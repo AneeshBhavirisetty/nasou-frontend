@@ -1,0 +1,302 @@
+
+> nasou-storefront@0.1.0 dev
+> vite
+
+
+  VITE v7.3.6  ready in 625 ms
+
+  ➜  Local:   http://localhost:5174/
+  ➜  Network: use --host to expose
+12:17:27 AM [vite] (client) hmr update /src/pages/auth/Login.jsx, /src/index.css
+12:20:21 AM [vite] (client) hmr update /src/App.jsx, /src/index.css
+12:20:21 AM [vite] Internal server error: D:\Partner_projects\nasou-store\nasou-storefront-main\src\App.jsx: Expected corresponding JSX closing tag for <AuthLayout>. (59:10)
+
+  57 |             <Route path="/reset-password/:token" element={<ResetPassword />} />
+  58 |             <Route path="/forgot-email" element={<ForgotEmail />} />
+> 59 |           </Route>
+     |           ^
+  60 |
+  61 |           {/* Protected customer routes */}
+  62 |           <Route element={<ProtectedRoute />}>
+  Plugin: vite:react-babel
+  File: D:/Partner_projects/nasou-store/nasou-storefront-main/src/App.jsx:59:10
+  57 |              <Route path="/reset-password/:token" element={<ResetPassword />} />
+  58 |              <Route path="/forgot-email" element={<ForgotEmail />} />
+  59 |            </Route>
+     |            ^
+  60 |  
+  61 |            {/* Protected customer routes */}
+      at constructor (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:369:19)
+      at JSXParserMixin.raise (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:6620:19)
+      at JSXParserMixin.jsxParseElementAt (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4743:16)
+      at JSXParserMixin.jsxParseElement (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4765:17)
+      at JSXParserMixin.parseExprAtom (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4775:19)
+      at JSXParserMixin.parseExprSubscripts (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:11102:23)
+      at JSXParserMixin.parseUpdate (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:11087:21)
+      at JSXParserMixin.parseMaybeUnary (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:11067:23)
+      at JSXParserMixin.parseMaybeUnaryOrPrivate (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10920:61)
+      at JSXParserMixin.parseExprOps (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10925:23)
+      at JSXParserMixin.parseMaybeConditional (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10902:23)
+      at JSXParserMixin.parseMaybeAssign (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10852:21)
+      at JSXParserMixin.parseExpressionBase (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10805:23)
+      at D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10801:39
+      at JSXParserMixin.allowInAnd (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:12455:12)
+      at JSXParserMixin.parseExpression (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10801:17)
+      at JSXParserMixin.jsxParseExpressionContainer (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4648:31)
+      at JSXParserMixin.jsxParseAttributeValue (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4620:21)
+      at JSXParserMixin.jsxParseAttribute (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4669:38)
+      at JSXParserMixin.jsxParseOpeningElementAfterName (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4683:28)
+      at JSXParserMixin.jsxParseOpeningElementAt (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4678:17)
+      at JSXParserMixin.jsxParseElementAt (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4702:33)
+      at JSXParserMixin.jsxParseElementAt (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4714:32)
+      at JSXParserMixin.jsxParseElementAt (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4714:32)
+      at JSXParserMixin.jsxParseElementAt (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4714:32)
+      at JSXParserMixin.jsxParseElement (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4765:17)
+      at JSXParserMixin.parseExprAtom (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4775:19)
+      at JSXParserMixin.parseExprSubscripts (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:11102:23)
+      at JSXParserMixin.parseUpdate (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:11087:21)
+      at JSXParserMixin.parseMaybeUnary (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:11067:23)
+      at JSXParserMixin.parseMaybeUnaryOrPrivate (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10920:61)
+      at JSXParserMixin.parseExprOps (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10925:23)
+      at JSXParserMixin.parseMaybeConditional (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10902:23)
+      at JSXParserMixin.parseMaybeAssign (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10852:21)
+      at D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10821:39
+      at JSXParserMixin.allowInAnd (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:12455:12)
+      at JSXParserMixin.parseMaybeAssignAllowIn (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10821:17)
+      at JSXParserMixin.parseMaybeAssignAllowInOrVoidPattern (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:12522:17)
+      at JSXParserMixin.parseParenAndDistinguishExpression (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:11701:28)
+      at JSXParserMixin.parseExprAtom (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:11357:23)
+      at JSXParserMixin.parseExprAtom (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4780:20)
+      at JSXParserMixin.parseExprSubscripts (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:11102:23)
+      at JSXParserMixin.parseUpdate (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:11087:21)
+      at JSXParserMixin.parseMaybeUnary (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:11067:23)
+      at JSXParserMixin.parseMaybeUnaryOrPrivate (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10920:61)
+      at JSXParserMixin.parseExprOps (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10925:23)
+      at JSXParserMixin.parseMaybeConditional (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10902:23)
+      at JSXParserMixin.parseMaybeAssign (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10852:21)
+      at JSXParserMixin.parseExpressionBase (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10805:23)
+      at D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10801:39
+12:20:21 AM [vite] Internal server error: D:\Partner_projects\nasou-store\nasou-storefront-main\src\App.jsx: Expected corresponding JSX closing tag for <AuthLayout>. (59:10)
+
+  57 |             <Route path="/reset-password/:token" element={<ResetPassword />} />
+  58 |             <Route path="/forgot-email" element={<ForgotEmail />} />
+> 59 |           </Route>
+     |           ^
+  60 |
+  61 |           {/* Protected customer routes */}
+  62 |           <Route element={<ProtectedRoute />}>
+  Plugin: vite:react-babel
+  File: D:/Partner_projects/nasou-store/nasou-storefront-main/src/App.jsx:59:10
+  57 |              <Route path="/reset-password/:token" element={<ResetPassword />} />
+  58 |              <Route path="/forgot-email" element={<ForgotEmail />} />
+  59 |            </Route>
+     |            ^
+  60 |  
+  61 |            {/* Protected customer routes */}
+      at constructor (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:369:19)
+      at JSXParserMixin.raise (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:6620:19)
+      at JSXParserMixin.jsxParseElementAt (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4743:16)
+      at JSXParserMixin.jsxParseElement (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4765:17)
+      at JSXParserMixin.parseExprAtom (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4775:19)
+      at JSXParserMixin.parseExprSubscripts (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:11102:23)
+      at JSXParserMixin.parseUpdate (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:11087:21)
+      at JSXParserMixin.parseMaybeUnary (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:11067:23)
+      at JSXParserMixin.parseMaybeUnaryOrPrivate (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10920:61)
+      at JSXParserMixin.parseExprOps (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10925:23)
+      at JSXParserMixin.parseMaybeConditional (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10902:23)
+      at JSXParserMixin.parseMaybeAssign (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10852:21)
+      at JSXParserMixin.parseExpressionBase (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10805:23)
+      at D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10801:39
+      at JSXParserMixin.allowInAnd (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:12455:12)
+      at JSXParserMixin.parseExpression (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10801:17)
+      at JSXParserMixin.jsxParseExpressionContainer (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4648:31)
+      at JSXParserMixin.jsxParseAttributeValue (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4620:21)
+      at JSXParserMixin.jsxParseAttribute (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4669:38)
+      at JSXParserMixin.jsxParseOpeningElementAfterName (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4683:28)
+      at JSXParserMixin.jsxParseOpeningElementAt (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4678:17)
+      at JSXParserMixin.jsxParseElementAt (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4702:33)
+      at JSXParserMixin.jsxParseElementAt (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4714:32)
+      at JSXParserMixin.jsxParseElementAt (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4714:32)
+      at JSXParserMixin.jsxParseElementAt (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4714:32)
+      at JSXParserMixin.jsxParseElement (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4765:17)
+      at JSXParserMixin.parseExprAtom (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4775:19)
+      at JSXParserMixin.parseExprSubscripts (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:11102:23)
+      at JSXParserMixin.parseUpdate (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:11087:21)
+      at JSXParserMixin.parseMaybeUnary (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:11067:23)
+      at JSXParserMixin.parseMaybeUnaryOrPrivate (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10920:61)
+      at JSXParserMixin.parseExprOps (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10925:23)
+      at JSXParserMixin.parseMaybeConditional (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10902:23)
+      at JSXParserMixin.parseMaybeAssign (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10852:21)
+      at D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10821:39
+      at JSXParserMixin.allowInAnd (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:12455:12)
+      at JSXParserMixin.parseMaybeAssignAllowIn (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10821:17)
+      at JSXParserMixin.parseMaybeAssignAllowInOrVoidPattern (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:12522:17)
+      at JSXParserMixin.parseParenAndDistinguishExpression (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:11701:28)
+      at JSXParserMixin.parseExprAtom (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:11357:23)
+      at JSXParserMixin.parseExprAtom (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4780:20)
+      at JSXParserMixin.parseExprSubscripts (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:11102:23)
+      at JSXParserMixin.parseUpdate (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:11087:21)
+      at JSXParserMixin.parseMaybeUnary (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:11067:23)
+      at JSXParserMixin.parseMaybeUnaryOrPrivate (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10920:61)
+      at JSXParserMixin.parseExprOps (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10925:23)
+      at JSXParserMixin.parseMaybeConditional (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10902:23)
+      at JSXParserMixin.parseMaybeAssign (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10852:21)
+      at JSXParserMixin.parseExpressionBase (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10805:23)
+      at D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10801:39
+12:23:55 AM [vite] (client) hmr update /src/index.css
+12:23:59 AM [vite] (client) page reload src/layouts/AuthLayout.jsx
+12:24:00 AM [vite] (client) Pre-transform error: D:\Partner_projects\nasou-store\nasou-storefront-main\src\App.jsx: Expected corresponding JSX closing tag for <AuthLayout>. (59:10)
+
+  57 |             <Route path="/reset-password/:token" element={<ResetPassword />} />
+  58 |             <Route path="/forgot-email" element={<ForgotEmail />} />
+> 59 |           </Route>
+     |           ^
+  60 |
+  61 |           {/* Protected customer routes */}
+  62 |           <Route element={<ProtectedRoute />}>
+  Plugin: vite:react-babel
+  File: D:/Partner_projects/nasou-store/nasou-storefront-main/src/App.jsx:59:10
+  57 |              <Route path="/reset-password/:token" element={<ResetPassword />} />
+  58 |              <Route path="/forgot-email" element={<ForgotEmail />} />
+  59 |            </Route>
+     |            ^
+  60 |  
+  61 |            {/* Protected customer routes */}
+12:24:00 AM [vite] Internal server error: D:\Partner_projects\nasou-store\nasou-storefront-main\src\App.jsx: Expected corresponding JSX closing tag for <AuthLayout>. (59:10)
+
+  57 |             <Route path="/reset-password/:token" element={<ResetPassword />} />
+  58 |             <Route path="/forgot-email" element={<ForgotEmail />} />
+> 59 |           </Route>
+     |           ^
+  60 |
+  61 |           {/* Protected customer routes */}
+  62 |           <Route element={<ProtectedRoute />}>
+  Plugin: vite:react-babel
+  File: D:/Partner_projects/nasou-store/nasou-storefront-main/src/App.jsx:59:10
+  57 |              <Route path="/reset-password/:token" element={<ResetPassword />} />
+  58 |              <Route path="/forgot-email" element={<ForgotEmail />} />
+  59 |            </Route>
+     |            ^
+  60 |  
+  61 |            {/* Protected customer routes */}
+      at constructor (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:369:19)
+      at JSXParserMixin.raise (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:6620:19)
+      at JSXParserMixin.jsxParseElementAt (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4743:16)
+      at JSXParserMixin.jsxParseElement (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4765:17)
+      at JSXParserMixin.parseExprAtom (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4775:19)
+      at JSXParserMixin.parseExprSubscripts (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:11102:23)
+      at JSXParserMixin.parseUpdate (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:11087:21)
+      at JSXParserMixin.parseMaybeUnary (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:11067:23)
+      at JSXParserMixin.parseMaybeUnaryOrPrivate (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10920:61)
+      at JSXParserMixin.parseExprOps (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10925:23)
+      at JSXParserMixin.parseMaybeConditional (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10902:23)
+      at JSXParserMixin.parseMaybeAssign (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10852:21)
+      at JSXParserMixin.parseExpressionBase (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10805:23)
+      at D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10801:39
+      at JSXParserMixin.allowInAnd (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:12455:12)
+      at JSXParserMixin.parseExpression (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10801:17)
+      at JSXParserMixin.jsxParseExpressionContainer (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4648:31)
+      at JSXParserMixin.jsxParseAttributeValue (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4620:21)
+      at JSXParserMixin.jsxParseAttribute (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4669:38)
+      at JSXParserMixin.jsxParseOpeningElementAfterName (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4683:28)
+      at JSXParserMixin.jsxParseOpeningElementAt (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4678:17)
+      at JSXParserMixin.jsxParseElementAt (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4702:33)
+      at JSXParserMixin.jsxParseElementAt (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4714:32)
+      at JSXParserMixin.jsxParseElementAt (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4714:32)
+      at JSXParserMixin.jsxParseElementAt (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4714:32)
+      at JSXParserMixin.jsxParseElement (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4765:17)
+      at JSXParserMixin.parseExprAtom (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4775:19)
+      at JSXParserMixin.parseExprSubscripts (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:11102:23)
+      at JSXParserMixin.parseUpdate (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:11087:21)
+      at JSXParserMixin.parseMaybeUnary (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:11067:23)
+      at JSXParserMixin.parseMaybeUnaryOrPrivate (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10920:61)
+      at JSXParserMixin.parseExprOps (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10925:23)
+      at JSXParserMixin.parseMaybeConditional (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10902:23)
+      at JSXParserMixin.parseMaybeAssign (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10852:21)
+      at D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10821:39
+      at JSXParserMixin.allowInAnd (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:12455:12)
+      at JSXParserMixin.parseMaybeAssignAllowIn (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10821:17)
+      at JSXParserMixin.parseMaybeAssignAllowInOrVoidPattern (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:12522:17)
+      at JSXParserMixin.parseParenAndDistinguishExpression (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:11701:28)
+      at JSXParserMixin.parseExprAtom (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:11357:23)
+      at JSXParserMixin.parseExprAtom (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4780:20)
+      at JSXParserMixin.parseExprSubscripts (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:11102:23)
+      at JSXParserMixin.parseUpdate (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:11087:21)
+      at JSXParserMixin.parseMaybeUnary (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:11067:23)
+      at JSXParserMixin.parseMaybeUnaryOrPrivate (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10920:61)
+      at JSXParserMixin.parseExprOps (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10925:23)
+      at JSXParserMixin.parseMaybeConditional (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10902:23)
+      at JSXParserMixin.parseMaybeAssign (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10852:21)
+      at JSXParserMixin.parseExpressionBase (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10805:23)
+      at D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10801:39
+12:24:00 AM [vite] Internal server error: D:\Partner_projects\nasou-store\nasou-storefront-main\src\App.jsx: Expected corresponding JSX closing tag for <AuthLayout>. (59:10)
+
+  57 |             <Route path="/reset-password/:token" element={<ResetPassword />} />
+  58 |             <Route path="/forgot-email" element={<ForgotEmail />} />
+> 59 |           </Route>
+     |           ^
+  60 |
+  61 |           {/* Protected customer routes */}
+  62 |           <Route element={<ProtectedRoute />}>
+  Plugin: vite:react-babel
+  File: D:/Partner_projects/nasou-store/nasou-storefront-main/src/App.jsx:59:10
+  57 |              <Route path="/reset-password/:token" element={<ResetPassword />} />
+  58 |              <Route path="/forgot-email" element={<ForgotEmail />} />
+  59 |            </Route>
+     |            ^
+  60 |  
+  61 |            {/* Protected customer routes */}
+      at constructor (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:369:19)
+      at JSXParserMixin.raise (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:6620:19)
+      at JSXParserMixin.jsxParseElementAt (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4743:16)
+      at JSXParserMixin.jsxParseElement (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4765:17)
+      at JSXParserMixin.parseExprAtom (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4775:19)
+      at JSXParserMixin.parseExprSubscripts (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:11102:23)
+      at JSXParserMixin.parseUpdate (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:11087:21)
+      at JSXParserMixin.parseMaybeUnary (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:11067:23)
+      at JSXParserMixin.parseMaybeUnaryOrPrivate (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10920:61)
+      at JSXParserMixin.parseExprOps (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10925:23)
+      at JSXParserMixin.parseMaybeConditional (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10902:23)
+      at JSXParserMixin.parseMaybeAssign (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10852:21)
+      at JSXParserMixin.parseExpressionBase (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10805:23)
+      at D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10801:39
+      at JSXParserMixin.allowInAnd (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:12455:12)
+      at JSXParserMixin.parseExpression (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10801:17)
+      at JSXParserMixin.jsxParseExpressionContainer (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4648:31)
+      at JSXParserMixin.jsxParseAttributeValue (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4620:21)
+      at JSXParserMixin.jsxParseAttribute (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4669:38)
+      at JSXParserMixin.jsxParseOpeningElementAfterName (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4683:28)
+      at JSXParserMixin.jsxParseOpeningElementAt (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4678:17)
+      at JSXParserMixin.jsxParseElementAt (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4702:33)
+      at JSXParserMixin.jsxParseElementAt (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4714:32)
+      at JSXParserMixin.jsxParseElementAt (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4714:32)
+      at JSXParserMixin.jsxParseElementAt (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4714:32)
+      at JSXParserMixin.jsxParseElement (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4765:17)
+      at JSXParserMixin.parseExprAtom (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4775:19)
+      at JSXParserMixin.parseExprSubscripts (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:11102:23)
+      at JSXParserMixin.parseUpdate (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:11087:21)
+      at JSXParserMixin.parseMaybeUnary (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:11067:23)
+      at JSXParserMixin.parseMaybeUnaryOrPrivate (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10920:61)
+      at JSXParserMixin.parseExprOps (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10925:23)
+      at JSXParserMixin.parseMaybeConditional (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10902:23)
+      at JSXParserMixin.parseMaybeAssign (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10852:21)
+      at D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10821:39
+      at JSXParserMixin.allowInAnd (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:12455:12)
+      at JSXParserMixin.parseMaybeAssignAllowIn (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10821:17)
+      at JSXParserMixin.parseMaybeAssignAllowInOrVoidPattern (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:12522:17)
+      at JSXParserMixin.parseParenAndDistinguishExpression (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:11701:28)
+      at JSXParserMixin.parseExprAtom (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:11357:23)
+      at JSXParserMixin.parseExprAtom (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:4780:20)
+      at JSXParserMixin.parseExprSubscripts (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:11102:23)
+      at JSXParserMixin.parseUpdate (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:11087:21)
+      at JSXParserMixin.parseMaybeUnary (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:11067:23)
+      at JSXParserMixin.parseMaybeUnaryOrPrivate (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10920:61)
+      at JSXParserMixin.parseExprOps (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10925:23)
+      at JSXParserMixin.parseMaybeConditional (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10902:23)
+      at JSXParserMixin.parseMaybeAssign (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10852:21)
+      at JSXParserMixin.parseExpressionBase (D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10805:23)
+      at D:\Partner_projects\nasou-store\nasou-storefront-main\node_modules\@babel\parser\lib\index.js:10801:39
+12:26:20 AM [vite] (client) hmr update /src/App.jsx, /src/index.css
+12:26:41 AM [vite] (client) hmr update /src/index.css, /src/App.jsx
+
+D:\Partner_projects\nasou-store\nasou-storefront-main>
