@@ -1,0 +1,206 @@
+@import "tailwindcss";
+
+/* ============================================================
+   NASOU HIVE — STOREFRONT DESIGN TOKENS
+   Voice: a plumbing supplier that can prove where every fitting
+   came from. Warm neutral paper + deep forest for authority +
+   one clay accent for commerce energy. Mono type is reserved for
+   verifiable data (SKUs, batch ids); a classic serif (Fraunces)
+   carries the big editorial headlines.
+   ============================================================ */
+@theme {
+  /* Neutrals — warm, paper-like, never grey-blue */
+  --color-canvas: #faf9f6;
+  --color-surface: #ffffff;
+  --color-sunk: #f2f1ec;
+  --color-line: #e6e4dc;
+  --color-line-soft: #efeee8;
+
+  /* Ink ramp — greened blacks */
+  --color-ink: #101711;
+  --color-ink-70: #43504a;
+  --color-ink-50: #6c7873;
+  --color-ink-35: #949e99;
+
+  /* Brand — forest */
+  --color-forest: #0d2e22;
+  --color-forest-800: #12402f;
+  --color-emerald: #12805c;
+  --color-emerald-600: #0f6b4d;
+  --color-emerald-100: #d5eee4;
+  --color-emerald-50: #eaf6f1;
+
+  /* Accent — clay, used only for commerce moments */
+  --color-clay: #cf5f3c;
+  --color-clay-600: #b74f2e;
+  --color-clay-50: #fdf0eb;
+
+  /* Data / trace voice */
+  --color-slate: #3e5c76;
+  --color-slate-50: #edf2f7;
+  --color-amber: #b8791d;
+  --color-amber-50: #fdf5e7;
+
+  /* Type */
+  --font-display: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Fraunces", ui-serif, Georgia, "Times New Roman", serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  /* Elevation — soft and warm, never a hard grey drop */
+  --shadow-card: 0 1px 2px rgba(16, 23, 17, 0.04), 0 10px 30px -18px rgba(16, 23, 17, 0.18);
+  --shadow-lift: 0 2px 6px rgba(16, 23, 17, 0.06), 0 22px 48px -24px rgba(16, 23, 17, 0.3);
+  --shadow-pop: 0 30px 70px -24px rgba(16, 23, 17, 0.34);
+
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 26px;
+
+  /* Motion */
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --dur-fast: 160ms;
+  --dur-mid: 280ms;
+  --dur-slow: 520ms;
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    scroll-behavior: smooth;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    background: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.028em;
+    line-height: 1.05;
+    font-weight: 700;
+  }
+
+  ::selection {
+    background: var(--color-emerald);
+    color: #fff;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-emerald);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Never let a wide child force a horizontal scrollbar on mobile. */
+  img, svg, video, canvas { max-width: 100%; }
+}
+
+@layer components {
+  /* Editorial headline voice — the "classic" note. */
+  .font-serif { font-family: var(--font-serif); }
+  .display-serif {
+    font-family: var(--font-serif);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.02;
+    font-optical-sizing: auto;
+  }
+
+  /* Prices, weights, batch ids — anything auditable */
+  .tnum { font-variant-numeric: tabular-nums; }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-ink-35);
+  }
+
+  /* Faint dotted field used behind the hero and dark bands. */
+  .field-dots {
+    background-image: radial-gradient(rgba(16, 23, 17, 0.09) 1px, transparent 1px);
+    background-size: 22px 22px;
+  }
+  .field-dots-dark {
+    background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+    background-size: 22px 22px;
+  }
+
+  .no-bar { scrollbar-width: none; -ms-overflow-style: none; }
+  .no-bar::-webkit-scrollbar { display: none; }
+
+  /* Product imagery bed under transparent / blown-out art. */
+  .photo-bed { background: linear-gradient(155deg, #f4f2ec 0%, #eae8e0 100%); }
+  .photo-bed-dark { background: linear-gradient(155deg, #14251d 0%, #0d1a14 100%); }
+
+  /* Hover sheen sweep for premium buttons / cards. */
+  .sheen { position: relative; overflow: hidden; }
+  .sheen::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-120%);
+    background: linear-gradient(100deg, transparent 20%, rgba(255, 255, 255, 0.35) 50%, transparent 80%);
+    transition: transform 0.7s var(--ease-out-quint);
+    pointer-events: none;
+  }
+  .sheen:hover::after { transform: translateX(120%); }
+
+  /* Skeleton shimmer */
+  .shimmer {
+    background: linear-gradient(90deg, #efeee8 25%, #f7f6f1 37%, #efeee8 63%);
+    background-size: 400% 100%;
+    animation: shimmer 1.4s ease-in-out infinite;
+  }
+}
+
+/* Entrance motion for above-the-fold content. Deliberately CSS, not JS. */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes stepIn {
+  from { opacity: 0; transform: translateX(14px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes shimmer {
+  from { background-position: 100% 0; }
+  to   { background-position: -100% 0; }
+}
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+@keyframes float-y {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-10px); }
+}
+@keyframes shake-x {
+  10%, 90% { transform: translateX(-1px); }
+  20%, 80% { transform: translateX(2px); }
+  30%, 50%, 70% { transform: translateX(-4px); }
+  40%, 60% { transform: translateX(4px); }
+}
+
+.animate-marquee { animation: marquee 32s linear infinite; }
+.animate-float { animation: float-y 6s ease-in-out infinite; }
+.animate-shake { animation: shake-x 0.4s ease-in-out both; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .animate-marquee, .animate-float { animation: none !important; }
+}

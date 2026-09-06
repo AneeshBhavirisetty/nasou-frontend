@@ -1,3 +1,14 @@
 node_modules
 dist
 .DS_Store
+
+# logs
+*.log
+npm-debug.log*
+
+# local env (keep .env.example)
+.env.local
+.env.*.local
+
+# local screenshot scratch
+.shots/

@@ -1,20 +1,36 @@
 # Nasou Hive — customer storefront
 
-The customer-facing half of Nasou Hive: browse, compare suppliers, and check
-out. Every listing carries a traceability record (origin, maker, batch, carbon)
-because that is the product's actual differentiator — the UI is built around
-showing it, not hiding it behind a marketing page.
-
-Front end only. No API, no auth, no persistence — all state is in memory.
+Customer-facing storefront for a plumbing / PVC-uPVC-cPVC fittings supplier.
+Browse ~1,400 SKUs by size, material, brand and code; add to cart; check out.
+Front end only — auth runs against an in-browser mock (`VITE_MOCK_API=true`).
 
 ## Run it
 
 ```bash
 npm install
-npm run dev
+npm run dev            # http://localhost:5174
+npm run build          # production build (three.js is a lazy chunk)
+npm run build:catalog  # regenerate the catalog from shop data 1.xlsx
 ```
 
-Opens on <http://localhost:5174>.
+## Catalog
+
+`src/data/catalog.js` reads `src/data/catalog.generated.json`, produced from
+`shop data 1.xlsx` by `scripts/build-catalog.mjs`. The workbook has no price /
+stock columns, so those are **deterministic synthetic values** (seeded PRNG) —
+swap the generator for a real price feed when one exists.
+
+## Demo auth
+
+- Password login: `test@example.com` / `password123`
+- OTP login: any 10-digit number, code `123456`
+- `DEMO` pill (bottom-left) switches the previewed role (CUSTOMER / ADMIN).
+
+## 3D hero
+
+`three` + `@react-three/fiber` + `@react-three/drei`, code-split and lazy-loaded
+via `src/components/hero/HeroStage.jsx`, with a static SVG fallback for
+no-WebGL / `prefers-reduced-motion`.
 
 ## Routes
 
@@ -34,63 +50,35 @@ is a shareable link.
 
 | I want to change…            | Edit                                          |
 | ---------------------------- | --------------------------------------------- |
-| Brand name, contact, footer  | `src/data/site.js`                            |
-| Currency (₹ → anything)      | `currency` in `src/data/site.js` — one object |
-| Products, categories, suppliers | `src/data/catalog.js`                      |
-| Colours, type, radius, shadow | `@theme` block in `src/index.css`            |
-
-Nothing in `src/components` or `src/pages` hardcodes a brand string, a colour
-hex or a currency symbol — they all resolve through those four places.
+| Brand name, nav, footer, copy | `src/data/site.js`                           |
+| Currency (₹ → anything)      | `currency` in `src/data/site.js`              |
+| Products / prices / stock    | `scripts/build-catalog.mjs`, then `npm run build:catalog` |
+| Colours, type, radius, motion tokens | `@theme` block in `src/index.css`     |
 
 ## Structure
 
 ```text
 src/
-├── data/
-│   ├── site.js        brand, nav, currency, footer, trust copy
-│   └── catalog.js     products + derived trace / batch / supplier offers
-├── context/
-│   └── CartContext.jsx
-├── lib/format.js      money, discount, carbon phrasing, eco banding
+├── data/        site.js · catalog.js (+ generated JSON) · suppliers.json
+├── context/     Cart · Auth · Toast · Wishlist
+├── layouts/     Public · Auth (split-screen) · Protected · Admin
+├── lib/         format.js · motion.js · api.js (+ mock) · auth.js
 ├── components/
-│   ├── ui.jsx         Button, Badge, Stars, Photo, Stepper, Field, Container
-│   ├── Icon.jsx       one stroked icon set, consistent line weight
-│   ├── Header.jsx     ticker, mega menu, search, cart
-│   ├── ProductCard.jsx
-│   ├── TraceRail.jsx  the six-checkpoint journey (light + dark variants)
-│   ├── CartDrawer.jsx
-│   ├── Footer.jsx
-│   └── Logo.jsx
-└── pages/             Home, Shop, ProductDetail, Cart, Checkout, OrderConfirmed
+│   ├── ui.jsx           Button, Badge, Rating, PriceTag, Photo, Field, …
+│   ├── ProductArt.jsx   per-type SVG product illustrations
+│   ├── Reveal / Counter / Marquee / StatTile / Accordion / Tabs
+│   ├── hero/            HeroStage (lazy 3D) · Hero3D · HeroFallbackArt
+│   ├── auth/            AuthCard · OtpInput · PasswordField · AuthStepper · ResendTimer
+│   └── admin/           AdminSidebar · RoleSwitch
+└── pages/       Home, Shop, ProductDetail, Cart, Checkout, OrderConfirmed,
+                 Wishlist, Orders, Info, NotFound, auth/*, admin/*
 ```
 
-## Two deliberate decisions
+## Notes
 
-**Cart lines are stored lean.** A line is `{ id, supplierId, qty, price }`.
-Product name, photo and eco data are rehydrated from the catalogue on render, so
-the cart can never display a stale copy of a product that has since changed.
-
-**Motion never gates content.** Above-the-fold content (hero, product buy box,
-checkout steps) uses CSS animation with `both` fill, so it reaches its visible
-state even if no animation frame ever runs. Only below-the-fold scroll reveals
-use framer-motion. This is why the checkout steps are a keyed `div` rather than
-an `AnimatePresence mode="wait"` — that would gate the next step on the previous
-one's exit animation finishing, which can strand a shopper mid-purchase.
-
-## Data shape
-
-Products state their own facts once; everything else is derived in
-`catalog.js` so it can't drift:
-
-- `buildTrace(product)` — six checkpoints, built from `origin` and `maker`
-- `batchId(product)` — deterministic, stable across reloads
-- `offersFor(product)` — 3 competing retailers; the cheapest is always exactly
-  the listed price so the grid card and product page agree
-
-Swap these for API calls and the components need no changes.
-
-## Not built yet
-
-Auth, wishlist, order history, reviews submission, address book, and search
-suggestions are all linked in the UI but resolve to `/shop`. Product photos are
-Unsplash URLs with a graceful fallback — replace with real assets.
+- **Cart lines are lean** — `{ id, supplierId, qty, price }`; everything displayable is
+  rehydrated from the catalog on render, so the cart can't show a stale product copy.
+- **Checkout steps are a keyed `div`**, not `AnimatePresence mode="wait"` — the latter would
+  gate the next step on the previous one's exit animation and could strand a shopper.
+- **Prices are synthetic.** `catalog.generated.json` is deterministic and regenerable; wire a
+  real price feed into `build-catalog.mjs` when available.

@@ -1,0 +1,191 @@
+[
+  {
+    "slug": "star",
+    "name": "Star",
+    "tier": "value",
+    "count": 343,
+    "blurb": "Trade-grade · best price for volume jobs"
+  },
+  {
+    "slug": "waterflo",
+    "name": "Waterflo",
+    "tier": "value",
+    "count": 303,
+    "blurb": "Trade-grade · best price for volume jobs"
+  },
+  {
+    "slug": "jeevan",
+    "name": "Jeevan",
+    "tier": "value",
+    "count": 270,
+    "blurb": "Trade-grade · best price for volume jobs"
+  },
+  {
+    "slug": "vahini",
+    "name": "Vahini",
+    "tier": "mid",
+    "count": 152,
+    "blurb": "Regional brand · consistent supply, fair pricing"
+  },
+  {
+    "slug": "astral",
+    "name": "Astral",
+    "tier": "premium",
+    "count": 74,
+    "blurb": "National brand · ISI-marked, warehouse-stocked"
+  },
+  {
+    "slug": "watertec",
+    "name": "Watertec",
+    "tier": "mid",
+    "count": 66,
+    "blurb": "Regional brand · consistent supply, fair pricing"
+  },
+  {
+    "slug": "ashirvad",
+    "name": "Ashirvad",
+    "tier": "premium",
+    "count": 48,
+    "blurb": "National brand · ISI-marked, warehouse-stocked"
+  },
+  {
+    "slug": "nasou",
+    "name": "Nasou",
+    "tier": "value",
+    "count": 35,
+    "blurb": "Trade-grade · best price for volume jobs"
+  },
+  {
+    "slug": "flowman",
+    "name": "Flowman",
+    "tier": "mid",
+    "count": 33,
+    "blurb": "Regional brand · consistent supply, fair pricing"
+  },
+  {
+    "slug": "kasta",
+    "name": "Kasta",
+    "tier": "mid",
+    "count": 26,
+    "blurb": "Regional brand · consistent supply, fair pricing"
+  },
+  {
+    "slug": "finolex",
+    "name": "Finolex",
+    "tier": "premium",
+    "count": 23,
+    "blurb": "National brand · ISI-marked, warehouse-stocked"
+  },
+  {
+    "slug": "kothari",
+    "name": "Kothari",
+    "tier": "mid",
+    "count": 16,
+    "blurb": "Regional brand · consistent supply, fair pricing"
+  },
+  {
+    "slug": "standard",
+    "name": "Standard",
+    "tier": "value",
+    "count": 15,
+    "blurb": "Trade-grade · best price for volume jobs"
+  },
+  {
+    "slug": "sentini",
+    "name": "Sentini",
+    "tier": "premium",
+    "count": 11,
+    "blurb": "National brand · ISI-marked, warehouse-stocked"
+  },
+  {
+    "slug": "narayanee",
+    "name": "Narayanee",
+    "tier": "value",
+    "count": 11,
+    "blurb": "Trade-grade · best price for volume jobs"
+  },
+  {
+    "slug": "ajay",
+    "name": "Ajay",
+    "tier": "value",
+    "count": 8,
+    "blurb": "Trade-grade · best price for volume jobs"
+  },
+  {
+    "slug": "supreme",
+    "name": "Supreme",
+    "tier": "premium",
+    "count": 7,
+    "blurb": "National brand · ISI-marked, warehouse-stocked"
+  },
+  {
+    "slug": "aquatek",
+    "name": "Aquatek",
+    "tier": "mid",
+    "count": 6,
+    "blurb": "Regional brand · consistent supply, fair pricing"
+  },
+  {
+    "slug": "star-pro",
+    "name": "Star Pro",
+    "tier": "premium",
+    "count": 6,
+    "blurb": "National brand · ISI-marked, warehouse-stocked"
+  },
+  {
+    "slug": "sanystar",
+    "name": "Sanystar",
+    "tier": "mid",
+    "count": 4,
+    "blurb": "Regional brand · consistent supply, fair pricing"
+  },
+  {
+    "slug": "skipper",
+    "name": "Skipper",
+    "tier": "premium",
+    "count": 3,
+    "blurb": "National brand · ISI-marked, warehouse-stocked"
+  },
+  {
+    "slug": "sun-plus",
+    "name": "Sun Plus",
+    "tier": "mid",
+    "count": 3,
+    "blurb": "Regional brand · consistent supply, fair pricing"
+  },
+  {
+    "slug": "zoloto",
+    "name": "Zoloto",
+    "tier": "premium",
+    "count": 3,
+    "blurb": "National brand · ISI-marked, warehouse-stocked"
+  },
+  {
+    "slug": "freshdrop",
+    "name": "Freshdrop",
+    "tier": "mid",
+    "count": 2,
+    "blurb": "Regional brand · consistent supply, fair pricing"
+  },
+  {
+    "slug": "parryware",
+    "name": "Parryware",
+    "tier": "premium",
+    "count": 2,
+    "blurb": "National brand · ISI-marked, warehouse-stocked"
+  },
+  {
+    "slug": "splendor",
+    "name": "Splendor",
+    "tier": "mid",
+    "count": 1,
+    "blurb": "Regional brand · consistent supply, fair pricing"
+  },
+  {
+    "slug": "sudhakar",
+    "name": "Sudhakar",
+    "tier": "value",
+    "count": 1,
+    "blurb": "Trade-grade · best price for volume jobs"
+  }
+]
