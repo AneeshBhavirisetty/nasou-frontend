@@ -1,7 +1,20 @@
-import { createContext, useCallback, useContext, useMemo, useReducer, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useState } from 'react';
 import { findProduct, offersFor } from '../data/catalog';
 
 const CartContext = createContext(null);
+const STORAGE_KEY = 'nasou_cart';
+
+/* Persist lean cart lines so the cart survives a reload / the trip to /login. */
+function loadLines() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    return Array.isArray(raw)
+      ? raw.filter((l) => l && l.id && Number(l.qty) > 0).map((l) => ({ id: l.id, supplierId: l.supplierId, qty: Number(l.qty), price: Number(l.price) }))
+      : [];
+  } catch {
+    return [];
+  }
+}
 
 function reducer(state, action) {
   switch (action.type) {
@@ -33,9 +46,15 @@ const FREE_DELIVERY_ABOVE = 999;
 const DELIVERY_FEE = 49;
 
 export function CartProvider({ children }) {
-  const [lines, dispatch] = useReducer(reducer, []);
+  const [lines, dispatch] = useReducer(reducer, undefined, loadLines);
   const [open, setOpen] = useState(false);
   const [toast, setToast] = useState(null);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(lines));
+    } catch { /* quota — non-fatal */ }
+  }, [lines]);
 
   const add = useCallback((product, { qty = 1, supplierId, price } = {}) => {
     const offer = offersFor(product).find((o) => o.id === supplierId) ?? offersFor(product)[0];

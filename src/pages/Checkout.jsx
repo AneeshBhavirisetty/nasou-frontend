@@ -5,6 +5,7 @@ import ProductArt from '../components/ProductArt';
 import { Badge, Button, Container, Breadcrumbs, Field } from '../components/ui';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
+import { useAuth } from '../context/AuthContext';
 import { useAdminStore, couponDiscount } from '../context/AdminStore';
 import { paymentMethods } from '../data/site';
 import { cx, money } from '../lib/format';
@@ -58,6 +59,7 @@ const DELIVERY_OPTIONS = [
 export default function Checkout() {
   const { items, totals, clear } = useCart();
   const { coupons } = useAdminStore();
+  const { isAuthenticated, user } = useAuth();
   const toast = useToast();
   const [step, setStep] = useState(0);
   const [delivery, setDelivery] = useState('standard');
@@ -71,6 +73,32 @@ export default function Checkout() {
      the flag the empty-cart guard below would bounce the shopper to /cart
      before the confirmation route ever loads. */
   if (items.length === 0 && !placed) return <Navigate to="/cart" replace />;
+
+  /* Checkout requires an account — ask the shopper to sign in first. Their
+     cart is held in memory, so it survives the round trip to /login and back. */
+  if (!isAuthenticated) {
+    return (
+      <Container className="py-14 sm:py-20">
+        <div className="mx-auto max-w-md rounded-xl border border-line bg-white p-8 text-center shadow-card sm:p-10">
+          <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-emerald-50 text-emerald-600">
+            <Icon name="lock" size={24} />
+          </span>
+          <h1 className="mt-5 display-serif text-[24px]">Sign in to check out</h1>
+          <p className="mt-2 text-[14px] leading-relaxed text-ink-50">
+            You need an account to place an order — for your GST invoice, order tracking and returns.
+            Your {totals.count} item{totals.count !== 1 && 's'} {totals.count === 1 ? 'is' : 'are'} saved.
+          </p>
+          <div className="mt-6 space-y-2.5">
+            <Button to="/login?redirect=/checkout" size="lg" full iconRight="arrowRight">Sign in</Button>
+            <Button to="/login/otp?redirect=/checkout" size="lg" full variant="outline">Create an account</Button>
+          </div>
+          <Link to="/cart" className="mt-4 inline-block text-[13px] font-semibold text-ink-50 transition hover:text-ink">
+            ← Back to cart
+          </Link>
+        </div>
+      </Container>
+    );
+  }
 
   const cartCategories = [...new Set(items.map((i) => i.product.category))];
   const couponResult = applied
@@ -121,7 +149,7 @@ export default function Checkout() {
                   <>
                     <h2 className="text-[19px]">Where should this go?</h2>
                     <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                      <Field label="Full name" placeholder="Aarav Reddy" defaultValue="Aarav Reddy" />
+                      <Field label="Full name" placeholder="Aarav Reddy" defaultValue={user?.fullName || 'Aarav Reddy'} />
                       <Field
                         label="Mobile number"
                         type="tel"
