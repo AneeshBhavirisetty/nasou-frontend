@@ -10,12 +10,12 @@ export default function HeroFallbackArt({ className = '' }) {
         </radialGradient>
         <linearGradient id="hf-body" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" stopColor="#ffffff" />
-          <stop offset="0.5" stopColor="#eef2f4" />
-          <stop offset="1" stopColor="#cdd7dd" />
+          <stop offset="0.5" stopColor="#f7f1e3" />
+          <stop offset="1" stopColor="#ddd0b6" />
         </linearGradient>
         <linearGradient id="hf-ring" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#c6d0d8" />
-          <stop offset="1" stopColor="#9fb0bb" />
+          <stop offset="0" stopColor="#ddd0b6" />
+          <stop offset="1" stopColor="#bcac8c" />
         </linearGradient>
         <filter id="hf-sh" x="-30%" y="-30%" width="160%" height="160%">
           <feDropShadow dx="0" dy="14" stdDeviation="16" floodColor="#0d2e22" floodOpacity="0.22" />
@@ -36,12 +36,12 @@ export default function HeroFallbackArt({ className = '' }) {
         <path d="M150 320 V210 A60 60 0 0 1 210 150 H320"
           fill="none" stroke="url(#hf-body)" strokeWidth="92" strokeLinecap="butt" />
         <path d="M150 320 V210 A60 60 0 0 1 210 150 H320"
-          fill="none" stroke="#9fb0bb" strokeWidth="94" strokeOpacity="0.25" />
+          fill="none" stroke="#bcac8c" strokeWidth="94" strokeOpacity="0.25" />
         {/* socket rims */}
         <ellipse cx="320" cy="150" rx="20" ry="48" fill="url(#hf-ring)" />
-        <ellipse cx="320" cy="150" rx="12" ry="34" fill="#c6d0d8" />
+        <ellipse cx="320" cy="150" rx="12" ry="34" fill="#ddd0b6" />
         <ellipse cx="150" cy="320" rx="48" ry="20" fill="url(#hf-ring)" />
-        <ellipse cx="150" cy="320" rx="34" ry="12" fill="#c6d0d8" />
+        <ellipse cx="150" cy="320" rx="34" ry="12" fill="#ddd0b6" />
         {/* highlight */}
         <path d="M180 320 V210 A30 30 0 0 1 210 180 H320"
           fill="none" stroke="#ffffff" strokeWidth="7" strokeOpacity="0.55" />

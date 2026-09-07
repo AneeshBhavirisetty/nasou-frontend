@@ -9,12 +9,12 @@
    carries the big editorial headlines.
    ============================================================ */
 @theme {
-  /* Neutrals — warm, paper-like, never grey-blue */
-  --color-canvas: #faf9f6;
+  /* Neutrals — cream paper. Never grey, never blue. */
+  --color-canvas: #fdf9f0;
   --color-surface: #ffffff;
-  --color-sunk: #f2f1ec;
-  --color-line: #e6e4dc;
-  --color-line-soft: #efeee8;
+  --color-sunk: #f7f0e1;
+  --color-line: #ebe2cf;
+  --color-line-soft: #f4eddd;
 
   /* Ink ramp — greened blacks */
   --color-ink: #101711;
@@ -139,7 +139,7 @@
   .no-bar::-webkit-scrollbar { display: none; }
 
   /* Product imagery bed under transparent / blown-out art. */
-  .photo-bed { background: linear-gradient(155deg, #f4f2ec 0%, #eae8e0 100%); }
+  .photo-bed { background: linear-gradient(155deg, #faf4e7 0%, #eee3ce 100%); }
   .photo-bed-dark { background: linear-gradient(155deg, #14251d 0%, #0d1a14 100%); }
 
   /* Hover sheen sweep for premium buttons / cards. */
@@ -157,7 +157,7 @@
 
   /* Skeleton shimmer */
   .shimmer {
-    background: linear-gradient(90deg, #efeee8 25%, #f7f6f1 37%, #efeee8 63%);
+    background: linear-gradient(90deg, #f4eddd 25%, #fbf6ec 37%, #f4eddd 63%);
     background-size: 400% 100%;
     animation: shimmer 1.4s ease-in-out infinite;
   }

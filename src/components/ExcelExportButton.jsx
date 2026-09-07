@@ -1,21 +1,23 @@
 import { useState } from 'react';
 import { Button } from './ui';
 import { useToast } from '../context/ToastContext';
+import { downloadSheet, isoDate } from '../lib/exportSheet';
 
-/* Demo export: simulates a server-side workbook build, then confirms.
-   (No real endpoint in the mock storefront.) */
-export default function ExcelExportButton({ filename = 'export.xlsx', label = 'Export to Excel' }) {
+/* Simple one-click export for tables that do not need a date/status filter
+   (Products, Users). Orders uses <ExportDialog> instead. */
+export default function ExcelExportButton({ filename = 'export', label = 'Export to Excel', headers = [], rows = [] }) {
   const toast = useToast();
-  const [state, setState] = useState('idle'); // idle | working | done
+  const [state, setState] = useState('idle');
 
   const run = () => {
-    if (state === 'working') return;
+    if (state === 'working' || rows.length === 0) return;
     setState('working');
     setTimeout(() => {
+      downloadSheet(`${filename}-${isoDate()}.csv`, headers, rows);
       setState('done');
-      toast.success(`${filename} is ready — check your downloads folder.`);
-      setTimeout(() => setState('idle'), 2500);
-    }, 1100);
+      toast.success(`${rows.length} rows exported`);
+      setTimeout(() => setState('idle'), 2200);
+    }, 400);
   };
 
   return (
@@ -25,6 +27,7 @@ export default function ExcelExportButton({ filename = 'export.xlsx', label = 'E
       size="sm"
       icon={state === 'done' ? 'check' : 'external'}
       loading={state === 'working'}
+      disabled={rows.length === 0}
     >
       {state === 'working' ? 'Building…' : state === 'done' ? 'Ready' : label}
     </Button>

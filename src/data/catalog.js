@@ -9,6 +9,7 @@
 
 import generated from './catalog.generated.json';
 import supplierList from './suppliers.json';
+import { retailerIdForSupplier } from './retailers';
 
 /* Admin edits (add / edit / delist done in /admin/products) are persisted by
    AdminStore under this key. We fold them in here at load so the storefront and
@@ -28,9 +29,17 @@ function applyAdminPatch(list) {
   }
 }
 
+/* Every product carries the retailer that supplies it, plus an image list
+   (empty until an admin attaches one — the UI falls back to ProductArt). */
+const withOwnership = generated.products.map((p) => ({
+  ...p,
+  retailerId: retailerIdForSupplier(p.supplier),
+  images: p.images ?? [],
+}));
+
 /* The as-shipped catalogue, before admin edits — AdminStore builds its patch on this. */
-export const catalogBase = generated.products;
-export const products = applyAdminPatch(generated.products);
+export const catalogBase = withOwnership;
+export const products = applyAdminPatch(withOwnership);
 export const suppliers = supplierList;
 export const generatedAt = generated.generatedAt;
 

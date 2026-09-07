@@ -4,21 +4,24 @@ import Icon from '../../components/Icon';
 import ProductArt from '../../components/ProductArt';
 import ExcelExportButton from '../../components/ExcelExportButton';
 import ProductForm from '../../components/admin/ProductForm';
+import BulkImportDialog from '../../components/admin/BulkImportDialog';
 import { Badge, Button, Field } from '../../components/ui';
 import { useToast } from '../../context/ToastContext';
 import { useAdminStore } from '../../context/AdminStore';
 import { catalogBase as CATALOG, categories, categoryName } from '../../data/catalog';
+import { baseRetailers } from '../../data/retailers';
 import { money, cx } from '../../lib/format';
 
 const PAGE = 20;
 
 export default function AdminProducts() {
   const toast = useToast();
-  const { products: rows, dirty, setStock, saveProduct, deleteProduct, reset } = useAdminStore();
+  const { products: rows, retailers: extraRetailers, dirty, setStock, saveProduct, deleteProduct, reset } = useAdminStore();
   const [q, setQ] = useState('');
   const [cat, setCat] = useState('');
   const [page, setPage] = useState(1);
   const [editing, setEditing] = useState(undefined); // undefined = closed, null = new, object = edit
+  const [bulk, setBulk] = useState(false);
 
   const filtered = useMemo(() => {
     const n = q.trim().toLowerCase();
@@ -36,6 +39,7 @@ export default function AdminProducts() {
     saveProduct(prod);
     toast.success(isNew ? `${prod.name} added` : `${prod.name} updated`);
   };
+  const onBulk = (list) => list.forEach(saveProduct);
   const onDelete = (p) => {
     if (!window.confirm(`Delist "${p.name}"?`)) return;
     deleteProduct(p.id);
@@ -58,8 +62,14 @@ export default function AdminProducts() {
               Reset
             </Button>
           )}
+          <Button size="sm" variant="outline" icon="upload" onClick={() => setBulk(true)}>Bulk import</Button>
           <Button size="sm" icon="plus" onClick={() => setEditing(null)}>Add product</Button>
-          <ExcelExportButton endpoint="/admin/products/export" filename="products.xlsx" label="Export" />
+          <ExcelExportButton
+            filename="nasou-products"
+            label="Export"
+            headers={['SKU', 'Name', 'Category', 'Material', 'Size', 'Brand', 'Price', 'MRP', 'Discount %', 'Stock']}
+            rows={filtered.map((p) => [p.sku, p.name, categoryName(p.category), p.material, p.size, p.supplierName, p.price, p.mrp, p.discount, p.stock])}
+          />
         </div>
       </div>
 
@@ -87,7 +97,9 @@ export default function AdminProducts() {
             >
               <div className="flex items-center gap-3">
                 <span className="photo-bed grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-md">
-                  <ProductArt kind={p.art} material={p.material} className="h-full w-full p-1" />
+                  {p.images?.[0]
+                    ? <img src={p.images[0]} alt="" className="h-full w-full object-cover" />
+                    : <ProductArt kind={p.art} material={p.material} className="h-full w-full p-1" />}
                 </span>
                 <div className="min-w-0">
                   <p className="flex items-center gap-1.5 truncate text-[13px] font-bold">
@@ -120,11 +132,19 @@ export default function AdminProducts() {
         </div>
       )}
 
+      <BulkImportDialog
+        open={bulk}
+        onClose={() => setBulk(false)}
+        existingSkus={new Set(rows.map((p) => p.sku))}
+        onImport={onBulk}
+      />
+
       {editing !== undefined && (
         <ProductForm
           key={editing?.id ?? 'new'}
           open
           product={editing}
+          retailers={[...extraRetailers, ...baseRetailers]}
           onClose={() => setEditing(undefined)}
           onSave={onSave}
         />

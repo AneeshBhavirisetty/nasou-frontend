@@ -52,7 +52,12 @@ export default function AdminUsers() {
           <h1 className="display-serif text-[clamp(1.5rem,4vw,2rem)]">Users</h1>
           <p className="text-[13px] text-ink-50">{filtered.length} accounts · demo data</p>
         </div>
-        <ExcelExportButton endpoint="/admin/users/export" filename="users.xlsx" label="Export" />
+        <ExcelExportButton
+          filename="nasou-users"
+          label="Export"
+          headers={['Name', 'Email', 'Phone', 'Role', 'Joined']}
+          rows={filtered.map((u) => [u.fullName, u.email, u.phone, u.role, u.joined])}
+        />
       </div>
 
       <div className="flex flex-wrap gap-3 rounded-lg border border-line bg-white p-3">

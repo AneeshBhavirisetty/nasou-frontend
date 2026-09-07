@@ -6,10 +6,11 @@
  *   <ProductArt kind="elbow" material="cPVC" />
  * ==========================================================================*/
 
+/* All three read as cream — differentiated by warmth, never by grey/blue. */
 const MATERIAL = {
-  PVC: { body: '#f4f3ee', shade: '#d9d7cc', edge: '#b7b4a5', ring: '#cfccbe' },
-  uPVC: { body: '#e9eef2', shade: '#c6d0d8', edge: '#9fb0bb', ring: '#bcc7cf' },
-  cPVC: { body: '#f6efe4', shade: '#e2d3bd', edge: '#c3ac8b', ring: '#d8c6ab' },
+  PVC: { body: '#fbf6ea', shade: '#e6dcc5', edge: '#c2b699', ring: '#d9cdb2' },
+  uPVC: { body: '#f4f4e6', shade: '#dbdcc2', edge: '#b3b593', ring: '#cbcdae' },
+  cPVC: { body: '#f9f0e0', shade: '#e8d7ba', edge: '#c9ae86', ring: '#dec9a6' },
   Brass: { body: '#e7cf9c', shade: '#caa86a', edge: '#a5843f', ring: '#d4b477' },
 };
 

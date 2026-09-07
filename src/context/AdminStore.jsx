@@ -18,13 +18,14 @@ const emptyPatch = { overrides: {}, added: [], removed: [] };
 function load() {
   try {
     const raw = JSON.parse(localStorage.getItem(KEY) || 'null');
-    if (!raw) return { patch: emptyPatch, coupons: seedCoupons() };
+    if (!raw) return { patch: emptyPatch, coupons: seedCoupons(), retailers: [] };
     return {
       patch: { ...emptyPatch, ...(raw.patch || {}) },
       coupons: Array.isArray(raw.coupons) ? raw.coupons : seedCoupons(),
+      retailers: Array.isArray(raw.retailers) ? raw.retailers : [],
     };
   } catch {
-    return { patch: emptyPatch, coupons: seedCoupons() };
+    return { patch: emptyPatch, coupons: seedCoupons(), retailers: [] };
   }
 }
 
@@ -39,12 +40,13 @@ function seedCoupons() {
 export function AdminStoreProvider({ children }) {
   const [patch, setPatch] = useState(() => load().patch);
   const [coupons, setCoupons] = useState(() => load().coupons);
+  const [retailers, setRetailers] = useState(() => load().retailers);
 
   useEffect(() => {
     try {
-      localStorage.setItem(KEY, JSON.stringify({ patch, coupons }));
+      localStorage.setItem(KEY, JSON.stringify({ patch, coupons, retailers }));
     } catch { /* quota — non-fatal */ }
-  }, [patch, coupons]);
+  }, [patch, coupons, retailers]);
 
   /* Derived product list: catalogue minus removed, with overrides applied,
      plus admin-added rows on top. */
@@ -102,14 +104,20 @@ export function AdminStoreProvider({ children }) {
 
   const deleteCoupon = useCallback((id) => setCoupons((cs) => cs.filter((c) => c.id !== id)), []);
 
+  /* Retailers onboarded from the admin (base list lives in data/retailers.js). */
+  const saveRetailer = useCallback((r) => {
+    setRetailers((rs) => (rs.some((x) => x.id === r.id) ? rs.map((x) => (x.id === r.id ? { ...x, ...r } : x)) : [{ ...r }, ...rs]));
+  }, []);
+
   const reset = useCallback(() => {
     setPatch(emptyPatch);
     setCoupons(seedCoupons());
+    setRetailers([]);
   }, []);
 
   const value = useMemo(
-    () => ({ products, coupons, dirty, setStock, saveProduct, deleteProduct, saveCoupon, deleteCoupon, reset }),
-    [products, coupons, dirty, setStock, saveProduct, deleteProduct, saveCoupon, deleteCoupon, reset]
+    () => ({ products, coupons, retailers, dirty, setStock, saveProduct, deleteProduct, saveCoupon, deleteCoupon, saveRetailer, reset }),
+    [products, coupons, retailers, dirty, setStock, saveProduct, deleteProduct, saveCoupon, deleteCoupon, saveRetailer, reset]
   );
 
   return <AdminStoreContext.Provider value={value}>{children}</AdminStoreContext.Provider>;

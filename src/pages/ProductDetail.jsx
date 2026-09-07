@@ -43,6 +43,8 @@ export default function ProductDetail() {
   const toast = useToast();
   const navigate = useNavigate();
   const [qty, setQty] = useState(1);
+  const [shot, setShot] = useState(0);
+  const gallery = product?.images ?? [];
   const tilt = usePointerTilt({ max: 6 });
 
   const offers = useMemo(() => (product ? offersFor(product) : []), [product]);
@@ -96,14 +98,32 @@ export default function ProductDetail() {
             style={tilt.style}
             className="photo-bed overflow-hidden rounded-xl border border-line"
           >
-            <ProductArt kind={product.art} material={product.material} title={product.title} className="aspect-square w-full p-10 sm:p-16" />
+            {gallery.length > 0 ? (
+              <img src={gallery[shot]} alt={product.title} className="aspect-square w-full object-cover" />
+            ) : (
+              <ProductArt kind={product.art} material={product.material} title={product.title} className="aspect-square w-full p-10 sm:p-16" />
+            )}
           </div>
           <div className="mt-3 grid grid-cols-4 gap-3">
-            {['front', 'socket', 'thread', 'pack'].map((v, i) => (
-              <div key={v} className="photo-bed grid aspect-square place-items-center rounded-md border border-line opacity-80">
-                <ProductArt kind={product.art} material={i === 3 ? 'PVC' : product.material} className="h-full w-full p-3" />
-              </div>
-            ))}
+            {gallery.length > 0
+              ? gallery.map((url, i) => (
+                  <button
+                    key={url}
+                    onClick={() => setShot(i)}
+                    aria-label={`View image ${i + 1}`}
+                    className={cx(
+                      'photo-bed grid aspect-square place-items-center overflow-hidden rounded-md border transition',
+                      i === shot ? 'border-forest ring-2 ring-forest/20' : 'border-line hover:border-ink-35'
+                    )}
+                  >
+                    <img src={url} alt="" className="h-full w-full object-cover" />
+                  </button>
+                ))
+              : ['front', 'socket', 'thread', 'pack'].map((v, i) => (
+                  <div key={v} className="photo-bed grid aspect-square place-items-center rounded-md border border-line opacity-80">
+                    <ProductArt kind={product.art} material={i === 3 ? 'PVC' : product.material} className="h-full w-full p-3" />
+                  </div>
+                ))}
           </div>
         </div>
 

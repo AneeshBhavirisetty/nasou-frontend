@@ -84,7 +84,7 @@ export const footerColumns = [
     links: [
       { label: 'About Nasou', to: '/about' },
       { label: 'Contact', to: '/contact' },
-      { label: 'Trade enquiries', to: '/contact' },
+      { label: 'Trade enquiries', to: '/enquiry' },
       { label: 'Returns policy', to: '/returns' },
     ],
   },

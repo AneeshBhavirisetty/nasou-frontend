@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom';
 import CartDrawer from './components/CartDrawer';
 import RoleSwitch from './components/admin/RoleSwitch';
+import ChatWidget from './components/chat/ChatWidget';
 import Home from './pages/Home';
 import Shop from './pages/Shop';
 import ProductDetail from './pages/ProductDetail';
@@ -9,6 +10,8 @@ import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import OrderConfirmed from './pages/OrderConfirmed';
 import Deals from './pages/Deals';
+import Enquiry from './pages/Enquiry';
+import Invoice from './pages/Invoice';
 import Wishlist from './pages/Wishlist';
 import Orders from './pages/Orders';
 import Info from './pages/Info';
@@ -26,6 +29,7 @@ import AdminProducts from './pages/admin/Products';
 import AdminUsers from './pages/admin/Users';
 import AdminOrders from './pages/admin/Orders';
 import AdminDiscounts from './pages/admin/Discounts';
+import AdminRetailers from './pages/admin/Retailers';
 import AuthLayout from './layouts/AuthLayout';
 import PublicLayout from './layouts/PublicLayout';
 import ProtectedLayout from './layouts/ProtectedLayout';
@@ -55,6 +59,8 @@ export default function App() {
           <Route path="/wishlist" element={<Wishlist />} />
           <Route path="/about" element={<Info slug="about" />} />
           <Route path="/contact" element={<Info slug="contact" />} />
+          <Route path="/enquiry" element={<Enquiry />} />
+          <Route path="/invoice/:id" element={<Invoice />} />
           <Route path="/returns" element={<Info slug="returns" />} />
           <Route path="/unauthorized" element={<Unauthorized />} />
           <Route path="*" element={<NotFound />} />
@@ -78,12 +84,14 @@ export default function App() {
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin/products" element={<AdminProducts />} />
           <Route path="/admin/discounts" element={<AdminDiscounts />} />
+          <Route path="/admin/retailers" element={<AdminRetailers />} />
           <Route path="/admin/users" element={<AdminUsers />} />
           <Route path="/admin/orders" element={<AdminOrders />} />
           <Route path="/admin/catalog/import" element={<AdminCatalogImport />} />
         </Route>
       </Routes>
       <CartDrawer />
+      <ChatWidget />
       <RoleSwitch />
     </>
   );

@@ -27,12 +27,21 @@ export default function ProductCard({ product, compact = false }) {
       <div className="relative">
         <Link to={to} className="block">
           <div className={cx('photo-bed relative overflow-hidden', compact ? 'aspect-square' : 'aspect-[5/4]')}>
-            <ProductArt
-              kind={product.art}
-              material={product.material}
-              title={product.title}
-              className="absolute inset-0 h-full w-full p-6 transition-transform duration-500 ease-out group-hover:scale-105"
-            />
+            {product.images?.[0] ? (
+              <img
+                src={product.images[0]}
+                alt={product.title}
+                loading="lazy"
+                className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+              />
+            ) : (
+              <ProductArt
+                kind={product.art}
+                material={product.material}
+                title={product.title}
+                className="absolute inset-0 h-full w-full p-6 transition-transform duration-500 ease-out group-hover:scale-105"
+              />
+            )}
           </div>
         </Link>
 

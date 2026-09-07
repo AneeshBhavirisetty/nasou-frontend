@@ -6,7 +6,7 @@ import Logo from './Logo';
 import ProductArt from './ProductArt';
 import { Badge } from './ui';
 import { categories, searchProducts } from '../data/catalog';
-import { announcements, primaryNav } from '../data/site';
+import { announcements } from '../data/site';
 import { money, cx } from '../lib/format';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
@@ -305,13 +305,17 @@ export default function Header() {
               Categories
               <Icon name="chevronDown" size={14} className={cx('transition', mega && 'rotate-180')} />
             </button>
-            {primaryNav.slice(1, 4).map((n) => (
-              <Link key={n.label} to={n.to} className="flex h-9 items-center rounded-md px-3 text-[14px] font-medium text-ink-70 transition hover:text-ink">
-                {n.label}
-              </Link>
-            ))}
             <Link to="/deals" className="flex h-9 items-center gap-1.5 rounded-md px-3 text-[14px] font-semibold text-clay-600 transition hover:text-clay">
               <Icon name="tag" size={14} /> Deals
+            </Link>
+            <Link to="/contact" className="flex h-9 items-center rounded-md px-3 text-[14px] font-medium text-ink-70 transition hover:text-ink">
+              Contact us
+            </Link>
+            <Link
+              to="/enquiry"
+              className="sheen ml-1 flex h-9 items-center gap-1.5 rounded-md border border-forest bg-forest px-3.5 text-[13.5px] font-semibold text-white transition hover:bg-forest-800"
+            >
+              <Icon name="mail" size={14} /> Enquire now
             </Link>
           </nav>
 
@@ -386,7 +390,9 @@ export default function Header() {
               </div>
               <div className="mt-3 grid grid-cols-2 gap-2">
                 <Link to="/deals" className="rounded-md border border-line px-3 py-2.5 text-center text-[13px] font-semibold text-clay-600">Deals</Link>
+                <Link to="/contact" className="rounded-md border border-line px-3 py-2.5 text-center text-[13px] font-semibold text-ink-70">Contact us</Link>
                 <Link to="/login" className="rounded-md border border-line px-3 py-2.5 text-center text-[13px] font-semibold text-ink-70">Sign in</Link>
+                <Link to="/enquiry" className="rounded-md border border-forest bg-forest px-3 py-2.5 text-center text-[13px] font-semibold text-white">Enquire now</Link>
               </div>
             </div>
           </motion.div>
