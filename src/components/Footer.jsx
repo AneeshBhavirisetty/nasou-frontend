@@ -62,10 +62,10 @@ export default function Footer() {
               {footerColumns.map((col) => (
                 <div key={col.title}>
                   <h3 className="mb-3.5 text-[11.5px] font-bold uppercase tracking-[0.12em] text-white/45">{col.title}</h3>
-                  <ul className="space-y-2.5">
+                  <ul className="space-y-1">
                     {col.links.map((l) => (
                       <li key={l.label}>
-                        <Link to={l.to} className="text-[13px] text-white/70 transition hover:text-white">{l.label}</Link>
+                        <Link to={l.to} className="-my-0.5 inline-block py-1.5 text-[13px] text-white/70 transition hover:text-white">{l.label}</Link>
                       </li>
                     ))}
                   </ul>

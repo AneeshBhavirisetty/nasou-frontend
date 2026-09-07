@@ -249,7 +249,7 @@ export default function Shop() {
             <motion.div
               initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 34, stiffness: 320 }}
-              className="fixed inset-x-0 bottom-0 z-[61] max-h-[86vh] overflow-y-auto rounded-t-xl bg-white p-5 lg:hidden"
+              className="fixed inset-x-0 bottom-0 z-[61] max-h-[86dvh] overflow-y-auto rounded-t-xl bg-white p-5 lg:hidden"
             >
               <div className="mb-2 flex items-center justify-between">
                 <h2 className="text-[17px] font-bold">Filters</h2>

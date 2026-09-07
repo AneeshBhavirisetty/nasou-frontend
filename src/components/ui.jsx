@@ -293,7 +293,7 @@ export function Breadcrumbs({ items = [], className = '' }) {
         return (
           <span key={i} className="flex items-center gap-1.5">
             {it.to && !last ? (
-              <Link to={it.to} className="transition hover:text-ink">{it.label}</Link>
+              <Link to={it.to} className="-my-1 inline-block py-1 transition hover:text-ink">{it.label}</Link>
             ) : (
               <span className={last ? 'font-semibold text-ink' : ''}>{it.label}</span>
             )}

@@ -70,10 +70,19 @@
   html {
     -webkit-font-smoothing: antialiased;
     scroll-behavior: smooth;
+    /* Chrome Android inflates text in narrow blocks without this. */
     text-size-adjust: 100%;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /* Touch: kill the grey tap flash and the legacy click delay. */
+  a, button, [role="button"], label, summary, input, select, textarea {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
   }
 
   body {
+    min-height: 100dvh;
     background: var(--color-canvas);
     color: var(--color-ink);
     font-family: var(--font-sans);

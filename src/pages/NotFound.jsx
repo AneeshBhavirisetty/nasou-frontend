@@ -3,7 +3,7 @@ import ProductArt from '../components/ProductArt';
 
 export default function NotFound() {
   return (
-    <Container className="flex min-h-[60vh] flex-col items-center justify-center py-16 text-center">
+    <Container className="flex min-h-[60dvh] flex-col items-center justify-center py-16 text-center">
       <div className="photo-bed grid h-32 w-32 place-items-center rounded-xl">
         <ProductArt kind="cap" material="PVC" className="h-full w-full p-5" />
       </div>

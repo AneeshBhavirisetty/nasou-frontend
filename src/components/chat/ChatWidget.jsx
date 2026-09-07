@@ -291,7 +291,7 @@ export default function ChatWidget() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.96 }}
             transition={{ duration: 0.22, ease: EASE }}
-            className="fixed bottom-20 right-4 z-[190] flex h-[min(70vh,470px)] w-[calc(100vw-2rem)] max-w-[360px] flex-col overflow-hidden rounded-xl border border-line bg-white shadow-pop sm:bottom-24 sm:right-6"
+            className="fixed bottom-20 right-4 z-[190] flex h-[min(70dvh,470px)] w-[calc(100vw-2rem)] max-w-[360px] flex-col overflow-hidden rounded-xl border border-line bg-white shadow-pop sm:bottom-24 sm:right-6"
             role="dialog"
             aria-label={isAdmin ? 'Support inbox' : 'Chat with Nasou support'}
           >

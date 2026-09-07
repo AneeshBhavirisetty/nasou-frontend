@@ -39,7 +39,7 @@ export default function Enquiry() {
 
   if (sent) {
     return (
-      <Container className="flex min-h-[60vh] items-center justify-center py-16">
+      <Container className="flex min-h-[60dvh] items-center justify-center py-16">
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}

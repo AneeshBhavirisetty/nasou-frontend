@@ -45,7 +45,7 @@ export default function RoleSwitch() {
       </AnimatePresence>
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1.5 rounded-full border border-line bg-white px-3 py-1.5 text-[11.5px] font-bold text-ink-70 shadow-lift"
+        className="flex h-9 items-center gap-1.5 rounded-full border border-line bg-white px-3.5 text-[11.5px] font-bold text-ink-70 shadow-lift"
       >
         <span className="h-1.5 w-1.5 rounded-full bg-emerald" />
         DEMO · {role || 'guest'}

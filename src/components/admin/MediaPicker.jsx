@@ -118,7 +118,7 @@ export default function MediaPicker({ open, onClose, selected = [], max = MAX_IM
               <div className="mt-4"><Button size="sm" icon="upload" onClick={() => setTab('upload')}>Upload the first image</Button></div>
             </div>
           ) : (
-            <div className="grid max-h-[46vh] grid-cols-3 gap-2.5 overflow-y-auto pr-1 sm:grid-cols-4">
+            <div className="grid max-h-[46dvh] grid-cols-3 gap-2.5 overflow-y-auto pr-1 sm:grid-cols-4">
               {library.map((rec) => {
                 const on = isPicked(rec.url);
                 const order = picked.indexOf(rec.url) + 1;

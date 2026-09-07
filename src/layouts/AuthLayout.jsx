@@ -54,7 +54,7 @@ function BrandPanel() {
 
 export default function AuthLayout() {
   return (
-    <div className="grid min-h-screen lg:grid-cols-[1.05fr_1fr]">
+    <div className="grid min-h-dvh lg:grid-cols-[1.05fr_1fr]">
       <BrandPanel />
       <div className="relative flex flex-col items-center justify-center bg-canvas px-4 py-10 sm:px-8">
         <Link to="/" className="mb-8 text-forest lg:hidden"><Logo /></Link>

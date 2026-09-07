@@ -83,7 +83,7 @@ export default function AdminUsers() {
               <p className="truncate text-[11.5px] text-ink-50">{u.email} · {u.phone}</p>
             </div>
             <span className="ml-auto text-[11.5px] text-ink-35">Joined {u.joined}</span>
-            <button onClick={() => cycleRole(u.id)} title="Cycle role">
+            <button onClick={() => cycleRole(u.id)} title="Cycle role" aria-label={`Change role for ${u.fullName}`} className="-m-2 p-2">
               <Badge tone={ROLE_TONE[u.role]} className="cursor-pointer">{u.role}</Badge>
             </button>
           </motion.div>

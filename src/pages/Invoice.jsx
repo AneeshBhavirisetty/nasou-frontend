@@ -13,7 +13,7 @@ export default function Invoice() {
 
   if (!order) {
     return (
-      <Container className="flex min-h-[60vh] items-center justify-center py-16">
+      <Container className="flex min-h-[60dvh] items-center justify-center py-16">
         <div className="w-full max-w-md rounded-xl border border-line bg-white p-8 text-center shadow-card">
           <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-amber-50 text-amber">
             <Icon name="fileText" size={24} />

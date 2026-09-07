@@ -29,7 +29,6 @@ import AdminProducts from './pages/admin/Products';
 import AdminUsers from './pages/admin/Users';
 import AdminOrders from './pages/admin/Orders';
 import AdminDiscounts from './pages/admin/Discounts';
-import AdminRetailers from './pages/admin/Retailers';
 import AuthLayout from './layouts/AuthLayout';
 import PublicLayout from './layouts/PublicLayout';
 import ProtectedLayout from './layouts/ProtectedLayout';
@@ -84,7 +83,6 @@ export default function App() {
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin/products" element={<AdminProducts />} />
           <Route path="/admin/discounts" element={<AdminDiscounts />} />
-          <Route path="/admin/retailers" element={<AdminRetailers />} />
           <Route path="/admin/users" element={<AdminUsers />} />
           <Route path="/admin/orders" element={<AdminOrders />} />
           <Route path="/admin/catalog/import" element={<AdminCatalogImport />} />

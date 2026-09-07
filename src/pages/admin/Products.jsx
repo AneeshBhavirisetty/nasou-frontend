@@ -9,14 +9,13 @@ import { Badge, Button, Field } from '../../components/ui';
 import { useToast } from '../../context/ToastContext';
 import { useAdminStore } from '../../context/AdminStore';
 import { catalogBase as CATALOG, categories, categoryName } from '../../data/catalog';
-import { baseRetailers } from '../../data/retailers';
 import { money, cx } from '../../lib/format';
 
 const PAGE = 20;
 
 export default function AdminProducts() {
   const toast = useToast();
-  const { products: rows, retailers: extraRetailers, dirty, setStock, saveProduct, deleteProduct, reset } = useAdminStore();
+  const { products: rows, dirty, setStock, saveProduct, deleteProduct, reset } = useAdminStore();
   const [q, setQ] = useState('');
   const [cat, setCat] = useState('');
   const [page, setPage] = useState(1);
@@ -144,7 +143,6 @@ export default function AdminProducts() {
           key={editing?.id ?? 'new'}
           open
           product={editing}
-          retailers={[...extraRetailers, ...baseRetailers]}
           onClose={() => setEditing(undefined)}
           onSave={onSave}
         />
@@ -168,7 +166,7 @@ function StockCell({ value, onChange }) {
 
   return (
     <div className="flex items-center gap-1">
-      <button onClick={() => nudge(-1)} className="grid h-7 w-7 shrink-0 place-items-center rounded border border-line text-ink-50 hover:text-ink" aria-label="Decrease stock by 1">
+      <button onClick={() => nudge(-1)} className="grid h-9 w-9 shrink-0 place-items-center rounded border border-line text-ink-50 transition hover:text-ink sm:h-7 sm:w-7" aria-label="Decrease stock by 1">
         <Icon name="minus" size={12} />
       </button>
       <input
@@ -186,11 +184,11 @@ function StockCell({ value, onChange }) {
           if (e.key === 'ArrowDown') { e.preventDefault(); nudge(e.shiftKey ? -10 : -1); }
         }}
         className={cx(
-          'tnum h-7 w-16 rounded border bg-white text-center text-[13px] font-bold outline-none transition focus:border-emerald focus:ring-2 focus:ring-emerald/15',
+          'tnum h-9 w-16 rounded border bg-white text-center text-[13px] font-bold outline-none transition focus:border-emerald focus:ring-2 focus:ring-emerald/15 sm:h-7',
           value === 0 && !editing ? 'border-clay/40 text-clay' : 'border-line'
         )}
       />
-      <button onClick={() => nudge(1)} className="grid h-7 w-7 shrink-0 place-items-center rounded border border-line text-ink-50 hover:text-ink" aria-label="Increase stock by 1">
+      <button onClick={() => nudge(1)} className="grid h-9 w-9 shrink-0 place-items-center rounded border border-line text-ink-50 transition hover:text-ink sm:h-7 sm:w-7" aria-label="Increase stock by 1">
         <Icon name="plus" size={12} />
       </button>
     </div>

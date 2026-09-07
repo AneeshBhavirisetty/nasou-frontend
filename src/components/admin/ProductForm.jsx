@@ -5,7 +5,7 @@ import Icon from '../Icon';
 import MediaPicker from './MediaPicker';
 import { Badge, Button, Field } from '../ui';
 import { categories } from '../../data/catalog';
-import { baseRetailers } from '../../data/retailers';
+import { retailerForName, retailerIdForName } from '../../data/retailers';
 import { MAX_IMAGES_PER_PRODUCT, MIN_IMAGES_PER_PRODUCT } from '../../lib/mediaStore';
 import { discount as pctOff, money, cx } from '../../lib/format';
 
@@ -14,17 +14,17 @@ const MATERIALS = ['PVC', 'uPVC', 'cPVC'];
 
 const blank = {
   name: '', sku: '', category: 'pvc-fittings', material: 'PVC', art: 'coupling',
-  size: '', retailerId: baseRetailers[0]?.id || '', price: '', mrp: '', stock: '', images: [],
+  size: '', supplierName: '', price: '', mrp: '', stock: '', images: [],
 };
 
-export default function ProductForm({ open, product, onClose, onSave, retailers = baseRetailers }) {
+export default function ProductForm({ open, product, onClose, onSave }) {
   const [f, setF] = useState(() =>
     product
       ? {
           ...blank, ...product,
           price: String(product.price ?? ''), mrp: String(product.mrp ?? ''), stock: String(product.stock ?? ''),
           images: product.images ?? [],
-          retailerId: product.retailerId || blank.retailerId,
+          supplierName: product.supplierName || '',
         }
       : blank
   );
@@ -35,7 +35,10 @@ export default function ProductForm({ open, product, onClose, onSave, retailers 
 
   const price = Number(f.price) || 0;
   const mrp = Number(f.mrp) || 0;
-  const retailer = retailers.find((r) => r.id === f.retailerId) || retailers[0];
+  /* Retailer is schema-only — resolved from the brand name, never picked in the UI.
+     Unknown brands stay unassigned for the backend to mint an id on onboarding. */
+  const brand = f.supplierName.trim();
+  const retailer = retailerForName(brand);
 
   const submit = (e) => {
     e.preventDefault();
@@ -47,7 +50,6 @@ export default function ProductForm({ open, product, onClose, onSave, retailers 
     /* Mandatory on new products; legacy catalogue rows without images stay editable
        (they fall back to the generated illustration). */
     if (isNew && f.images.length < MIN_IMAGES_PER_PRODUCT) return setErr(`Attach at least ${MIN_IMAGES_PER_PRODUCT} product image.`);
-    if (!f.retailerId) return setErr('Pick the retailer this product belongs to.');
 
     const isPipe = /pipe/.test(f.category) || f.art === 'pipe';
     const isAcc = f.category === 'plumbing-accessories';
@@ -60,17 +62,17 @@ export default function ProductForm({ open, product, onClose, onSave, retailers 
       name: f.name.trim(),
       title: f.size ? `${f.name.trim()} · ${f.size.trim()}` : f.name.trim(),
       variantLabel: [f.material, f.size].filter(Boolean).join(' · '),
-      description: product?.description || `${f.material} ${f.name.trim().toLowerCase()}${f.size ? ` in ${f.size.trim()}` : ''}, from ${retailer?.name || 'Nasou'}.`,
+      description: product?.description || `${f.material} ${f.name.trim().toLowerCase()}${f.size ? ` in ${f.size.trim()}` : ''}, from ${brand || 'Nasou'}.`,
       material: f.material,
       form: isPipe ? 'Pipes' : isAcc ? 'Accessories' : 'Fittings',
       kind: f.art,
       art: f.art,
       size: f.size.trim(),
       sizeRaw: f.size.trim(),
-      retailerId: f.retailerId,
-      supplier: retailer?.slug || 'nasou',
-      supplierName: retailer?.name || 'Nasou',
-      supplierTier: retailer?.tier || 'value',
+      retailerId: retailer?.id || product?.retailerId || retailerIdForName(brand),
+      supplier: retailer?.slug || (brand ? brand.toLowerCase().replace(/[^a-z0-9]+/g, '-') : 'nasou'),
+      supplierName: brand || 'Nasou',
+      supplierTier: retailer?.tier || product?.supplierTier || 'value',
       category: f.category,
       price: Math.round(price),
       mrp: Math.round(finalMrp),
@@ -102,7 +104,7 @@ export default function ProductForm({ open, product, onClose, onSave, retailers 
               <p className="text-[12px] text-ink-50">
                 {money(price)}{mrp > price ? ` · ${pctOff(price, mrp)}% off` : ''} · {f.stock || 0} in stock
               </p>
-              {f.retailerId && <p className="mt-0.5 font-mono text-[11px] text-ink-35">{f.retailerId} · {retailer?.name}</p>}
+              {brand && <p className="mt-0.5 text-[11px] text-ink-35">{brand}</p>}
             </div>
           </div>
 
@@ -156,14 +158,6 @@ export default function ProductForm({ open, product, onClose, onSave, retailers 
             <Field label="Product name" value={f.name} onChange={(e) => set('name')(e.target.value)} placeholder="e.g. cPVC Elbow" required />
             <Field label="Product code (SKU)" value={f.sku} onChange={(e) => set('sku')(e.target.value.toUpperCase())} placeholder="e.g. PL009999" required />
 
-            <label className="block sm:col-span-2">
-              <span className="mb-1.5 block text-[12.5px] font-semibold text-ink-70">
-                Retailer <span className="font-mono text-[11px] text-ink-35">({f.retailerId || 'unassigned'})</span>
-              </span>
-              <select value={f.retailerId} onChange={(e) => set('retailerId')(e.target.value)} className="h-11 w-full rounded-md border border-line bg-white px-3 text-[14px] outline-none focus:border-emerald focus:ring-2 focus:ring-emerald/15">
-                {retailers.map((r) => <option key={r.id} value={r.id}>{r.id} — {r.name}</option>)}
-              </select>
-            </label>
 
             <label className="block">
               <span className="mb-1.5 block text-[12.5px] font-semibold text-ink-70">Category</span>
@@ -180,6 +174,7 @@ export default function ProductForm({ open, product, onClose, onSave, retailers 
             </label>
 
             <Field label="Size" value={f.size} onChange={(e) => set('size')(e.target.value)} placeholder="e.g. 3/4 inch" />
+            <Field label="Brand / supplier" value={f.supplierName} onChange={(e) => set('supplierName')(e.target.value)} placeholder="e.g. Astral" />
 
             <label className="block">
               <span className="mb-1.5 block text-[12.5px] font-semibold text-ink-70">Fallback illustration</span>

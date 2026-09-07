@@ -4,7 +4,7 @@ import Icon from '../Icon';
 import { Badge, Button } from '../ui';
 import { useToast } from '../../context/ToastContext';
 import { categories } from '../../data/catalog';
-import { baseRetailers } from '../../data/retailers';
+import { retailerForName, retailerIdForName } from '../../data/retailers';
 import { downloadSheet } from '../../lib/exportSheet';
 import { discount as pctOff, cx } from '../../lib/format';
 
@@ -22,7 +22,7 @@ const SCHEMA = [
   { key: 'category', label: 'category', required: true, hint: categories.map((c) => c.slug).join(' | ') },
   { key: 'material', label: 'material', required: true, hint: 'PVC | uPVC | cPVC' },
   { key: 'size', label: 'size', required: false, hint: 'e.g. 3/4 inch' },
-  { key: 'retailerId', label: 'retailerId', required: true, hint: 'RTL-0001 …' },
+  { key: 'brand', label: 'brand', required: false, hint: 'Supplier / brand name' },
   { key: 'price', label: 'price', required: true, hint: 'Selling price, number' },
   { key: 'mrp', label: 'mrp', required: false, hint: 'Blank = price + 15%' },
   { key: 'stock', label: 'stock', required: false, hint: 'Opening quantity' },
@@ -32,7 +32,6 @@ const SCHEMA = [
 
 const MATERIALS = { pvc: 'PVC', upvc: 'uPVC', cpvc: 'cPVC' };
 const CAT_SLUGS = new Set(categories.map((c) => c.slug));
-const RETAILER_IDS = new Set(baseRetailers.map((r) => r.id));
 
 /* RFC-4180-ish CSV parser: quotes, escaped quotes, embedded newlines. */
 function parseCsv(text) {
@@ -76,7 +75,8 @@ function validate(raw, existingSkus) {
     const name = String(r.name || '').trim();
     const category = String(r.category || '').trim();
     const material = MATERIALS[String(r.material || '').trim().toLowerCase()] || '';
-    const retailerId = String(r.retailerId || '').trim().toUpperCase();
+    const brand = String(r.brand || '').trim();
+    const retailer = retailerForName(brand);
     const price = Math.round(Number(String(r.price || '').replace(/[^\d.]/g, '')) || 0);
     const mrpRaw = Math.round(Number(String(r.mrp || '').replace(/[^\d.]/g, '')) || 0);
     const stock = Math.max(0, Math.round(Number(String(r.stock || '').replace(/\D/g, '')) || 0));
@@ -88,7 +88,6 @@ function validate(raw, existingSkus) {
     if (!name) errors.push('name missing');
     if (!CAT_SLUGS.has(category)) errors.push('unknown category');
     if (!material) errors.push('material must be PVC / uPVC / cPVC');
-    if (!RETAILER_IDS.has(retailerId)) errors.push('unknown retailerId');
     if (price <= 0) errors.push('price must be > 0');
     if (mrpRaw && mrpRaw < price) errors.push('mrp below price');
 
@@ -109,10 +108,11 @@ function validate(raw, existingSkus) {
         art: String(r.art || 'coupling').trim().toLowerCase(),
         size: String(r.size || '').trim(),
         sizeRaw: String(r.size || '').trim(),
-        retailerId,
-        supplier: baseRetailers.find((x) => x.id === retailerId)?.slug || 'nasou',
-        supplierName: baseRetailers.find((x) => x.id === retailerId)?.name || 'Nasou',
-        supplierTier: baseRetailers.find((x) => x.id === retailerId)?.tier || 'value',
+        /* Schema-only: resolved from the brand, never entered by hand. */
+        retailerId: retailer?.id || retailerIdForName(brand),
+        supplier: retailer?.slug || (brand ? brand.toLowerCase().replace(/[^a-z0-9]+/g, '-') : 'nasou'),
+        supplierName: retailer?.name || brand || 'Nasou',
+        supplierTier: retailer?.tier || 'value',
         category, price, mrp,
         discount: pctOff(price, mrp),
         stock,
@@ -133,13 +133,12 @@ export default function BulkImportDialog({ open, onClose, existingSkus = new Set
   const reset = () => { setFile(null); setParsed(null); };
 
   const template = () => {
-    const r = baseRetailers[0]?.id || 'RTL-0001';
     downloadSheet(
       'nasou-product-import-template.csv',
       SCHEMA.map((c) => c.label),
       [
-        ['PL900001', 'cPVC Elbow', 'cpvc-fittings', 'cPVC', '3/4 inch', r, '92', '120', '250', 'elbow', ''],
-        ['PL900002', 'PVC Ball Valve', 'plumbing-accessories', 'PVC', '1 inch', r, '340', '430', '60', 'valve', ''],
+        ['PL900001', 'cPVC Elbow', 'cpvc-fittings', 'cPVC', '3/4 inch', 'Astral', '92', '120', '250', 'elbow', ''],
+        ['PL900002', 'PVC Ball Valve', 'plumbing-accessories', 'PVC', '1 inch', 'Star', '340', '430', '60', 'valve', ''],
       ]
     );
     toast.success('Template downloaded — fill it in and upload');
@@ -208,12 +207,12 @@ export default function BulkImportDialog({ open, onClose, existingSkus = new Set
               <p className="text-[12.5px] font-bold uppercase tracking-wider text-ink-35">Expected columns</p>
               <Button size="sm" variant="outline" icon="external" onClick={template}>Download template</Button>
             </div>
-            <div className="grid gap-x-4 gap-y-1 sm:grid-cols-2">
+            <div className="grid gap-x-4 gap-y-1.5 sm:grid-cols-2">
               {SCHEMA.map((c) => (
-                <p key={c.key} className="flex items-baseline gap-2 text-[12px]">
-                  <span className="font-mono font-bold text-ink-70">{c.label}</span>
-                  {c.required && <span className="text-clay">*</span>}
-                  <span className="truncate text-ink-35">{c.hint}</span>
+                <p key={c.key} className="flex min-w-0 items-baseline gap-2 text-[12px]">
+                  <span className="shrink-0 font-mono font-bold text-ink-70">{c.label}</span>
+                  {c.required && <span className="shrink-0 text-clay">*</span>}
+                  <span className="min-w-0 flex-1 break-words text-ink-35">{c.hint}</span>
                 </p>
               ))}
             </div>
@@ -228,7 +227,7 @@ export default function BulkImportDialog({ open, onClose, existingSkus = new Set
             <button onClick={reset} className="ml-auto text-[12.5px] font-semibold text-emerald-600">Choose another file</button>
           </div>
 
-          <div className="max-h-[42vh] overflow-y-auto rounded-lg border border-line">
+          <div className="max-h-[42dvh] overflow-y-auto rounded-lg border border-line">
             {parsed.rows.map((r) => (
               <div
                 key={r.line}
@@ -240,7 +239,7 @@ export default function BulkImportDialog({ open, onClose, existingSkus = new Set
                 <span className="tnum w-8 shrink-0 text-[11px] text-ink-35">#{r.line}</span>
                 <span className="font-mono text-[12px] font-bold">{r.product.sku || '—'}</span>
                 <span className="min-w-0 flex-1 truncate text-[13px]">{r.product.name || '—'}</span>
-                <span className="font-mono text-[11px] text-ink-35">{r.product.retailerId || '—'}</span>
+                <span className="text-[11.5px] text-ink-35">{r.product.supplierName || '—'}</span>
                 <span className="tnum text-[12.5px] font-semibold">₹{r.product.price || 0}</span>
                 {r.errors.length === 0
                   ? <Icon name="check" size={14} className="text-emerald-600" />

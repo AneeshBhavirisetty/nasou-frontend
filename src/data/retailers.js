@@ -30,6 +30,12 @@ export const baseRetailers = seeded;
 /** Look up a retailer id from a product's supplier slug. */
 export const retailerIdForSupplier = (slug) => bySlug.get(slug)?.id ?? `${RETAILER_PREFIX}-0000`;
 
+/* The retailer mapping is schema-only for now — there is no retailer UI. The
+   admin types a brand name and we resolve the id behind the scenes; unknown
+   brands stay unassigned for the backend to mint an id on onboarding. */
+export const retailerForName = (name) => bySlug.get(slugifyRetailer(name)) ?? null;
+export const retailerIdForName = (name) => retailerForName(name)?.id ?? '';
+
 /** Mint the next free id given the retailers currently known. */
 export function nextRetailerId(existing = seeded) {
   const max = existing.reduce((m, r) => {
