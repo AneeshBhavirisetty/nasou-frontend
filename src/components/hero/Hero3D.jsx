@@ -54,7 +54,7 @@ function Elbow() {
         </mesh>
       </group>
       {/* accent collar */}
-      <mesh material={new THREE.MeshStandardMaterial({ color: '#12805c', roughness: 0.4 })} position={[1, -0.2, 0]}>
+      <mesh material={new THREE.MeshStandardMaterial({ color: '#287052', roughness: 0.4 })} position={[1, -0.2, 0]}>
         <torusGeometry args={[0.46, 0.06, 16, 48]} />
       </mesh>
     </group>
@@ -72,8 +72,8 @@ export default function Hero3D() {
       <ambientLight intensity={0.65} />
       <hemisphereLight args={['#ffffff', '#e0d5bd', 0.7]} />
       <directionalLight position={[5, 6, 4]} intensity={1.25} castShadow />
-      <directionalLight position={[-5, 2, -3]} intensity={0.5} color="#e8f3ea" />
-      <pointLight position={[0, -3, 3]} intensity={0.35} color="#12805c" />
+      <directionalLight position={[-5, 2, -3]} intensity={0.5} color="#e6ecea" />
+      <pointLight position={[0, -3, 3]} intensity={0.35} color="#287052" />
       <Suspense fallback={null}>
         <Float speed={1.4} rotationIntensity={0.25} floatIntensity={0.6}>
           <Elbow />

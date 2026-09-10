@@ -127,7 +127,7 @@ export default function Shop() {
         ))}
       </Group>
       <Group title="Price">
-        <input type="range" min={50} max={PRICE_MAX} step={50} value={maxPrice} onChange={(e) => setMaxPrice(Number(e.target.value))} className="w-full accent-[#12805c]" />
+        <input type="range" min={50} max={PRICE_MAX} step={50} value={maxPrice} onChange={(e) => setMaxPrice(Number(e.target.value))} className="w-full accent-[#287052]" />
         <div className="mt-2 flex justify-between text-[12px] text-ink-50">
           <span className="tnum">{money(50)}</span>
           <span className="tnum font-semibold text-ink">up to {money(maxPrice)}{maxPrice === PRICE_MAX ? '+' : ''}</span>

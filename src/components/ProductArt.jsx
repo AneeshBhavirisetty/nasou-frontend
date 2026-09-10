@@ -32,7 +32,7 @@ function Defs({ id, c }) {
         <stop offset="1" stopColor={c.edge} />
       </linearGradient>
       <filter id={`${id}-sh`} x="-20%" y="-20%" width="140%" height="140%">
-        <feDropShadow dx="0" dy="6" stdDeviation="7" floodColor="#101711" floodOpacity="0.14" />
+        <feDropShadow dx="0" dy="6" stdDeviation="7" floodColor="#1f3b34" floodOpacity="0.14" />
       </filter>
     </defs>
   );
@@ -151,8 +151,8 @@ const SHAPES = {
     <g filter={`url(#${id}-sh)`}>
       <rect x="52" y="82" width="96" height="44" rx="10" fill={`url(#${id}-body)`} stroke={c.edge} strokeWidth="2" />
       <circle cx="100" cy="104" r="20" fill={c.shade} stroke={c.edge} strokeWidth="2" />
-      <rect x="92" y="40" width="16" height="42" rx="4" fill="#0f6b4d" />
-      <rect x="72" y="30" width="56" height="14" rx="7" fill="#12805c" />
+      <rect x="92" y="40" width="16" height="42" rx="4" fill="#255849" />
+      <rect x="72" y="30" width="56" height="14" rx="7" fill="#287052" />
       <Socket id={id} c={c} cx={52} cy={104} rx={10} ry={22} />
       <Socket id={id} c={c} cx={148} cy={104} rx={10} ry={22} />
     </g>
@@ -193,7 +193,7 @@ export default function ProductArt({ kind = 'coupling', material = 'PVC', classN
       preserveAspectRatio="xMidYMid meet"
     >
       <Defs id={id} c={c} />
-      <ellipse cx="100" cy="176" rx="62" ry="10" fill="#101711" opacity="0.08" />
+      <ellipse cx="100" cy="176" rx="62" ry="10" fill="#1f3b34" opacity="0.08" />
       {shape(id, c)}
     </svg>
   );
