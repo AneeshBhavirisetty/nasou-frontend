@@ -3,8 +3,8 @@
 /* ============================================================
    NASOU HIVE — STOREFRONT DESIGN TOKENS
    Voice: a plumbing supplier that can prove where every fitting
-   came from. Warm neutral paper + deep forest for authority +
-   one clay accent for commerce energy. Mono type is reserved for
+   came from. Palette is the NasouHive demo's: linen paper, forest
+   #1F5C4A, sage ink, with rose/amber/sky kept for status only. Mono type is reserved for
    verifiable data (SKUs, batch ids); a classic serif (Fraunces)
    carries the big editorial headlines.
    ============================================================ */
@@ -30,16 +30,16 @@
   --color-emerald-100: #cad8d2;
   --color-emerald-50: #e6ecea;
 
-  /* Accent — clay, used only for commerce moments */
-  --color-clay: #cf5f3c;
-  --color-clay-600: #b74f2e;
-  --color-clay-50: #fdf0eb;
+  /* Alert accent — errors, deals, destructive actions (Tailwind rose) */
+  --color-clay: oklch(58.6% 0.253 17.585);
+  --color-clay-600: oklch(51.4% 0.222 16.935);
+  --color-clay-50: oklch(96.9% 0.015 12.422);
 
-  /* Data / trace voice */
-  --color-slate: #3e5c76;
-  --color-slate-50: #edf2f7;
-  --color-amber: #b8791d;
-  --color-amber-50: #fdf5e7;
+  /* Status voices — info (Tailwind sky), warning (Tailwind amber) */
+  --color-slate: oklch(50% 0.134 242.749);
+  --color-slate-50: oklch(97.7% 0.013 236.62);
+  --color-amber: oklch(55.5% 0.163 48.998);
+  --color-amber-50: oklch(98.7% 0.022 95.277);
 
   /* Type */
   --font-display: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;

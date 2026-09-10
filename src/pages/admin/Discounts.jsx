@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Icon from '../../components/Icon';
 import Modal from '../../components/Modal';
+import { AdminPageHead } from '../../components/admin/AdminUI';
 import { Badge, Button, Field } from '../../components/ui';
 import { useToast } from '../../context/ToastContext';
 import { useAdminStore, couponDiscount } from '../../context/AdminStore';
@@ -104,84 +105,102 @@ export default function AdminDiscounts() {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="display-serif text-[clamp(1.5rem,4vw,2rem)]">Discounts</h1>
-          <p className="text-[13px] text-ink-50">
-            {coupons.length} code{coupons.length !== 1 && 's'} · <span className="text-emerald-600">{active} active</span> · customers enter these at checkout
-          </p>
-        </div>
+      <AdminPageHead
+        icon="tag"
+        title="Discounts"
+        note={<>{coupons.length} code{coupons.length !== 1 && 's'} · <span className="text-emerald-600">{active} active</span> · customers enter these at checkout</>}
+      >
         <Button size="sm" icon="plus" onClick={() => setEditing(null)}>New discount code</Button>
-      </div>
+      </AdminPageHead>
 
-      <div className="overflow-hidden rounded-lg border border-line bg-white">
-        <div className="hidden grid-cols-[130px_1fr_160px_120px_90px] gap-3 border-b border-line bg-canvas px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider text-ink-35 lg:grid">
-          <span>Code</span><span>Discount</span><span>Conditions</span><span>On ₹2,000</span><span className="text-right">Actions</span>
+      {coupons.length > 0 ? (
+        <div className="grid gap-4 md:grid-cols-2">
+          <AnimatePresence initial={false}>
+            {coupons.map((c) => {
+              const p = preview(c);
+              return (
+                <motion.article
+                  key={c.id}
+                  layout
+                  initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.96 }}
+                  transition={{ duration: 0.2, ease: EASE }}
+                  className={cx(
+                    'relative flex overflow-hidden rounded-lg border bg-white shadow-card transition hover:shadow-lift',
+                    c.active ? 'border-line' : 'border-line opacity-75'
+                  )}
+                >
+                  {/* ticket stub — the headline value */}
+                  <div className={cx('relative flex w-[104px] shrink-0 flex-col items-center justify-center px-2 py-5 text-center sm:w-[120px]', c.active ? 'bg-forest text-white' : 'bg-sunk text-ink-35')}>
+                    <p className="display-serif text-[clamp(1.35rem,4vw,1.7rem)] leading-none">
+                      {c.kind === 'percent' ? `${c.value}%` : money(c.value)}
+                    </p>
+                    <p className={cx('mt-1 text-[10.5px] font-bold uppercase tracking-[0.14em]', c.active ? 'text-emerald-100' : 'text-ink-35')}>off</p>
+                    {!c.active && <Badge tone="neutral" className="mt-2 bg-white">Inactive</Badge>}
+                    {/* perforation */}
+                    <span className="absolute -right-2 -top-2 h-4 w-4 rounded-full border border-line bg-canvas" />
+                    <span className="absolute -bottom-2 -right-2 h-4 w-4 rounded-full border border-line bg-canvas" />
+                  </div>
+
+                  <div className="flex min-w-0 flex-1 flex-col border-l border-dashed border-line p-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex min-w-0 items-center gap-2">
+                        <span className={cx('truncate rounded-md border border-dashed px-2 py-0.5 font-mono text-[13.5px] font-bold', c.active ? 'border-emerald/40 bg-emerald-50 text-emerald-600' : 'border-line text-ink-35 line-through')}>
+                          {c.code}
+                        </span>
+                      </div>
+                      <div className="flex shrink-0 gap-1.5">
+                        <button
+                          onClick={() => { saveCoupon({ ...c, active: !c.active }); }}
+                          className={cx('grid h-8 w-8 place-items-center rounded-md border transition', c.active ? 'border-line text-emerald-600 hover:border-emerald' : 'border-line text-ink-35 hover:text-ink')}
+                          aria-label={c.active ? 'Deactivate' : 'Activate'}
+                          title={c.active ? 'Deactivate' : 'Activate'}
+                        >
+                          <Icon name={c.active ? 'check' : 'clock'} size={14} />
+                        </button>
+                        <button onClick={() => setEditing(c)} className="grid h-8 w-8 place-items-center rounded-md border border-line text-ink-50 transition hover:border-ink-35 hover:text-ink" aria-label="Edit">
+                          <Icon name="wrench" size={14} />
+                        </button>
+                        <button
+                          onClick={() => { if (window.confirm(`Delete code ${c.code}?`)) { deleteCoupon(c.id); toast.success('Code deleted'); } }}
+                          className="grid h-8 w-8 place-items-center rounded-md border border-line text-ink-50 transition hover:border-clay/40 hover:text-clay"
+                          aria-label="Delete"
+                        >
+                          <Icon name="trash" size={14} />
+                        </button>
+                      </div>
+                    </div>
+
+                    <p className="mt-2.5 text-[13px]">
+                      <span className="font-semibold">{scopeLabel(c.scope)}</span>
+                      {c.kind === 'percent' && c.maxDiscount > 0 && <span className="text-ink-35"> · max {money(c.maxDiscount)}</span>}
+                    </p>
+                    <p className="mt-0.5 text-[12px] text-ink-50">
+                      {c.minOrder > 0 ? `Min ${money(c.minOrder)}` : 'No minimum'}
+                      {c.expiry && <> · till {c.expiry}</>}
+                    </p>
+
+                    <div className="mt-auto flex items-center justify-between gap-2 pt-3 text-[12px]">
+                      <span className="text-ink-35">On a ₹2,000 cart</span>
+                      {p.ok
+                        ? <span className="tnum font-bold text-emerald-600">− {money(p.amount)}</span>
+                        : <span className="font-semibold text-ink-35">{p.reason}</span>}
+                    </div>
+                  </div>
+                </motion.article>
+              );
+            })}
+          </AnimatePresence>
         </div>
-        <AnimatePresence initial={false}>
-          {coupons.map((c) => {
-            const p = preview(c);
-            return (
-              <motion.div
-                key={c.id}
-                layout
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.2, ease: EASE }}
-                className="grid grid-cols-1 gap-2 border-b border-line px-4 py-3 last:border-0 lg:grid-cols-[130px_1fr_160px_120px_90px] lg:items-center lg:gap-3"
-              >
-                <div className="flex items-center gap-2">
-                  <span className={cx('font-mono text-[13px] font-bold', !c.active && 'text-ink-35 line-through')}>{c.code}</span>
-                  {!c.active && <Badge tone="neutral">Off</Badge>}
-                </div>
-                <div className="text-[13px]">
-                  <span className="font-semibold">
-                    {c.kind === 'percent' ? `${c.value}% off` : `${money(c.value)} off`}
-                  </span>
-                  <span className="text-ink-50"> · {scopeLabel(c.scope)}</span>
-                  {c.kind === 'percent' && c.maxDiscount > 0 && <span className="text-ink-35"> · max {money(c.maxDiscount)}</span>}
-                </div>
-                <div className="text-[12px] text-ink-50">
-                  {c.minOrder > 0 ? `Min ${money(c.minOrder)}` : 'No minimum'}
-                  {c.expiry && <> · till {c.expiry}</>}
-                </div>
-                <div className="text-[13px] font-bold">
-                  {p.ok ? <span className="text-emerald-600">− {money(p.amount)}</span> : <span className="text-ink-35">{p.reason}</span>}
-                </div>
-                <div className="flex gap-1.5 lg:justify-end">
-                  <button
-                    onClick={() => { saveCoupon({ ...c, active: !c.active }); }}
-                    className={cx('grid h-8 w-8 place-items-center rounded-md border transition', c.active ? 'border-line text-emerald-600 hover:border-emerald' : 'border-line text-ink-35 hover:text-ink')}
-                    aria-label={c.active ? 'Deactivate' : 'Activate'}
-                    title={c.active ? 'Deactivate' : 'Activate'}
-                  >
-                    <Icon name={c.active ? 'check' : 'clock'} size={14} />
-                  </button>
-                  <button onClick={() => setEditing(c)} className="grid h-8 w-8 place-items-center rounded-md border border-line text-ink-50 transition hover:border-ink-35 hover:text-ink" aria-label="Edit">
-                    <Icon name="wrench" size={14} />
-                  </button>
-                  <button
-                    onClick={() => { if (window.confirm(`Delete code ${c.code}?`)) { deleteCoupon(c.id); toast.success('Code deleted'); } }}
-                    className="grid h-8 w-8 place-items-center rounded-md border border-line text-ink-50 transition hover:border-clay/40 hover:text-clay"
-                    aria-label="Delete"
-                  >
-                    <Icon name="trash" size={14} />
-                  </button>
-                </div>
-              </motion.div>
-            );
-          })}
-        </AnimatePresence>
-        {coupons.length === 0 && (
-          <div className="px-4 py-12 text-center">
-            <span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-sunk text-ink-35"><Icon name="tag" size={22} /></span>
-            <p className="mt-3 text-[13px] text-ink-50">No discount codes yet.</p>
-            <div className="mt-4"><Button size="sm" icon="plus" onClick={() => setEditing(null)}>Create your first code</Button></div>
-          </div>
-        )}
-      </div>
+      ) : (
+        <div className="rounded-lg border border-dashed border-line bg-white/60 px-4 py-12 text-center">
+          <span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-sunk text-ink-35"><Icon name="tag" size={22} /></span>
+          <p className="mt-3 text-[13px] text-ink-50">No discount codes yet.</p>
+          <div className="mt-4"><Button size="sm" icon="plus" onClick={() => setEditing(null)}>Create your first code</Button></div>
+        </div>
+      )}
 
       <p className="flex items-center gap-2 text-[12px] text-ink-35">
-        <Icon name="tag" size={13} /> The “On ₹2,000” column previews the discount for a sample cart. Codes apply on the cart subtotal at checkout.
+        <Icon name="tag" size={13} /> “On a ₹2,000 cart” previews the discount for a sample cart. Codes apply on the cart subtotal at checkout.
       </p>
 
       {editing !== undefined && (

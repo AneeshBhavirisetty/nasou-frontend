@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import Icon from '../components/Icon';
+import { AdminPageHead } from '../components/admin/AdminUI';
 import { Button } from '../components/ui';
 import { useToast } from '../context/ToastContext';
 import { products, categories } from '../data/catalog';
@@ -38,19 +39,16 @@ export default function AdminCatalogImport() {
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="display-serif text-[clamp(1.5rem,4vw,2rem)]">Catalogue import</h1>
-        <p className="text-[13px] text-ink-50">Upsert product metadata from a supplier workbook.</p>
-      </div>
+      <AdminPageHead icon="layers" title="Catalogue import" note="Upsert product metadata from a supplier workbook." />
 
-      <div className="max-w-2xl rounded-lg border border-line bg-white p-5 sm:p-6">
+      <div className="max-w-2xl rounded-lg border border-line bg-white p-5 shadow-card sm:p-6">
         <label
           onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
           onDragLeave={() => setDrag(false)}
           onDrop={(e) => { e.preventDefault(); setDrag(false); take(e.dataTransfer.files?.[0]); }}
           className={cx(
             'flex cursor-pointer flex-col items-center rounded-lg border-2 border-dashed px-6 py-10 text-center transition',
-            drag ? 'border-emerald bg-emerald-50/50' : 'border-line hover:border-ink-35'
+            drag ? 'border-emerald bg-emerald-50/50' : 'border-line bg-canvas/40 hover:border-emerald/50 hover:bg-emerald-50/30'
           )}
         >
           <span className="grid h-12 w-12 place-items-center rounded-full bg-emerald-50 text-emerald-600">

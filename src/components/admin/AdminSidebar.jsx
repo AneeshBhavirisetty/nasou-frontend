@@ -15,24 +15,34 @@ export default function AdminSidebar() {
   return (
     <>
       {/* desktop rail */}
-      <aside className="hidden w-52 shrink-0 lg:block">
-        <div className="sticky top-[100px] space-y-1">
-          <p className="eyebrow mb-2 px-3">Admin</p>
-          {NAV.map((n) => (
-            <NavLink
-              key={n.to}
-              to={n.to}
-              className={({ isActive }) =>
-                cx(
-                  'flex items-center gap-2.5 rounded-md px-3 py-2 text-[13.5px] font-semibold transition',
-                  isActive ? 'bg-forest text-white' : 'text-ink-70 hover:bg-sunk hover:text-ink'
-                )
-              }
-            >
-              <Icon name={n.icon} size={16} />
-              {n.label}
-            </NavLink>
-          ))}
+      <aside className="hidden w-56 shrink-0 lg:block">
+        <div className="sticky top-[100px] rounded-lg border border-line bg-white/80 p-2.5 shadow-card backdrop-blur">
+          <div className="mb-2 flex items-center gap-2.5 border-b border-line px-2 pb-3 pt-1.5">
+            <span className="grid h-9 w-9 place-items-center rounded-md bg-forest text-white">
+              <Icon name="shieldCheck" size={17} />
+            </span>
+            <div className="leading-tight">
+              <p className="text-[13.5px] font-bold">Admin</p>
+              <p className="text-[11px] text-ink-35">Store console</p>
+            </div>
+          </div>
+          <nav className="space-y-1">
+            {NAV.map((n) => (
+              <NavLink
+                key={n.to}
+                to={n.to}
+                className={({ isActive }) =>
+                  cx(
+                    'flex items-center gap-2.5 rounded-md px-3 py-2.5 text-[13.5px] font-semibold transition',
+                    isActive ? 'bg-forest text-white shadow-card' : 'text-ink-70 hover:bg-sunk hover:text-ink'
+                  )
+                }
+              >
+                <Icon name={n.icon} size={16} />
+                {n.label}
+              </NavLink>
+            ))}
+          </nav>
         </div>
       </aside>
 
@@ -45,7 +55,7 @@ export default function AdminSidebar() {
             className={({ isActive }) =>
               cx(
                 'flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12.5px] font-semibold transition',
-                isActive ? 'border-forest bg-forest text-white' : 'border-line text-ink-70'
+                isActive ? 'border-forest bg-forest text-white shadow-card' : 'border-line bg-white text-ink-70'
               )
             }
           >

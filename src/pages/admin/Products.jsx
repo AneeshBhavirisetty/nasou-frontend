@@ -5,7 +5,8 @@ import ProductArt from '../../components/ProductArt';
 import ExcelExportButton from '../../components/ExcelExportButton';
 import ProductForm from '../../components/admin/ProductForm';
 import BulkImportDialog from '../../components/admin/BulkImportDialog';
-import { Badge, Button, Field } from '../../components/ui';
+import { AdminPageHead, SearchInput } from '../../components/admin/AdminUI';
+import { Badge, Button } from '../../components/ui';
 import { useToast } from '../../context/ToastContext';
 import { useAdminStore } from '../../context/AdminStore';
 import { catalogBase as CATALOG, categories, categoryName } from '../../data/catalog';
@@ -47,43 +48,39 @@ export default function AdminProducts() {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="display-serif text-[clamp(1.5rem,4vw,2rem)]">Products</h1>
-          <p className="text-[13px] text-ink-50">
-            {filtered.length.toLocaleString('en-IN')} of {rows.length.toLocaleString('en-IN')} SKUs
-            {dirty && <span className="ml-2 text-emerald-600">· unsaved admin changes are stored locally</span>}
-          </p>
-        </div>
-        <div className="flex gap-2">
-          {dirty && (
-            <Button size="sm" variant="ghost" icon="refresh" onClick={() => { if (window.confirm('Discard all admin changes and restore the shipped catalogue?')) { reset(); toast.info('Catalogue restored'); } }}>
-              Reset
-            </Button>
-          )}
-          <Button size="sm" variant="outline" icon="upload" onClick={() => setBulk(true)}>Bulk import</Button>
-          <Button size="sm" icon="plus" onClick={() => setEditing(null)}>Add product</Button>
-          <ExcelExportButton
-            filename="nasou-products"
-            label="Export"
-            headers={['SKU', 'Name', 'Category', 'Material', 'Size', 'Brand', 'Price', 'MRP', 'Discount %', 'Stock']}
-            rows={filtered.map((p) => [p.sku, p.name, categoryName(p.category), p.material, p.size, p.supplierName, p.price, p.mrp, p.discount, p.stock])}
-          />
-        </div>
-      </div>
+      <AdminPageHead
+        icon="package"
+        title="Products"
+        note={<>
+          {filtered.length.toLocaleString('en-IN')} of {rows.length.toLocaleString('en-IN')} SKUs
+          {dirty && <span className="ml-2 text-emerald-600">· unsaved admin changes are stored locally</span>}
+        </>}
+      >
+        {dirty && (
+          <Button size="sm" variant="ghost" icon="refresh" onClick={() => { if (window.confirm('Discard all admin changes and restore the shipped catalogue?')) { reset(); toast.info('Catalogue restored'); } }}>
+            Reset
+          </Button>
+        )}
+        <Button size="sm" variant="outline" icon="upload" onClick={() => setBulk(true)}>Bulk import</Button>
+        <Button size="sm" icon="plus" onClick={() => setEditing(null)}>Add product</Button>
+        <ExcelExportButton
+          filename="nasou-products"
+          label="Export"
+          headers={['SKU', 'Name', 'Category', 'Material', 'Size', 'Brand', 'Price', 'MRP', 'Discount %', 'Stock']}
+          rows={filtered.map((p) => [p.sku, p.name, categoryName(p.category), p.material, p.size, p.supplierName, p.price, p.mrp, p.discount, p.stock])}
+        />
+      </AdminPageHead>
 
-      <div className="flex flex-wrap gap-3 rounded-lg border border-line bg-white p-3">
-        <div className="min-w-[200px] flex-1">
-          <Field placeholder="Search name, SKU or brand" value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} />
-        </div>
-        <select value={cat} onChange={(e) => { setCat(e.target.value); setPage(1); }} className="h-11 rounded-md border border-line bg-white px-3 text-[13px] font-semibold outline-none">
+      <div className="flex flex-wrap gap-3 rounded-lg border border-line bg-white p-3 shadow-card">
+        <SearchInput placeholder="Search name, SKU or brand" value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} />
+        <select value={cat} onChange={(e) => { setCat(e.target.value); setPage(1); }} aria-label="Category" className="h-11 rounded-md border border-line bg-white px-3 text-[13px] font-semibold outline-none transition focus:border-emerald focus:ring-2 focus:ring-emerald/15">
           <option value="">All categories</option>
           {categories.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}
         </select>
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-line bg-white">
-        <div className="hidden grid-cols-[1fr_92px_84px_132px_96px] gap-3 border-b border-line bg-canvas px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider text-ink-35 sm:grid">
+      <div className="overflow-hidden rounded-lg border border-line bg-white shadow-card">
+        <div className="hidden grid-cols-[1fr_92px_84px_132px_96px] gap-3 border-b border-line bg-sunk px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-ink-50 sm:grid">
           <span>Product</span><span>Price</span><span>MRP</span><span>Stock</span><span className="text-right">Actions</span>
         </div>
         {shown.map((p, i) => {
@@ -92,10 +89,10 @@ export default function AdminProducts() {
             <motion.div
               key={p.id}
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: Math.min(i, 12) * 0.02 }}
-              className="grid grid-cols-1 gap-2 border-b border-line px-4 py-3 last:border-0 sm:grid-cols-[1fr_92px_84px_132px_96px] sm:items-center sm:gap-3"
+              className="grid grid-cols-2 items-center gap-x-3 gap-y-2.5 border-b border-line px-4 py-3 transition-colors last:border-0 hover:bg-canvas/40 sm:grid-cols-[1fr_92px_84px_132px_96px] sm:gap-3"
             >
-              <div className="flex items-center gap-3">
-                <span className="photo-bed grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-md">
+              <div className="col-span-2 flex items-center gap-3 sm:col-span-1">
+                <span className="photo-bed grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-md border border-line">
                   {p.images?.[0]
                     ? <img src={p.images[0]} alt="" className="h-full w-full object-cover" />
                     : <ProductArt kind={p.art} material={p.material} className="h-full w-full p-1" />}
@@ -109,7 +106,7 @@ export default function AdminProducts() {
                 </div>
               </div>
               <span className="tnum text-[13px] font-semibold">{money(p.price)}</span>
-              <span className="tnum text-[13px] text-ink-50">{money(p.mrp)}</span>
+              <span className="tnum text-right text-[13px] text-ink-50 sm:text-left"><span className="sm:hidden">MRP </span>{money(p.mrp)}</span>
               <StockCell value={p.stock} onChange={(n) => setStock(p.id, n)} />
               <div className="flex justify-end gap-1.5">
                 <button onClick={() => setEditing(p)} className="grid h-8 w-8 place-items-center rounded-md border border-line text-ink-50 transition hover:border-ink-35 hover:text-ink" aria-label={`Edit ${p.name}`}>
@@ -122,7 +119,12 @@ export default function AdminProducts() {
             </motion.div>
           );
         })}
-        {shown.length === 0 && <p className="px-4 py-10 text-center text-[13px] text-ink-50">No products match.</p>}
+        {shown.length === 0 && (
+          <div className="px-4 py-14 text-center">
+            <span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-sunk text-ink-35"><Icon name="search" size={20} /></span>
+            <p className="mt-3 text-[13px] text-ink-50">No products match.</p>
+          </div>
+        )}
       </div>
 
       {shown.length < filtered.length && (

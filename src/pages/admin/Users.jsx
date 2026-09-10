@@ -2,11 +2,13 @@ import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import Icon from '../../components/Icon';
 import ExcelExportButton from '../../components/ExcelExportButton';
-import { Badge, Button, Field } from '../../components/ui';
+import { AdminPageHead, FilterTabs, SearchInput } from '../../components/admin/AdminUI';
+import { Badge } from '../../components/ui';
 import { useToast } from '../../context/ToastContext';
 import { deliveryBy } from '../../lib/format';
 
 const ROLE_TONE = { ADMIN: 'dark', RETAILER: 'slate', CUSTOMER: 'neutral' };
+const ROLE_AVATAR = { ADMIN: 'bg-forest text-white', RETAILER: 'bg-slate-50 text-slate', CUSTOMER: 'bg-emerald-50 text-emerald-600' };
 const SEED = [
   ['Priya Sharma', 'priya@example.com', 'ADMIN'],
   ['Rahul Kumar', 'rahul@trade.in', 'RETAILER'],
@@ -36,6 +38,12 @@ export default function AdminUsers() {
     [rows, q, role]
   );
 
+  const counts = useMemo(() => {
+    const n = q.toLowerCase();
+    const hit = rows.filter((u) => !n || `${u.fullName} ${u.email}`.toLowerCase().includes(n));
+    return { all: hit.length, by: (r) => hit.filter((u) => u.role === r).length };
+  }, [rows, q]);
+
   const cycleRole = (id) =>
     setRows((r) => r.map((u) => {
       if (u.id !== id) return u;
@@ -47,49 +55,69 @@ export default function AdminUsers() {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="display-serif text-[clamp(1.5rem,4vw,2rem)]">Users</h1>
-          <p className="text-[13px] text-ink-50">{filtered.length} accounts · demo data</p>
-        </div>
+      <AdminPageHead icon="user" title="Users" note={`${filtered.length} accounts · demo data`}>
         <ExcelExportButton
           filename="nasou-users"
           label="Export"
           headers={['Name', 'Email', 'Phone', 'Role', 'Joined']}
           rows={filtered.map((u) => [u.fullName, u.email, u.phone, u.role, u.joined])}
         />
+      </AdminPageHead>
+
+      <div className="space-y-3 rounded-lg border border-line bg-white p-3 shadow-card">
+        <SearchInput placeholder="Search name or email" value={q} onChange={(e) => setQ(e.target.value)} />
+        <FilterTabs
+          label="Role"
+          value={role}
+          onChange={setRole}
+          options={[
+            { value: '', label: 'All roles', count: counts.all },
+            ...['CUSTOMER', 'RETAILER', 'ADMIN'].map((r) => ({ value: r, label: r, count: counts.by(r) })),
+          ]}
+        />
       </div>
 
-      <div className="flex flex-wrap gap-3 rounded-lg border border-line bg-white p-3">
-        <div className="min-w-[200px] flex-1"><Field placeholder="Search name or email" value={q} onChange={(e) => setQ(e.target.value)} /></div>
-        <select value={role} onChange={(e) => setRole(e.target.value)} className="h-11 rounded-md border border-line bg-white px-3 text-[13px] font-semibold outline-none">
-          <option value="">All roles</option>
-          <option>CUSTOMER</option><option>RETAILER</option><option>ADMIN</option>
-        </select>
-      </div>
-
-      <div className="overflow-hidden rounded-lg border border-line bg-white">
-        {filtered.map((u, i) => (
-          <motion.div
-            key={u.id}
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: Math.min(i, 12) * 0.02 }}
-            className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-line px-4 py-3 last:border-0"
-          >
-            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-emerald-50 text-[12px] font-bold text-emerald-600">
-              {u.fullName[0]}
-            </span>
-            <div className="min-w-0">
-              <p className="text-[13px] font-bold">{u.fullName}</p>
-              <p className="truncate text-[11.5px] text-ink-50">{u.email} · {u.phone}</p>
-            </div>
-            <span className="ml-auto text-[11.5px] text-ink-35">Joined {u.joined}</span>
-            <button onClick={() => cycleRole(u.id)} title="Cycle role" aria-label={`Change role for ${u.fullName}`} className="-m-2 p-2">
-              <Badge tone={ROLE_TONE[u.role]} className="cursor-pointer">{u.role}</Badge>
-            </button>
-          </motion.div>
-        ))}
-        {filtered.length === 0 && <p className="px-4 py-10 text-center text-[13px] text-ink-50">No users match.</p>}
-      </div>
+      {filtered.length > 0 ? (
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {filtered.map((u, i) => (
+            <motion.article
+              key={u.id}
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(i, 12) * 0.03 }}
+              className="flex flex-col rounded-lg border border-line bg-white p-4 shadow-card transition hover:-translate-y-0.5 hover:border-emerald-100 hover:shadow-lift sm:p-5"
+            >
+              <div className="flex items-start gap-3">
+                <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-full text-[14px] font-bold ${ROLE_AVATAR[u.role]}`}>
+                  {u.fullName[0]}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[14px] font-bold">{u.fullName}</p>
+                  <p className="text-[11.5px] text-ink-35">Joined {u.joined}</p>
+                </div>
+                <button onClick={() => cycleRole(u.id)} title="Cycle role" aria-label={`Change role for ${u.fullName}`} className="-m-2 p-2">
+                  <Badge tone={ROLE_TONE[u.role]} className="cursor-pointer">{u.role}</Badge>
+                </button>
+              </div>
+              <dl className="mt-4 space-y-1.5 border-t border-line pt-3.5 text-[12.5px]">
+                <div className="flex items-center gap-2 text-ink-70">
+                  <Icon name="mail" size={13} className="shrink-0 text-ink-35" />
+                  <dt className="sr-only">Email</dt>
+                  <dd className="truncate">{u.email}</dd>
+                </div>
+                <div className="flex items-center gap-2 text-ink-70">
+                  <Icon name="phone" size={13} className="shrink-0 text-ink-35" />
+                  <dt className="sr-only">Phone</dt>
+                  <dd className="tnum">{u.phone}</dd>
+                </div>
+              </dl>
+            </motion.article>
+          ))}
+        </div>
+      ) : (
+        <div className="rounded-lg border border-dashed border-line bg-white/60 px-4 py-14 text-center">
+          <span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-sunk text-ink-35"><Icon name="search" size={20} /></span>
+          <p className="mt-3 text-[13px] text-ink-50">No users match.</p>
+        </div>
+      )}
     </div>
   );
 }
