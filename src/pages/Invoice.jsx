@@ -14,11 +14,11 @@ export default function Invoice() {
   if (!order) {
     return (
       <Container className="flex min-h-[60dvh] items-center justify-center py-16">
-        <div className="w-full max-w-md rounded-xl border border-line bg-white p-8 text-center shadow-card">
+        <div className="w-full max-w-md rounded-[24px] border border-white/80 bg-white p-8 text-center shadow-pop">
           <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-amber-50 text-amber">
             <Icon name="fileText" size={24} />
           </span>
-          <h1 className="mt-5 display-serif text-[22px]">Invoice not found</h1>
+          <h1 className="mt-5 text-[22px] font-semibold text-ink">Invoice not found</h1>
           <p className="mt-2 text-[13.5px] text-ink-50">
             No order matches <span className="font-mono">{id}</span>.
           </p>
@@ -37,7 +37,7 @@ export default function Invoice() {
         <Button size="sm" icon="fileText" onClick={() => window.print()}>Print / save PDF</Button>
       </div>
 
-      <article className="mx-auto max-w-3xl rounded-xl border border-line bg-white p-6 shadow-card sm:p-10 print:border-0 print:shadow-none">
+      <article className="mx-auto max-w-3xl rounded-[24px] border border-white/80 bg-white p-6 shadow-card sm:p-10 print:rounded-none print:border-0 print:shadow-none">
         <header className="flex flex-wrap items-start justify-between gap-4 border-b border-line pb-6">
           <div>
             <span className="text-forest"><Logo /></span>

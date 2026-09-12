@@ -31,7 +31,7 @@ export default function ForgotEmail() {
     <AuthCard
       title="Recover your email"
       subtitle="We’ll show the masked email linked to your mobile number."
-      footer={<Link to="/login" className="inline-flex items-center gap-1.5 font-semibold text-emerald-600 hover:text-emerald-700"><Icon name="arrowLeft" size={14} /> Back to sign in</Link>}
+      footer={<Link to="/login" className="inline-flex items-center gap-1.5 font-bold text-forest hover:underline"><Icon name="arrowLeft" size={14} /> Back to sign in</Link>}
     >
       {found ? (
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-4 text-center">

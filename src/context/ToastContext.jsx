@@ -60,7 +60,7 @@ const BAR = { success: 'bg-emerald', error: 'bg-clay', warning: 'bg-amber', info
 
 function ToastStack({ toasts, dismiss }) {
   return (
-    <div className="pointer-events-none fixed inset-x-4 bottom-4 z-[200] flex flex-col items-center gap-2 sm:inset-x-auto sm:right-5 sm:items-end">
+    <div className="pointer-events-none fixed inset-x-4 bottom-[calc(var(--tabbar-h,0px)+1rem)] z-[200] flex flex-col items-center gap-2 sm:inset-x-auto sm:right-5 sm:items-end">
       <AnimatePresence>
         {toasts.map((t) => (
           <motion.div

@@ -23,7 +23,7 @@ export default function ResendTimer({ seconds = 30, onResend, className = '' }) 
     );
   }
   return (
-    <button type="button" onClick={restart} className={`text-[12.5px] font-semibold text-emerald-600 transition hover:text-emerald-700 ${className}`}>
+    <button type="button" onClick={restart} className={`text-[12.5px] font-bold text-forest transition hover:underline ${className}`}>
       Resend code
     </button>
   );

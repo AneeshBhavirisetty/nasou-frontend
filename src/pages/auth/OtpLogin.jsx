@@ -6,6 +6,7 @@ import { useToast } from '../../context/ToastContext';
 import { Button, Field } from '../../components/ui';
 import Icon from '../../components/Icon';
 import AuthCard from '../../components/auth/AuthCard';
+import { landingFor } from '../../lib/auth';
 import AuthStepper from '../../components/auth/AuthStepper';
 import OtpInput from '../../components/auth/OtpInput';
 import ResendTimer from '../../components/auth/ResendTimer';
@@ -17,11 +18,12 @@ const MOCK = import.meta.env.VITE_API_BASE_URL === undefined || import.meta.env.
 const STEPS = ['Mobile', 'Verify', 'Details'];
 
 export default function OtpLogin() {
-  const { isAuthenticated, sendOtp, verifyOtp, register } = useAuth();
+  const { isAuthenticated, user, sendOtp, verifyOtp, register } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
   const [params] = useSearchParams();
-  const redirect = params.get('redirect') || '/';
+  const explicit = params.get('redirect');
+  const redirect = explicit || '/';
 
   const [step, setStep] = useState(0);
   const [phone, setPhone] = useState('');
@@ -31,7 +33,7 @@ export default function OtpLogin() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  if (isAuthenticated) return <Navigate to={redirect} replace />;
+  if (isAuthenticated) return <Navigate to={landingFor(user, explicit)} replace />;
 
   const send = async () => {
     setError('');
@@ -56,7 +58,7 @@ export default function OtpLogin() {
       const data = await verifyOtp(phone.trim(), otp);
       if (data?.accessToken) {
         toast.success('Welcome back!');
-        navigate(redirect, { replace: true });
+        navigate(landingFor(data, explicit), { replace: true });
       } else {
         setStep(2);
         toast.info('One more step — create your account.');
@@ -104,7 +106,7 @@ export default function OtpLogin() {
           : step === 1 ? `Enter the code sent to ${phone}.`
             : 'Just your name and email to finish.'
       }
-      footer={<>Prefer a password? <Link to="/login" className="font-semibold text-emerald-600 hover:text-emerald-700">Sign in here</Link></>}
+      footer={<>Prefer a password? <Link to="/login" className="font-bold text-forest hover:underline">Sign in here</Link></>}
     >
       <AuthStepper steps={STEPS} current={step} />
 
@@ -123,10 +125,10 @@ export default function OtpLogin() {
             {err}
             <Button onClick={verify} full size="lg" loading={loading}>Verify &amp; continue</Button>
             <div className="flex items-center justify-between">
-              <button onClick={() => { setStep(0); setOtp(''); }} className="text-[12.5px] font-medium text-ink-50 hover:text-ink">← Change number</button>
+              <button onClick={() => { setStep(0); setOtp(''); }} className="text-[12.5px] font-semibold text-forest-800 hover:text-forest">← Change number</button>
               <ResendTimer seconds={30} onResend={send} />
             </div>
-            {MOCK && <p className="text-center text-[11.5px] text-ink-35">Demo mode — enter any 6 digits</p>}
+            {MOCK && <p className="text-center text-[11.5px] text-forest-800">Demo mode — enter any 6 digits</p>}
           </div>
         )}
 

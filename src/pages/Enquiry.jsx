@@ -43,12 +43,12 @@ export default function Enquiry() {
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-md rounded-xl border border-line bg-white p-8 text-center shadow-card"
+          className="w-full max-w-md rounded-[24px] border border-white/80 bg-white p-8 text-center shadow-pop"
         >
-          <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-emerald-50 text-emerald-600">
-            <Icon name="check" size={26} strokeWidth={2.6} />
+          <span className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-forest text-white shadow-btn">
+            <Icon name="check" size={28} strokeWidth={2.6} />
           </span>
-          <h1 className="mt-5 display-serif text-[24px]">Enquiry received</h1>
+          <h1 className="mt-5 text-[24px] font-semibold text-ink">Enquiry received</h1>
           <p className="mt-2 text-[13.5px] leading-relaxed text-ink-50">
             Thanks {f.name.split(' ')[0]} — our trade desk will call{' '}
             <span className="tnum font-semibold text-ink">+91 {f.phone}</span> within one working day.
@@ -67,27 +67,29 @@ export default function Enquiry() {
 
   return (
     <>
-      <section className="border-b border-line bg-forest text-white">
-        <div className="field-dots-dark">
-          <Container className="py-10 sm:py-14">
+      <Container className="pt-5">
+        <section className="forest-band relative overflow-hidden rounded-[24px] text-white shadow-pop">
+          <div className="field-dots-dark pointer-events-none absolute inset-0 opacity-40" />
+          <div className="relative px-6 py-9 sm:px-10 sm:py-12">
             <Breadcrumbs
-              className="mb-4 [&_a]:text-white/60 [&_span]:text-white/50"
+              className="mb-4 [&_a]:!text-white/70 [&_span]:text-white/50 [&_.font-semibold]:!text-white"
               items={[{ label: 'Home', to: '/' }, { label: 'Enquiry' }]}
             />
-            <p className="eyebrow mb-2 text-emerald-100/80">Trade desk</p>
-            <h1 className="display-serif text-[clamp(1.9rem,6vw,3.2rem)] text-white">Enquire now</h1>
-            <p className="mt-3 max-w-lg text-[14px] leading-relaxed text-white/60">
+            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#d5e5df]">Trade desk</p>
+            <h1 className="font-hero mt-3 text-[clamp(2rem,6vw,3.2rem)] font-semibold text-white">Enquire now</h1>
+            <p className="mt-3 max-w-lg text-[14px] leading-relaxed text-sunk">
               Bulk orders, dealer tie-ups, or a quote on specific SKUs — tell us what you need and we
               will come back within one working day with pricing and availability.
             </p>
-          </Container>
-        </div>
-      </section>
+          </div>
+        </section>
+      </Container>
 
-      <Container className="py-8 sm:py-12">
-        <div className="grid gap-8 lg:grid-cols-[1.3fr_1fr]">
-          <form onSubmit={submit} noValidate className="rounded-lg border border-line bg-white p-5 sm:p-6">
-            <p className="eyebrow mb-3">What is this about?</p>
+      <Container className="pb-12 pt-5">
+        <div className="grid gap-5 lg:grid-cols-[1.3fr_1fr]">
+          <form onSubmit={submit} noValidate className="rounded-[24px] border border-white/80 bg-white p-5 shadow-card sm:p-7">
+            <h2 className="text-[20px] font-semibold text-ink">What is this about?</h2>
+            <p className="mb-4 mt-1 text-[14px] text-ink-50">Pick the closest match — it routes your enquiry to the right desk.</p>
             <div className="grid gap-2 sm:grid-cols-2">
               {PURPOSE.map((p) => (
                 <button
@@ -95,11 +97,11 @@ export default function Enquiry() {
                   type="button"
                   onClick={() => set('purpose', p.id)}
                   className={cx(
-                    'rounded-md border p-3 text-left transition',
-                    f.purpose === p.id ? 'border-forest bg-emerald-50/60 ring-1 ring-forest' : 'border-line hover:border-ink-35'
+                    'rounded-[16px] border p-4 text-left transition',
+                    f.purpose === p.id ? 'border-forest bg-white shadow-card' : 'border-line-soft bg-white hover:border-forest/40'
                   )}
                 >
-                  <span className="block text-[13.5px] font-bold">{p.label}</span>
+                  <span className="block text-[14px] font-bold text-ink">{p.label}</span>
                   <span className="block text-[12px] text-ink-50">{p.note}</span>
                 </button>
               ))}
@@ -112,11 +114,11 @@ export default function Enquiry() {
               <Field label="Email" type="email" value={f.email} onChange={(e) => set('email', e.target.value)} placeholder="Optional" autoComplete="email" />
 
               <label className="block">
-                <span className="mb-1.5 block text-[12.5px] font-semibold text-ink-70">Product family</span>
+                <span className="mb-1.5 block text-[11.5px] font-semibold uppercase tracking-[0.16em] text-forest-800">Product family</span>
                 <select
                   value={f.category}
                   onChange={(e) => set('category', e.target.value)}
-                  className="h-11 w-full rounded-md border border-line bg-white px-3 text-[14px] outline-none focus:border-emerald focus:ring-2 focus:ring-emerald/15"
+                  className="h-12 w-full rounded-md border border-line bg-white/80 px-4 text-[14px] text-ink outline-none transition focus:border-forest focus:shadow-[0_0_0_2px_rgba(31,92,74,0.18)]"
                 >
                   <option value="">Any / not sure</option>
                   {categories.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}
@@ -134,13 +136,13 @@ export default function Enquiry() {
             </div>
 
             <label className="mt-3 block">
-              <span className="mb-1.5 block text-[12.5px] font-semibold text-ink-70">What do you need?</span>
+              <span className="mb-1.5 block text-[11.5px] font-semibold uppercase tracking-[0.16em] text-forest-800">What do you need?</span>
               <textarea
                 rows={4}
                 value={f.message}
                 onChange={(e) => set('message', e.target.value)}
                 placeholder="Sizes, materials, site location, timeline…"
-                className="w-full rounded-md border border-line bg-white px-3.5 py-2.5 text-[14px] outline-none transition placeholder:text-ink-35 focus:border-emerald focus:ring-2 focus:ring-emerald/15"
+                className="w-full rounded-md border border-line bg-white/80 px-4 py-3 text-[14px] text-ink outline-none transition placeholder:text-ink-35 focus:border-forest focus:shadow-[0_8px_25px_rgba(37,88,73,0.14),0_0_0_2px_rgba(31,92,74,0.18)]"
                 required
               />
             </label>
@@ -156,14 +158,14 @@ export default function Enquiry() {
               </motion.p>
             )}
 
-            <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-line pt-4">
+            <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-line-soft pt-5">
               <Button type="submit" size="lg" iconRight="arrowRight">Send enquiry</Button>
               <span className="text-[12px] text-ink-35">We reply within one working day.</span>
             </div>
           </form>
 
           <aside className="space-y-4">
-            <div className="rounded-lg border border-line bg-white p-5">
+            <div className="rounded-[24px] border border-white/80 bg-white p-5 shadow-card sm:p-6">
               <Badge tone="ok" icon="phone">Talk to us</Badge>
               <div className="mt-4 space-y-2.5 text-[13.5px]">
                 <a href={`tel:${brand.phone.replace(/\s/g, '')}`} className="flex items-center gap-2.5 font-semibold transition hover:text-emerald-600">
@@ -184,9 +186,9 @@ export default function Enquiry() {
               </div>
             </div>
 
-            <div className="rounded-lg border border-line bg-canvas p-5">
-              <p className="eyebrow mb-3">Why buy trade from Nasou</p>
-              <ul className="space-y-2.5 text-[13px] text-ink-70">
+            <div className="rounded-[24px] bg-ink p-5 text-white sm:p-6">
+              <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.18em] text-[#c9d7d2]">Why buy trade from Nasou</p>
+              <ul className="space-y-2.5 text-[13.5px] text-white/85">
                 {[
                   ['tag', 'Slab pricing above ₹25,000'],
                   ['truck', 'Same-day dispatch on in-stock lines'],
@@ -194,11 +196,11 @@ export default function Enquiry() {
                   ['layers', '27 brands under one account'],
                 ].map(([ic, t]) => (
                   <li key={t} className="flex items-center gap-2.5">
-                    <Icon name={ic} size={15} className="shrink-0 text-emerald-600" /> {t}
+                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-[10px] bg-white/10"><Icon name={ic} size={15} /></span> {t}
                   </li>
                 ))}
               </ul>
-              <Link to="/contact" className="mt-4 inline-flex items-center gap-1 text-[12.5px] font-semibold text-emerald-600">
+              <Link to="/contact" className="mt-5 inline-flex items-center gap-1.5 rounded-md bg-white px-4 py-2.5 text-[12.5px] font-bold text-forest transition hover:-translate-y-0.5">
                 General contact details <Icon name="arrowRight" size={13} />
               </Link>
             </div>

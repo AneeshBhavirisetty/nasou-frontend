@@ -45,8 +45,8 @@ function CouponForm({ open, coupon, onClose, onSave }) {
         <div className="grid gap-3 sm:grid-cols-2">
           <Field label="Code" value={c.code} onChange={(e) => set('code', e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))} placeholder="MONSOON10" required />
           <label className="block">
-            <span className="mb-1.5 block text-[12.5px] font-semibold text-ink-70">Type</span>
-            <select value={c.kind} onChange={(e) => set('kind', e.target.value)} className="h-11 w-full rounded-md border border-line bg-white px-3 text-[14px] outline-none focus:border-emerald focus:ring-2 focus:ring-emerald/15">
+            <span className="mb-1.5 block text-[11.5px] font-semibold uppercase tracking-[0.16em] text-forest-800">Type</span>
+            <select value={c.kind} onChange={(e) => set('kind', e.target.value)} className="h-12 w-full rounded-md border border-line bg-white/80 px-4 text-[14px] text-ink outline-none transition focus:border-forest focus:shadow-[0_0_0_2px_rgba(31,92,74,0.18)]">
               <option value="percent">Percent off (%)</option>
               <option value="flat">Flat amount off (₹)</option>
             </select>
@@ -57,15 +57,15 @@ function CouponForm({ open, coupon, onClose, onSave }) {
             <Field label="Max discount cap (₹)" type="text" inputMode="numeric" value={String(c.maxDiscount)} onChange={(e) => set('maxDiscount', e.target.value.replace(/\D/g, ''))} hint="0 = uncapped" />
           )}
           <label className="block">
-            <span className="mb-1.5 block text-[12.5px] font-semibold text-ink-70">Applies to</span>
-            <select value={c.scope} onChange={(e) => set('scope', e.target.value)} className="h-11 w-full rounded-md border border-line bg-white px-3 text-[14px] outline-none focus:border-emerald focus:ring-2 focus:ring-emerald/15">
+            <span className="mb-1.5 block text-[11.5px] font-semibold uppercase tracking-[0.16em] text-forest-800">Applies to</span>
+            <select value={c.scope} onChange={(e) => set('scope', e.target.value)} className="h-12 w-full rounded-md border border-line bg-white/80 px-4 text-[14px] text-ink outline-none transition focus:border-forest focus:shadow-[0_0_0_2px_rgba(31,92,74,0.18)]">
               <option value="">Whole cart</option>
               {categories.map((cat) => <option key={cat.slug} value={cat.slug}>{cat.name} only</option>)}
             </select>
           </label>
           <label className="block">
-            <span className="mb-1.5 block text-[12.5px] font-semibold text-ink-70">Expiry (optional)</span>
-            <input type="date" value={c.expiry} onChange={(e) => set('expiry', e.target.value)} className="h-11 w-full rounded-md border border-line bg-white px-3 text-[14px] outline-none focus:border-emerald focus:ring-2 focus:ring-emerald/15" />
+            <span className="mb-1.5 block text-[11.5px] font-semibold uppercase tracking-[0.16em] text-forest-800">Expiry (optional)</span>
+            <input type="date" value={c.expiry} onChange={(e) => set('expiry', e.target.value)} className="h-12 w-full rounded-md border border-line bg-white/80 px-4 text-[14px] text-ink outline-none transition focus:border-forest focus:shadow-[0_0_0_2px_rgba(31,92,74,0.18)]" />
           </label>
         </div>
 
@@ -106,7 +106,6 @@ export default function AdminDiscounts() {
   return (
     <div className="space-y-5">
       <AdminPageHead
-        icon="tag"
         title="Discounts"
         note={<>{coupons.length} code{coupons.length !== 1 && 's'} · <span className="text-emerald-600">{active} active</span> · customers enter these at checkout</>}
       >
@@ -192,7 +191,7 @@ export default function AdminDiscounts() {
           </AnimatePresence>
         </div>
       ) : (
-        <div className="rounded-lg border border-dashed border-line bg-white/60 px-4 py-12 text-center">
+        <div className="rounded-[20px] border border-dashed border-[#cad8d2] bg-[#f4f7f5] px-4 py-12 text-center">
           <span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-sunk text-ink-35"><Icon name="tag" size={22} /></span>
           <p className="mt-3 text-[13px] text-ink-50">No discount codes yet.</p>
           <div className="mt-4"><Button size="sm" icon="plus" onClick={() => setEditing(null)}>Create your first code</Button></div>

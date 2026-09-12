@@ -44,7 +44,7 @@ export default function ResetPassword() {
     <AuthCard
       title="Set a new password"
       subtitle="Choose something you haven’t used here before."
-      footer={<Link to="/login" className="inline-flex items-center gap-1.5 font-semibold text-emerald-600 hover:text-emerald-700"><Icon name="arrowLeft" size={14} /> Back to sign in</Link>}
+      footer={<Link to="/login" className="inline-flex items-center gap-1.5 font-bold text-forest hover:underline"><Icon name="arrowLeft" size={14} /> Back to sign in</Link>}
     >
       <form onSubmit={submit} noValidate className="space-y-4">
         <PasswordField label="New password" autoComplete="new-password" strength value={pw} onChange={setPw} />

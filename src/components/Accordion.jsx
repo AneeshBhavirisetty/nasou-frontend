@@ -8,14 +8,16 @@ import { EASE } from '../lib/motion';
 export function AccordionItem({ title, children, defaultOpen = false, className = '' }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className={cx('border-b border-line last:border-0', className)}>
+    <div className={cx('rounded-md bg-[#f4f7f5] px-4 transition-colors', open && 'bg-sunk/70', className)}>
       <button
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         className="flex w-full items-center justify-between gap-4 py-4 text-left"
       >
-        <span className="text-[14.5px] font-semibold text-ink">{title}</span>
-        <Icon name="chevronDown" size={16} className={cx('shrink-0 text-ink-35 transition-transform', open && 'rotate-180')} />
+        <span className="text-[14px] font-bold text-ink">{title}</span>
+        <span className={cx('grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white text-forest transition-transform', open && 'rotate-180')}>
+          <Icon name="chevronDown" size={15} />
+        </span>
       </button>
       <AnimatePresence initial={false}>
         {open && (
@@ -26,7 +28,7 @@ export function AccordionItem({ title, children, defaultOpen = false, className 
             transition={{ duration: 0.26, ease: EASE }}
             className="overflow-hidden"
           >
-            <div className="pb-4 text-[13.5px] leading-relaxed text-ink-50">{children}</div>
+            <div className="pb-4 text-[14px] leading-6 text-ink-50">{children}</div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -35,5 +37,5 @@ export function AccordionItem({ title, children, defaultOpen = false, className 
 }
 
 export default function Accordion({ children, className = '' }) {
-  return <div className={cx('rounded-lg border border-line bg-white px-4', className)}>{children}</div>;
+  return <div className={cx('space-y-3 rounded-[18px] bg-white p-4 shadow-card sm:p-5', className)}>{children}</div>;
 }

@@ -16,7 +16,7 @@ export default function RoleSwitch() {
   const roles = ['CUSTOMER', 'RETAILER', 'ADMIN'];
 
   return (
-    <div className="fixed bottom-4 left-4 z-[150]">
+    <div className="fixed bottom-[calc(var(--tabbar-h,0px)+1rem)] left-4 z-[150]">
       <AnimatePresence>
         {open && (
           <motion.div

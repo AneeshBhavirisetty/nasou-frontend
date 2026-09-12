@@ -13,18 +13,17 @@ export default function AuthStepper({ steps = [], current = 0 }) {
           <li key={label} className="flex flex-1 items-center gap-2">
             <span
               className={cx(
-                'grid h-6 w-6 shrink-0 place-items-center rounded-full border-2 text-[11px] font-bold transition',
-                done && 'border-emerald bg-emerald text-white',
-                active && 'border-forest bg-white text-forest',
-                !done && !active && 'border-line bg-white text-ink-35'
+                'grid h-8 w-8 shrink-0 place-items-center rounded-full text-[12px] font-bold transition',
+                (done || active) ? 'bg-forest text-white shadow-btn' : 'bg-sunk text-ink-50',
+                active && 'ring-4 ring-forest/15'
               )}
             >
               {done ? <Icon name="check" size={11} strokeWidth={3} /> : i + 1}
             </span>
-            <span className={cx('hidden text-[12px] font-semibold sm:block', active ? 'text-ink' : 'text-ink-35')}>{label}</span>
+            <span className={cx('hidden text-[12px] font-bold sm:block', active ? 'text-forest' : 'text-ink-50')}>{label}</span>
             {i < steps.length - 1 && (
-              <span className="relative h-px flex-1 bg-line">
-                <motion.span className="absolute inset-0 bg-emerald" initial={{ scaleX: 0 }} animate={{ scaleX: done ? 1 : 0 }} style={{ transformOrigin: 'left' }} />
+              <span className="relative h-1 flex-1 overflow-hidden rounded-full bg-sunk">
+                <motion.span className="absolute inset-0 bg-forest" initial={{ scaleX: 0 }} animate={{ scaleX: done ? 1 : 0 }} style={{ transformOrigin: 'left' }} />
               </span>
             )}
           </li>

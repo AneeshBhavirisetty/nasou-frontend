@@ -66,7 +66,6 @@ export default function AdminOrders() {
   return (
     <div className="space-y-5">
       <AdminPageHead
-        icon="truck"
         title="Orders"
         note={<>{filtered.length} of {rows.length} orders · <span className="tnum font-semibold text-ink-70">{money(inView)}</span> in view · demo data</>}
       >
@@ -75,7 +74,7 @@ export default function AdminOrders() {
         </Button>
       </AdminPageHead>
 
-      <div className="space-y-3 rounded-lg border border-line bg-white p-3 shadow-card">
+      <div className="space-y-3 rounded-[20px] border border-line bg-white/86 p-3 shadow-[0_18px_40px_rgba(37,88,73,0.08)]">
         <SearchInput placeholder="Search order # or customer" value={q} onChange={(e) => setQ(e.target.value)} />
         <FilterTabs
           label="Order status"
@@ -100,7 +99,7 @@ export default function AdminOrders() {
           ))}
         </div>
       ) : (
-        <div className="rounded-lg border border-dashed border-line bg-white/60 px-4 py-14 text-center">
+        <div className="rounded-[20px] border border-dashed border-[#cad8d2] bg-[#f4f7f5] px-4 py-14 text-center">
           <span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-sunk text-ink-35"><Icon name="search" size={20} /></span>
           <p className="mt-3 text-[13px] text-ink-50">No orders match.</p>
         </div>
@@ -129,7 +128,7 @@ function OrderCard({ order: o, onAdvance }) {
   const more = o.lines.length - 1;
 
   return (
-    <article className="flex h-full flex-col rounded-lg border border-line bg-white p-4 shadow-card transition hover:-translate-y-0.5 hover:border-emerald-100 hover:shadow-lift sm:p-5">
+    <article className="flex h-full flex-col rounded-[20px] border border-line bg-white p-4 shadow-[0_18px_40px_rgba(37,88,73,0.08)] transition hover:-translate-y-0.5 hover:border-forest/30 hover:shadow-lift sm:p-5">
       <header className="flex items-start justify-between gap-3">
         <div>
           <p className="font-mono text-[14px] font-bold">{o.id}</p>

@@ -55,7 +55,7 @@ export default function AdminUsers() {
 
   return (
     <div className="space-y-5">
-      <AdminPageHead icon="user" title="Users" note={`${filtered.length} accounts · demo data`}>
+      <AdminPageHead title="Users" note={`${filtered.length} accounts · demo data`}>
         <ExcelExportButton
           filename="nasou-users"
           label="Export"
@@ -64,7 +64,7 @@ export default function AdminUsers() {
         />
       </AdminPageHead>
 
-      <div className="space-y-3 rounded-lg border border-line bg-white p-3 shadow-card">
+      <div className="space-y-3 rounded-[20px] border border-line bg-white/86 p-3 shadow-[0_18px_40px_rgba(37,88,73,0.08)]">
         <SearchInput placeholder="Search name or email" value={q} onChange={(e) => setQ(e.target.value)} />
         <FilterTabs
           label="Role"
@@ -83,7 +83,7 @@ export default function AdminUsers() {
             <motion.article
               key={u.id}
               initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(i, 12) * 0.03 }}
-              className="flex flex-col rounded-lg border border-line bg-white p-4 shadow-card transition hover:-translate-y-0.5 hover:border-emerald-100 hover:shadow-lift sm:p-5"
+              className="flex flex-col rounded-[20px] border border-line bg-white p-4 shadow-[0_18px_40px_rgba(37,88,73,0.08)] transition hover:-translate-y-0.5 hover:border-forest/30 hover:shadow-lift sm:p-5"
             >
               <div className="flex items-start gap-3">
                 <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-full text-[14px] font-bold ${ROLE_AVATAR[u.role]}`}>
@@ -113,7 +113,7 @@ export default function AdminUsers() {
           ))}
         </div>
       ) : (
-        <div className="rounded-lg border border-dashed border-line bg-white/60 px-4 py-14 text-center">
+        <div className="rounded-[20px] border border-dashed border-[#cad8d2] bg-[#f4f7f5] px-4 py-14 text-center">
           <span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-sunk text-ink-35"><Icon name="search" size={20} /></span>
           <p className="mt-3 text-[13px] text-ink-50">No users match.</p>
         </div>

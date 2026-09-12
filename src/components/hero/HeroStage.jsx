@@ -15,7 +15,7 @@ function webglAvailable() {
 
 /* Decides between the real 3D scene and the static SVG, and only mounts the
    heavy chunk once it's actually needed. */
-export default function HeroStage({ className = '' }) {
+export default function HeroStage({ className = '', active = true }) {
   const reduced = usePrefersReducedMotion();
   const [can3d, setCan3d] = useState(false);
 
@@ -31,7 +31,7 @@ export default function HeroStage({ className = '' }) {
     <div className={className}>
       {use3d ? (
         <Suspense fallback={<HeroFallbackArt className="h-full w-full animate-float" />}>
-          <Hero3D />
+          <Hero3D active={active} />
         </Suspense>
       ) : (
         <HeroFallbackArt className="h-full w-full animate-float" />

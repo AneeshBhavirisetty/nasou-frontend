@@ -1,18 +1,17 @@
 @import "tailwindcss";
 
 /* ============================================================
-   NASOU HIVE — STOREFRONT DESIGN TOKENS
-   Voice: a plumbing supplier that can prove where every fitting
-   came from. Palette is the NasouHive demo's: linen paper, forest
-   #1F5C4A, sage ink, with rose/amber/sky kept for status only. Mono type is reserved for
-   verifiable data (SKUs, batch ids); a classic serif (Fraunces)
-   carries the big editorial headlines.
+   NASOU HIVE — DESIGN TOKENS
+   Visual language follows the NasouHive demo templates: linen
+   paper (#EFEAE1), forest #1F5C4A, sage ink, Manrope throughout
+   (Sora for the big hero voice), soft white cards with green-
+   tinted shadows. Rose / amber / sky are kept for status only.
    ============================================================ */
 @theme {
   /* Neutrals — cream paper. Never grey, never blue. */
-  --color-canvas: #efe7da;
+  --color-canvas: #efeae1;
   --color-surface: #ffffff;
-  --color-sunk: #efeae1;
+  --color-sunk: #e6ecea;
   --color-line: #e5d8c7;
   --color-line-soft: #e6ecea;
 
@@ -28,7 +27,7 @@
   --color-emerald: #287052;
   --color-emerald-600: #255849;
   --color-emerald-100: #cad8d2;
-  --color-emerald-50: #e6ecea;
+  --color-emerald-50: #eaf4ee;
 
   /* Alert accent — errors, deals, destructive actions (Tailwind rose) */
   --color-clay: oklch(58.6% 0.253 17.585);
@@ -42,15 +41,17 @@
   --color-amber-50: oklch(98.7% 0.022 95.277);
 
   /* Type */
-  --font-display: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-serif: "Fraunces", ui-serif, Georgia, "Times New Roman", serif;
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-display: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --font-hero: "Sora", "Manrope", ui-sans-serif, system-ui, sans-serif;
 
   /* Elevation — soft and warm, never a hard grey drop */
-  --shadow-card: 0 1px 2px rgba(37, 88, 73, 0.04), 0 10px 30px -18px rgba(37, 88, 73, 0.18);
-  --shadow-lift: 0 2px 6px rgba(37, 88, 73, 0.06), 0 22px 48px -24px rgba(37, 88, 73, 0.3);
-  --shadow-pop: 0 30px 70px -24px rgba(37, 88, 73, 0.34);
+  --shadow-card: 0 16px 38px rgba(37, 88, 73, 0.09);
+  --shadow-lift: 0 24px 48px rgba(37, 88, 73, 0.12);
+  --shadow-pop: 0 28px 70px rgba(31, 59, 52, 0.18);
+  --shadow-btn: 0 10px 24px rgba(31, 92, 74, 0.18);
 
   --radius-xs: 6px;
   --radius-sm: 8px;
@@ -91,20 +92,26 @@
 
   h1, h2, h3, h4 {
     font-family: var(--font-display);
-    letter-spacing: -0.028em;
-    line-height: 1.05;
-    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    font-weight: 600;
   }
 
   ::selection {
-    background: var(--color-emerald);
+    background: var(--color-forest);
     color: #fff;
   }
 
   :focus-visible {
-    outline: 2px solid var(--color-emerald);
+    outline: 2px solid var(--color-forest);
     outline-offset: 2px;
     border-radius: 4px;
+  }
+
+  /* Height of the phone tab bar while it is mounted — floating widgets
+     (chat, toasts, demo role pill) offset themselves by this. */
+  @media (max-width: 1023.98px) {
+    html.has-tabbar { --tabbar-h: calc(76px + env(safe-area-inset-bottom)); }
   }
 
   /* Never let a wide child force a horizontal scrollbar on mobile. */
@@ -112,26 +119,27 @@
 }
 
 @layer components {
-  /* Editorial headline voice — the "classic" note. */
+  /* Headline voice — semibold Manrope, tight tracking (demo SectionTitle). */
   .font-serif { font-family: var(--font-serif); }
   .display-serif {
-    font-family: var(--font-serif);
+    font-family: var(--font-display);
     font-weight: 600;
-    letter-spacing: -0.02em;
-    line-height: 1.02;
-    font-optical-sizing: auto;
+    letter-spacing: -0.035em;
+    line-height: 1.05;
   }
+  /* Big campaign / hero voice (demo landing: Sora). */
+  .font-hero { font-family: var(--font-hero); letter-spacing: -0.04em; }
 
   /* Prices, weights, batch ids — anything auditable */
   .tnum { font-variant-numeric: tabular-nums; }
 
   .eyebrow {
-    font-family: var(--font-mono);
+    font-family: var(--font-sans);
     font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.16em;
+    font-weight: 700;
+    letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: var(--color-ink-35);
+    color: var(--color-ink-50);
   }
 
   /* Faint dotted field used behind the hero and dark bands. */
@@ -148,7 +156,7 @@
   .no-bar::-webkit-scrollbar { display: none; }
 
   /* Product imagery bed under transparent / blown-out art. */
-  .photo-bed { background: linear-gradient(155deg, #f7f5f2 0%, #e5d8c7 100%); }
+  .photo-bed { background: linear-gradient(155deg, #f4f7f5 0%, #e6ecea 100%); }
   .photo-bed-dark { background: linear-gradient(155deg, #173f35 0%, #12251f 100%); }
 
   /* Hover sheen sweep for premium buttons / cards. */
@@ -164,9 +172,48 @@
   }
   .sheen:hover::after { transform: translateX(120%); }
 
+  /* Demo surfaces ---------------------------------------------------- */
+  /* Frosted panel (demo .glass-panel) */
+  .glass-panel {
+    border: 1px solid rgba(229, 216, 199, 0.72);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(239, 234, 225, 0.74));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72), 0 24px 70px rgba(37, 88, 73, 0.18);
+    backdrop-filter: blur(24px);
+  }
+  /* White product / content card (demo ProductCard + ThemeCard) */
+  .card {
+    border: 1px solid rgba(255, 255, 255, 0.75);
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: var(--shadow-card);
+  }
+  /* Section label with leading hairline (demo .section-label) */
+  .section-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: rgba(37, 88, 73, 0.76);
+  }
+  .section-label::before {
+    content: "";
+    width: 2.5rem;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(37, 88, 73, 0), rgba(37, 88, 73, 0.72));
+  }
+  /* Deep forest campaign band (demo hero carousel / flash deals) */
+  .forest-band {
+    background:
+      radial-gradient(circle at 85% 10%, rgba(72, 132, 112, 0.35), transparent 40%),
+      linear-gradient(120deg, #173d33 0%, #1f5c4a 100%);
+  }
+
   /* Skeleton shimmer */
   .shimmer {
-    background: linear-gradient(90deg, #efeae1 25%, #f7f5f2 37%, #efeae1 63%);
+    background: linear-gradient(90deg, #e6ecea 25%, #f4f7f5 37%, #e6ecea 63%);
     background-size: 400% 100%;
     animation: shimmer 1.4s ease-in-out infinite;
   }
@@ -200,7 +247,19 @@
   40%, 60% { transform: translateX(4px); }
 }
 
+@keyframes drift {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50%      { transform: translate3d(0, -18px, 0); }
+}
+@keyframes pulse-ring {
+  0%   { opacity: 0.4; transform: scale(0.92); }
+  50%  { opacity: 1;   transform: scale(1.04); }
+  100% { opacity: 0.4; transform: scale(0.92); }
+}
+
 .animate-marquee { animation: marquee 32s linear infinite; }
+.animate-drift { animation: drift 8s ease-in-out infinite; }
+.animate-pulse-ring { animation: pulse-ring 3s ease-in-out infinite; }
 .animate-float { animation: float-y 6s ease-in-out infinite; }
 .animate-shake { animation: shake-x 0.4s ease-in-out both; }
 
@@ -211,5 +270,5 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-  .animate-marquee, .animate-float { animation: none !important; }
+  .animate-marquee, .animate-float, .animate-drift, .animate-pulse-ring { animation: none !important; }
 }

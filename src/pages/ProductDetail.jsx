@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Navigate, useNavigate, useParams } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Icon from '../components/Icon';
 import ProductArt from '../components/ProductArt';
@@ -8,7 +8,7 @@ import TraceRail from '../components/TraceRail';
 import Reveal from '../components/Reveal';
 import Accordion, { AccordionItem } from '../components/Accordion';
 import Tabs from '../components/Tabs';
-import { Badge, Button, Container, Breadcrumbs, PriceTag, Rating, Stepper } from '../components/ui';
+import { Badge, Button, Container, Breadcrumbs, PriceTag, Rating, SectionHead, Stepper } from '../components/ui';
 import { categoryName, findProduct, offersFor, relatedProducts } from '../data/catalog';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
@@ -78,7 +78,7 @@ export default function ProductDetail() {
   ];
 
   return (
-    <Container className="py-8 sm:py-10">
+    <Container className="pb-12 pt-5">
       <Breadcrumbs
         className="mb-5"
         items={[
@@ -88,166 +88,205 @@ export default function ProductDetail() {
         ]}
       />
 
-      <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
-        {/* gallery */}
+      <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr] lg:gap-8">
+        {/* gallery — demo 2×2 image grid */}
         <div>
-          <div
-            ref={tilt.ref}
-            onMouseMove={tilt.onMouseMove}
-            onMouseLeave={tilt.onMouseLeave}
-            style={tilt.style}
-            className="photo-bed overflow-hidden rounded-xl border border-line"
-          >
-            {gallery.length > 0 ? (
-              <img src={gallery[shot]} alt={product.title} className="aspect-square w-full object-cover" />
-            ) : (
-              <ProductArt kind={product.art} material={product.material} title={product.title} className="aspect-square w-full p-10 sm:p-16" />
-            )}
-          </div>
-          <div className="mt-3 grid grid-cols-4 gap-3">
-            {gallery.length > 0
-              ? gallery.map((url, i) => (
+          {gallery.length > 0 ? (
+            <>
+              <div
+                ref={tilt.ref}
+                onMouseMove={tilt.onMouseMove}
+                onMouseLeave={tilt.onMouseLeave}
+                style={tilt.style}
+                className="photo-bed relative overflow-hidden rounded-[18px] border border-white/80 shadow-card"
+              >
+                <img src={gallery[shot]} alt={product.title} className="aspect-square w-full object-cover" />
+                {product.badges[0] && <span className="absolute left-4 top-4 rounded-full bg-forest px-3 py-1 text-[10.5px] font-bold uppercase tracking-[0.08em] text-white">{product.badges[0]}</span>}
+              </div>
+              <div className="mt-3 grid grid-cols-4 gap-3">
+                {gallery.map((url, i) => (
                   <button
                     key={url}
                     onClick={() => setShot(i)}
                     aria-label={`View image ${i + 1}`}
                     className={cx(
-                      'photo-bed grid aspect-square place-items-center overflow-hidden rounded-md border transition',
-                      i === shot ? 'border-forest ring-2 ring-forest/20' : 'border-line hover:border-ink-35'
+                      'photo-bed grid aspect-square place-items-center overflow-hidden rounded-[14px] border-2 transition',
+                      i === shot ? 'border-forest' : 'border-white/80 hover:border-forest/40'
                     )}
                   >
                     <img src={url} alt="" className="h-full w-full object-cover" />
                   </button>
-                ))
-              : ['front', 'socket', 'thread', 'pack'].map((v, i) => (
-                  <div key={v} className="photo-bed grid aspect-square place-items-center rounded-md border border-line opacity-80">
-                    <ProductArt kind={product.art} material={i === 3 ? 'PVC' : product.material} className="h-full w-full p-3" />
-                  </div>
                 ))}
-          </div>
+              </div>
+            </>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              <div
+                ref={tilt.ref}
+                onMouseMove={tilt.onMouseMove}
+                onMouseLeave={tilt.onMouseLeave}
+                style={tilt.style}
+                className="photo-bed relative overflow-hidden rounded-[18px] border border-white/80 shadow-card"
+              >
+                <ProductArt kind={product.art} material={product.material} title={product.title} className="aspect-[4/5] w-full p-8 sm:p-10" />
+                {product.badges[0] && <span className="absolute left-4 top-4 rounded-full bg-forest px-3 py-1 text-[10.5px] font-bold uppercase tracking-[0.08em] text-white">{product.badges[0]}</span>}
+              </div>
+              {['socket', 'thread', 'pack'].map((v, i) => (
+                <div key={v} className="photo-bed overflow-hidden rounded-[18px] border border-white/80">
+                  <ProductArt kind={product.art} material={i === 2 ? 'PVC' : product.material} className={cx('aspect-[4/5] w-full p-8 sm:p-10', i === 0 && 'scale-x-[-1]')} />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* buy box */}
+        {/* buy box — demo info card */}
         <div>
-          <p className="eyebrow">{categoryName(product.category)} · {product.size || 'standard'}</p>
-          <h1 className="mt-2 display-serif text-[clamp(1.7rem,4.5vw,2.6rem)]">{product.name}</h1>
-          <div className="mt-3 flex flex-wrap items-center gap-3">
-            <Rating value={product.rating} count={product.reviewCount} />
-            <span className="text-ink-35">·</span>
-            <span className="font-mono text-[12px] text-ink-50">SKU {product.sku}</span>
-            {product.badges.map((b) => <Badge key={b} tone={b === 'Value' ? 'clay' : b === 'New' ? 'ok' : 'dark'}>{b}</Badge>)}
-          </div>
+          <div className="rounded-[24px] border border-white/80 bg-white p-6 shadow-card sm:p-7 lg:sticky lg:top-[136px]">
+            <p className="text-[11.5px] font-bold uppercase tracking-[0.18em] text-ink-50">
+              {product.supplierName} · {categoryName(product.category)}
+            </p>
+            <h1 className="mt-2 text-[clamp(1.6rem,4vw,2rem)] font-semibold leading-tight text-ink">{product.name}</h1>
+            <p className="mt-3 text-[14.5px] leading-6 text-ink-50">{product.description}</p>
 
-          <p className="mt-4 text-[14.5px] leading-relaxed text-ink-50">{product.description}</p>
-
-          <div className="mt-6 rounded-xl border border-line bg-white p-5">
-            <PriceTag price={product.price} mrp={product.mrp} size="lg" />
-            <p className="mt-1 text-[12px] text-ink-35">Exclusive of GST · {off > 0 ? `you save ${money(product.mrp - product.price)}` : 'best price'}</p>
-
-            <div className="mt-4 flex items-center gap-2 text-[13px] font-semibold">
-              {out ? (
-                <span className="flex items-center gap-1.5 text-ink-35"><Icon name="clock" size={15} /> Out of stock</span>
-              ) : (
-                <span className={cx('flex items-center gap-1.5', low ? 'text-amber' : 'text-emerald-600')}>
-                  <Icon name="check" size={15} strokeWidth={2.5} /> {low ? `Only ${product.stock} left` : 'In stock'} · dispatch {deliveryBy(1)}
-                </span>
-              )}
-            </div>
-
-            <div className="mt-4 flex items-center gap-3">
-              <Stepper value={qty} onChange={setQty} min={1} max={Math.max(1, Math.min(20, product.stock || 20))} />
-              <span className="text-[12.5px] text-ink-50">
-                {qty > 1 && <span className="tnum font-semibold text-ink">{money(product.price * qty)}</span>} {qty > 1 && 'total'}
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-2 rounded-[12px] border border-line-soft px-3 py-2 text-[13px]">
+                <span className="tnum font-bold text-ink">{product.rating.toFixed(1)}</span>
+                <Icon name="star" size={14} fill="currentColor" className="text-amber-400" />
+                <span className="h-4 w-px bg-line" />
+                <span className="tnum text-ink-50">{product.reviewCount.toLocaleString('en-IN')} verified ratings</span>
               </span>
+              <span className="rounded-[12px] border border-line-soft px-3 py-2 font-mono text-[12px] font-semibold text-ink-50">SKU {product.sku}</span>
+              {product.badges.slice(1).map((b) => <Badge key={b} tone={b === 'Value' ? 'clay' : b === 'New' ? 'ok' : 'dark'}>{b}</Badge>)}
             </div>
 
-            <div className="mt-4 grid gap-2.5 sm:grid-cols-2">
-              <Button onClick={addToCart} disabled={out} size="lg" variant="primary" icon="cart">Add to cart</Button>
-              <Button onClick={buyNow} disabled={out} size="lg" variant="accent" iconRight="arrowRight">Buy now</Button>
-            </div>
-            <button
-              onClick={() => wishlist.toggle(product.id)}
-              className={cx('mt-2.5 flex w-full items-center justify-center gap-2 rounded-md border py-2.5 text-[13px] font-semibold transition',
-                saved ? 'border-clay/30 bg-clay-50 text-clay-600' : 'border-line text-ink-70 hover:border-ink-35')}
-            >
-              <Icon name="heart" size={15} fill={saved ? 'currentColor' : 'none'} />
-              {saved ? 'Saved to wishlist' : 'Save to wishlist'}
-            </button>
-          </div>
-
-          <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-            {[['truck', 'Free over ₹999'], ['refresh', '7-day returns'], ['shieldCheck', 'GST invoice']].map(([ic, t]) => (
-              <div key={t} className="rounded-md border border-line bg-white px-2 py-3">
-                <Icon name={ic} size={16} className="mx-auto text-emerald-600" />
-                <p className="mt-1.5 text-[11px] font-semibold text-ink-70">{t}</p>
+            <div className="mt-5 border-t border-line-soft pt-5">
+              <PriceTag price={product.price} mrp={product.mrp} size="lg" className="[&>span:first-child]:text-[32px]" />
+              <p className="mt-1 text-[12.5px] font-bold text-emerald-700">
+                Exclusive of GST · {off > 0 ? `you save ${money(product.mrp - product.price)}` : 'best price'}
+              </p>
+              <div className="mt-3 flex items-center gap-2 text-[13px] font-semibold">
+                {out ? (
+                  <span className="flex items-center gap-1.5 text-ink-35"><Icon name="clock" size={15} /> Out of stock</span>
+                ) : (
+                  <span className={cx('flex items-center gap-1.5', low ? 'text-amber' : 'text-emerald-700')}>
+                    <Icon name="check" size={15} strokeWidth={2.5} /> {low ? `Only ${product.stock} left` : 'In stock'} · dispatch {deliveryBy(1)}
+                  </span>
+                )}
               </div>
-            ))}
+            </div>
+
+            <div className="mt-6">
+              <div className="flex items-center justify-between">
+                <p className="text-[12px] font-bold uppercase tracking-[0.14em] text-ink">Quantity</p>
+                {qty > 1 && <p className="tnum text-[13px] text-ink-50"><span className="font-bold text-ink">{money(product.price * qty)}</span> total</p>}
+              </div>
+              <div className="mt-3">
+                <Stepper value={qty} onChange={setQty} min={1} max={Math.max(1, Math.min(20, product.stock || 20))} />
+              </div>
+            </div>
+
+            <div className="mt-6 grid grid-cols-[1fr_auto] gap-3">
+              <Button onClick={addToCart} disabled={out} size="lg" variant="primary" icon="cart">Add to cart</Button>
+              <button
+                onClick={() => wishlist.toggle(product.id)}
+                aria-pressed={saved}
+                className={cx('flex h-[52px] items-center justify-center gap-2 rounded-md border px-5 text-[14px] font-semibold transition',
+                  saved ? 'border-clay/30 bg-clay-50 text-clay-600' : 'border-line bg-white text-forest hover:border-forest')}
+              >
+                <Icon name="heart" size={16} fill={saved ? 'currentColor' : 'none'} />
+                <span className="hidden sm:inline">{saved ? 'Saved' : 'Wishlist'}</span>
+              </button>
+            </div>
+            <Button onClick={buyNow} disabled={out} size="lg" variant="mint" full className="mt-3" iconRight="arrowRight">Buy now</Button>
+
+            <div className="mt-7">
+              <p className="text-[16px] font-semibold text-ink">Delivery options</p>
+              <div className="mt-3 divide-y divide-line-soft rounded-[16px] border border-line-soft">
+                {[['truck', 'Free delivery over ₹999', 'Same-day dispatch on in-stock items before 2 PM'], ['refresh', '7-day returns', 'Unused fittings in original packaging'], ['shieldCheck', 'GST invoice', 'Input-credit-ready on every order']].map(([ic, t, d]) => (
+                  <div key={t} className="flex items-center gap-3 px-4 py-3">
+                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[12px] bg-sunk text-forest"><Icon name={ic} size={16} /></span>
+                    <div>
+                      <p className="text-[13.5px] font-bold text-ink">{t}</p>
+                      <p className="text-[12px] text-ink-50">{d}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* details tabs */}
-      <div className="mt-12 grid gap-10 lg:grid-cols-[1.4fr_1fr]">
-        <Tabs
-          tabs={[
-            {
-              key: 'specs',
-              label: 'Specifications',
-              content: (
-                <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-line bg-line sm:grid-cols-3">
-                  {specs.map(([k, v]) => (
-                    <div key={k} className="bg-white p-3.5">
-                      <dt className="eyebrow !text-[9px]">{k}</dt>
-                      <dd className="mt-1 text-[13.5px] font-semibold capitalize">{v}</dd>
-                    </div>
-                  ))}
-                </dl>
-              ),
-            },
-            {
-              key: 'suppliers',
-              label: `Offers (${offers.length})`,
-              content: (
-                <div className="space-y-2.5">
-                  {offers.map((o) => (
-                    <div key={o.id} className={cx('flex items-center justify-between gap-3 rounded-md border p-3.5', o.best ? 'border-emerald bg-emerald-50/50' : 'border-line')}>
-                      <div>
-                        <p className="text-[13.5px] font-bold capitalize">{o.name} {o.best && <Badge tone="ok">Best price</Badge>}</p>
-                        <p className="text-[12px] text-ink-50">{o.city} · {o.eta}</p>
+      {/* details */}
+      <div className="mt-10 grid gap-6 lg:grid-cols-[1.4fr_1fr]">
+        <div className="rounded-[24px] border border-white/80 bg-white p-4 shadow-card sm:p-6">
+          <Tabs
+            tabs={[
+              {
+                key: 'specs',
+                label: 'Specifications',
+                content: (
+                  <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                    {specs.map(([k, v]) => (
+                      <div key={k} className="rounded-[14px] bg-[#f4f7f5] p-3.5">
+                        <dt className="text-[10.5px] font-bold uppercase tracking-[0.14em] text-ink-50">{k}</dt>
+                        <dd className="mt-1 text-[14px] font-semibold capitalize text-ink">{v}</dd>
                       </div>
-                      <span className="tnum text-[15px] font-extrabold">{money(o.price)}</span>
-                    </div>
-                  ))}
-                </div>
-              ),
-            },
-            {
-              key: 'reviews',
-              label: `Reviews (${product.reviewCount})`,
-              content: (
-                <div className="space-y-4">
-                  {reviews.map((r, i) => (
-                    <div key={i} className="border-b border-line pb-4 last:border-0">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[13px] font-bold">{r.name}</span>
-                        <span className="text-[11.5px] text-ink-35">{r.date}</span>
+                    ))}
+                  </dl>
+                ),
+              },
+              {
+                key: 'suppliers',
+                label: `Offers (${offers.length})`,
+                content: (
+                  <div className="space-y-2.5">
+                    {offers.map((o) => (
+                      <div key={o.id} className={cx('flex items-center justify-between gap-3 rounded-[16px] border p-4', o.best ? 'border-forest bg-emerald-50/60' : 'border-line-soft')}>
+                        <div>
+                          <p className="flex flex-wrap items-center gap-2 text-[14px] font-bold capitalize text-ink">{o.name} {o.best && <Badge tone="ok">Best price</Badge>}</p>
+                          <p className="text-[12px] text-ink-50">{o.city} · {o.eta}</p>
+                        </div>
+                        <span className="tnum text-[16px] font-bold text-ink">{money(o.price)}</span>
                       </div>
-                      <Rating value={r.rating} showValue={false} size={12} className="mt-1" />
-                      <p className="mt-1.5 text-[13px] text-ink-70">{r.text}</p>
-                    </div>
-                  ))}
-                </div>
-              ),
-            },
-          ]}
-        />
+                    ))}
+                  </div>
+                ),
+              },
+              {
+                key: 'reviews',
+                label: `Reviews (${product.reviewCount})`,
+                content: (
+                  <div className="space-y-3">
+                    {reviews.map((r, i) => (
+                      <div key={i} className="rounded-[16px] bg-[#f4f7f5] p-4">
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="flex items-center gap-2.5 text-[13.5px] font-bold text-ink">
+                            <span className="grid h-8 w-8 place-items-center rounded-full bg-forest text-[11px] font-black text-white">{r.name[0]}</span>
+                            {r.name}
+                          </span>
+                          <span className="text-[11.5px] text-ink-35">{r.date}</span>
+                        </div>
+                        <Rating value={r.rating} size={12} className="mt-2" />
+                        <p className="mt-1.5 text-[13.5px] leading-6 text-ink-70">{r.text}</p>
+                      </div>
+                    ))}
+                  </div>
+                ),
+              },
+            ]}
+          />
+        </div>
 
-        <div>
-          <p className="eyebrow mb-4">Traceability</p>
-          <div className="rounded-lg border border-line bg-white p-5">
-            <TraceRail product={product} compact />
+        <div className="space-y-4">
+          <div className="rounded-[24px] border border-white/80 bg-white p-5 shadow-card">
+            <p className="text-[11.5px] font-bold uppercase tracking-[0.18em] text-ink-50">Traceability</p>
+            <div className="mt-4">
+              <TraceRail product={product} compact />
+            </div>
           </div>
-          <Accordion className="mt-4">
+          <Accordion>
             <AccordionItem title="Delivery & dispatch" defaultOpen>
               In-stock items ordered before 2 PM are dispatched the same working day from Hyderabad. Metro delivery next day; rest of India 2–5 days.
             </AccordionItem>
@@ -263,12 +302,17 @@ export default function ProductDetail() {
 
       {/* related */}
       {related.length > 0 && (
-        <div className="mt-14">
-          <h2 className="display-serif text-[clamp(1.4rem,3.5vw,2rem)]">More in {categoryName(product.category)}</h2>
-          <Reveal stagger={0.05} className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        <section className="mt-12">
+          <SectionHead
+            serif={false}
+            title={`More in ${categoryName(product.category)}`}
+            note="Similar size and price from the same product family"
+            action={<Link to={`/shop?category=${product.category}`} className="shrink-0 text-[13px] font-bold text-forest hover:underline">View all</Link>}
+          />
+          <Reveal stagger={0.05} className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
             {related.map((p) => <Reveal.Item key={p.id}><ProductCard product={p} /></Reveal.Item>)}
           </Reveal>
-        </div>
+        </section>
       )}
     </Container>
   );

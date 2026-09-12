@@ -39,9 +39,9 @@ export default function AdminCatalogImport() {
 
   return (
     <div className="space-y-5">
-      <AdminPageHead icon="layers" title="Catalogue import" note="Upsert product metadata from a supplier workbook." />
+      <AdminPageHead title="Catalogue import" note="Upsert product metadata from a supplier workbook." />
 
-      <div className="max-w-2xl rounded-lg border border-line bg-white p-5 shadow-card sm:p-6">
+      <div className="max-w-2xl rounded-[20px] border border-line bg-white/86 p-5 shadow-[0_18px_40px_rgba(37,88,73,0.08)] sm:p-6">
         <label
           onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
           onDragLeave={() => setDrag(false)}

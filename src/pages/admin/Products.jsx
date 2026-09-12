@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Icon from '../../components/Icon';
 import ProductArt from '../../components/ProductArt';
@@ -9,7 +10,7 @@ import { AdminPageHead, SearchInput } from '../../components/admin/AdminUI';
 import { Badge, Button } from '../../components/ui';
 import { useToast } from '../../context/ToastContext';
 import { useAdminStore } from '../../context/AdminStore';
-import { catalogBase as CATALOG, categories, categoryName } from '../../data/catalog';
+import { catalogBase as CATALOG, categories, categoryName, suppliers } from '../../data/catalog';
 import { money, cx } from '../../lib/format';
 
 const PAGE = 20;
@@ -19,18 +20,29 @@ export default function AdminProducts() {
   const { products: rows, dirty, setStock, saveProduct, deleteProduct, reset } = useAdminStore();
   const [q, setQ] = useState('');
   const [cat, setCat] = useState('');
+  const [brand, setBrand] = useState('');
   const [page, setPage] = useState(1);
   const [editing, setEditing] = useState(undefined); // undefined = closed, null = new, object = edit
   const [bulk, setBulk] = useState(false);
+  const [params, setParams] = useSearchParams();
+
+  /* /admin/products?new=1 (the dashboard's "Add product") opens the form. */
+  useEffect(() => {
+    if (params.get('new')) {
+      setEditing(null);
+      setParams({}, { replace: true });
+    }
+  }, [params, setParams]);
 
   const filtered = useMemo(() => {
     const n = q.trim().toLowerCase();
     return rows.filter((p) => {
       if (cat && p.category !== cat) return false;
+      if (brand && p.supplier !== brand) return false;
       if (n && !`${p.name} ${p.sku} ${p.supplierName}`.toLowerCase().includes(n)) return false;
       return true;
     });
-  }, [rows, q, cat]);
+  }, [rows, q, cat, brand]);
 
   const shown = filtered.slice(0, page * PAGE);
 
@@ -49,7 +61,6 @@ export default function AdminProducts() {
   return (
     <div className="space-y-5">
       <AdminPageHead
-        icon="package"
         title="Products"
         note={<>
           {filtered.length.toLocaleString('en-IN')} of {rows.length.toLocaleString('en-IN')} SKUs
@@ -71,16 +82,20 @@ export default function AdminProducts() {
         />
       </AdminPageHead>
 
-      <div className="flex flex-wrap gap-3 rounded-lg border border-line bg-white p-3 shadow-card">
+      <div className="flex flex-wrap gap-3 rounded-[20px] border border-line bg-white/86 p-3 shadow-[0_18px_40px_rgba(37,88,73,0.08)]">
         <SearchInput placeholder="Search name, SKU or brand" value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} />
-        <select value={cat} onChange={(e) => { setCat(e.target.value); setPage(1); }} aria-label="Category" className="h-11 rounded-md border border-line bg-white px-3 text-[13px] font-semibold outline-none transition focus:border-emerald focus:ring-2 focus:ring-emerald/15">
+        <select value={cat} onChange={(e) => { setCat(e.target.value); setPage(1); }} aria-label="Category" className="h-12 rounded-[18px] border border-line bg-white px-4 text-[13px] font-semibold text-forest outline-none transition focus:border-forest/40">
           <option value="">All categories</option>
           {categories.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}
         </select>
+        <select value={brand} onChange={(e) => { setBrand(e.target.value); setPage(1); }} aria-label="Brand" className="h-12 rounded-[18px] border border-line bg-white px-4 text-[13px] font-semibold text-forest outline-none transition focus:border-forest/40">
+          <option value="">All brands</option>
+          {suppliers.map((s) => <option key={s.slug} value={s.slug}>{s.name}</option>)}
+        </select>
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-line bg-white shadow-card">
-        <div className="hidden grid-cols-[1fr_92px_84px_132px_96px] gap-3 border-b border-line bg-sunk px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-ink-50 sm:grid">
+      <div className="overflow-hidden rounded-[20px] border border-line bg-white/86 shadow-[0_18px_40px_rgba(37,88,73,0.08)]">
+        <div className="hidden grid-cols-[1fr_92px_84px_132px_96px] gap-3 border-b border-line bg-canvas px-4 py-3 text-[13px] font-medium text-forest-800 sm:grid">
           <span>Product</span><span>Price</span><span>MRP</span><span>Stock</span><span className="text-right">Actions</span>
         </div>
         {shown.map((p, i) => {

@@ -88,7 +88,7 @@ export default function ForgotPassword() {
     <AuthCard
       title="Reset your password"
       subtitle={step === 0 ? 'We’ll verify your mobile number first.' : step === 1 ? `Enter the code sent to ${phone}.` : 'Choose a new password.'}
-      footer={<Link to="/login" className="inline-flex items-center gap-1.5 font-semibold text-emerald-600 hover:text-emerald-700"><Icon name="arrowLeft" size={14} /> Back to sign in</Link>}
+      footer={<Link to="/login" className="inline-flex items-center gap-1.5 font-bold text-forest hover:underline"><Icon name="arrowLeft" size={14} /> Back to sign in</Link>}
     >
       <AuthStepper steps={STEPS} current={step} />
       <motion.div key={step} initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.28 }}>
@@ -105,10 +105,10 @@ export default function ForgotPassword() {
             {err}
             <Button onClick={verify} full size="lg" loading={loading}>Verify</Button>
             <div className="flex items-center justify-between">
-              <button onClick={() => { setStep(0); setOtp(''); }} className="text-[12.5px] font-medium text-ink-50 hover:text-ink">← Change number</button>
+              <button onClick={() => { setStep(0); setOtp(''); }} className="text-[12.5px] font-semibold text-forest-800 hover:text-forest">← Change number</button>
               <ResendTimer seconds={30} onResend={send} />
             </div>
-            {MOCK && <p className="text-center text-[11.5px] text-ink-35">Demo code: <span className="font-mono">123456</span></p>}
+            {MOCK && <p className="text-center text-[11.5px] text-forest-800">Demo code: <span className="font-mono">123456</span></p>}
           </div>
         )}
         {step === 2 && (

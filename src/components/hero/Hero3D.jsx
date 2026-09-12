@@ -61,9 +61,11 @@ function Elbow() {
   );
 }
 
-export default function Hero3D() {
+/* `active` pauses the render loop (e.g. while a carousel shows another slide). */
+export default function Hero3D({ active = true }) {
   return (
     <Canvas
+      frameloop={active ? 'always' : 'never'}
       camera={{ position: [3.2, 1.6, 4.2], fov: 42 }}
       dpr={[1, 1.8]}
       gl={{ antialias: true, alpha: true }}

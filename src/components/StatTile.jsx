@@ -7,26 +7,26 @@ export default function StatTile({ value, decimals, prefix, suffix, label, note,
   return (
     <div
       className={cx(
-        'rounded-lg border p-5 transition',
-        dark ? 'border-white/10 bg-white/[0.04] text-white' : 'border-line bg-white',
+        'h-full rounded-[16px] border p-4 transition sm:p-5',
+        dark ? 'border-white/10 bg-white/[0.07] text-white' : 'border-white/75 bg-white shadow-card',
         className
       )}
     >
       {icon && (
         <span
           className={cx(
-            'mb-3 grid h-9 w-9 place-items-center rounded-md',
-            dark ? 'bg-emerald/20 text-emerald-100' : 'bg-emerald-50 text-emerald-600'
+            'mb-3 grid h-9 w-9 place-items-center rounded-[12px]',
+            dark ? 'bg-white/10 text-white' : 'bg-sunk text-forest'
           )}
         >
           <Icon name={icon} size={17} />
         </span>
       )}
-      <div className={cx('display-serif text-[clamp(1.7rem,5vw,2.4rem)]', dark ? 'text-white' : 'text-ink')}>
+      <div className={cx('tnum text-[clamp(1.5rem,4vw,2rem)] font-semibold tracking-[-0.04em]', dark ? 'text-white' : 'text-ink')}>
         <Counter value={value} decimals={decimals} prefix={prefix} suffix={suffix} />
       </div>
-      <p className={cx('mt-1 text-[13px] font-semibold', dark ? 'text-white/80' : 'text-ink-70')}>{label}</p>
-      {note && <p className={cx('mt-0.5 text-[12px]', dark ? 'text-white/45' : 'text-ink-35')}>{note}</p>}
+      <p className={cx('mt-1 text-[13px] font-bold', dark ? 'text-white' : 'text-ink')}>{label}</p>
+      {note && <p className={cx('mt-1 text-[12px] leading-5', dark ? 'text-[#c9d7d2]' : 'text-ink-50')}>{note}</p>}
     </div>
   );
 }

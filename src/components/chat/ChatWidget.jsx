@@ -291,7 +291,7 @@ export default function ChatWidget() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.96 }}
             transition={{ duration: 0.22, ease: EASE }}
-            className="fixed bottom-20 right-4 z-[190] flex h-[min(70dvh,470px)] w-[calc(100vw-2rem)] max-w-[360px] flex-col overflow-hidden rounded-xl border border-line bg-white shadow-pop sm:bottom-24 sm:right-6"
+            className="fixed bottom-[calc(var(--tabbar-h,0px)+5rem)] right-4 z-[190] flex h-[min(70dvh,470px)] w-[calc(100vw-2rem)] max-w-[360px] flex-col overflow-hidden rounded-[22px] border border-white/80 bg-white shadow-pop sm:bottom-[calc(var(--tabbar-h,0px)+6rem)] sm:right-6"
             role="dialog"
             aria-label={isAdmin ? 'Support inbox' : 'Chat with Nasou support'}
           >
@@ -324,7 +324,7 @@ export default function ChatWidget() {
         onClick={() => setOpen((v) => !v)}
         whileTap={{ scale: 0.92 }}
         aria-label={open ? 'Close chat' : 'Open chat'}
-        className="fixed bottom-4 right-4 z-[190] grid h-14 w-14 place-items-center rounded-full bg-forest text-white shadow-pop transition hover:bg-emerald-600 sm:bottom-6 sm:right-6"
+        className="fixed bottom-[calc(var(--tabbar-h,0px)+1rem)] right-4 z-[190] grid h-14 w-14 place-items-center rounded-full bg-forest text-white shadow-[0_18px_40px_rgba(31,92,74,0.35)] ring-4 ring-white/70 transition hover:-translate-y-0.5 hover:bg-forest-800 sm:bottom-[calc(var(--tabbar-h,0px)+1.5rem)] sm:right-6"
       >
         <AnimatePresence mode="wait" initial={false}>
           <motion.span

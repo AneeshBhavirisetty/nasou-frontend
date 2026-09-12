@@ -56,7 +56,7 @@ export default function Modal({ open, onClose, title, size = 'md', children }) {
     >
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-ink/40 backdrop-blur-[2px]"
+        className="absolute inset-0 bg-[#173d33]/55 backdrop-blur-md"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -65,19 +65,19 @@ export default function Modal({ open, onClose, title, size = 'md', children }) {
       <div
         ref={panelRef}
         className={cx(
-          'relative w-full rounded-xl border border-line bg-white shadow-pop',
+          'relative w-full rounded-[22px] border border-white/80 bg-white shadow-[0_24px_48px_rgba(37,88,73,0.16)]',
           'animate-[rise_.26s_cubic-bezier(.22,1,.36,1)_both]',
           SIZE[size]
         )}
       >
         {title && (
-          <div className="flex items-center justify-between border-b border-line px-6 py-4">
-            <h2 id="modal-title" className="text-[17px] font-bold">
+          <div className="flex items-center justify-between border-b border-line-soft px-6 py-4">
+            <h2 id="modal-title" className="text-[19px] font-bold text-forest">
               {title}
             </h2>
             <button
               onClick={onClose}
-              className="grid h-8 w-8 place-items-center rounded-md text-ink-35 transition hover:bg-sunk hover:text-ink"
+              className="grid h-9 w-9 place-items-center rounded-full bg-sunk text-forest transition hover:bg-emerald-100/70"
               aria-label="Close"
             >
               <Icon name="close" size={16} />
@@ -88,7 +88,7 @@ export default function Modal({ open, onClose, title, size = 'md', children }) {
         {!title && (
           <button
             onClick={onClose}
-            className="absolute right-4 top-4 grid h-8 w-8 place-items-center rounded-md text-ink-35 transition hover:bg-sunk hover:text-ink"
+            className="absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-full bg-sunk text-forest transition hover:bg-emerald-100/70"
             aria-label="Close"
           >
             <Icon name="close" size={16} />
@@ -156,7 +156,7 @@ export function SessionExpiredDialog({ open, onLogin }) {
       <div className="mt-6">
         <button
           onClick={onLogin}
-          className="w-full rounded-md bg-forest py-2.5 text-[14px] font-semibold text-white transition hover:bg-forest-800"
+          className="w-full rounded-md bg-forest py-3 text-[14px] font-bold text-white shadow-btn transition hover:bg-forest-800"
         >
           Log in
         </button>

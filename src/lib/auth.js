@@ -64,6 +64,14 @@ export function parseJwt(token) {
   }
 }
 
+/* Where to land after signing in: an explicit ?redirect wins; otherwise
+   admins start on their dashboard and everyone else on the shop home. */
+export function landingFor(session, explicit) {
+  if (explicit) return explicit;
+  const role = session?.role ?? parseJwt(session?.accessToken)?.role;
+  return role === 'ADMIN' ? '/admin/dashboard' : '/';
+}
+
 export function isTokenExpired(token) {
   const payload = parseJwt(token);
   if (!payload?.exp) return true;

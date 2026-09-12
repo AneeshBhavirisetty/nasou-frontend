@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { cx } from '../lib/format';
 
-/* Underline tabs with an animated indicator (layoutId). */
+/* Segmented tabs (demo Sign In / Sign Up switch) with an animated pill. */
 export default function Tabs({ tabs = [], initial, onChange, className = '' }) {
   const [active, setActive] = useState(initial ?? tabs[0]?.key);
   const select = (k) => {
@@ -12,23 +12,24 @@ export default function Tabs({ tabs = [], initial, onChange, className = '' }) {
   const current = tabs.find((t) => t.key === active);
   return (
     <div className={className}>
-      <div className="no-bar flex gap-1 overflow-x-auto border-b border-line">
+      <div className="no-bar flex gap-1 overflow-x-auto rounded-md bg-sunk p-1 shadow-[inset_0_0_0_1px_rgba(37,88,73,0.08)]">
         {tabs.map((t) => (
           <button
             key={t.key}
             onClick={() => select(t.key)}
             className={cx(
-              'relative shrink-0 px-3.5 py-2.5 text-[13.5px] font-semibold transition',
-              active === t.key ? 'text-ink' : 'text-ink-50 hover:text-ink'
+              'relative flex-1 shrink-0 whitespace-nowrap rounded-sm px-4 py-2.5 text-[13.5px] font-semibold transition',
+              active === t.key ? 'text-white' : 'text-forest-800 hover:text-forest'
             )}
           >
-            {t.label}
             {active === t.key && (
               <motion.span
-                layoutId="tab-underline"
-                className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-forest"
+                layoutId="tab-pill"
+                transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+                className="absolute inset-0 rounded-sm bg-forest shadow-[0_10px_24px_rgba(31,92,74,0.18)]"
               />
             )}
+            <span className="relative">{t.label}</span>
           </button>
         ))}
       </div>

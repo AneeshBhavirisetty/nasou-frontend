@@ -8,6 +8,7 @@ import Icon from '../../components/Icon';
 import AuthCard from '../../components/auth/AuthCard';
 import PasswordField from '../../components/auth/PasswordField';
 import { DEMO_ACCOUNTS } from '../../lib/api';
+import { landingFor } from '../../lib/auth';
 
 const MOCK = import.meta.env.VITE_API_BASE_URL === undefined || import.meta.env.VITE_MOCK_API === 'true';
 
@@ -20,18 +21,18 @@ function detectType(v) {
 }
 
 export default function Login() {
-  const { isAuthenticated, login } = useAuth();
+  const { isAuthenticated, user, login } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
   const [params] = useSearchParams();
-  const redirect = params.get('redirect') || '/';
+  const explicit = params.get('redirect');
 
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  if (isAuthenticated) return <Navigate to={redirect} replace />;
+  if (isAuthenticated) return <Navigate to={landingFor(user, explicit)} replace />;
 
   const type = detectType(identifier);
 
@@ -46,9 +47,9 @@ export default function Login() {
 
     setLoading(true);
     try {
-      await login(trimmed, password);
+      const session = await login(trimmed, password);
       toast.success('Welcome back!');
-      navigate(redirect, { replace: true });
+      navigate(landingFor(session, explicit), { replace: true });
     } catch (err) {
       setError(err.message || 'Invalid credentials. Please try again.');
     } finally {
@@ -60,7 +61,7 @@ export default function Login() {
     <AuthCard
       title="Sign in"
       subtitle="Welcome back — your cart and wishlist are waiting."
-      footer={<>New to Nasou? <Link to="/login/otp" className="font-semibold text-emerald-600 hover:text-emerald-700">Create an account</Link></>}
+      footer={<>New to Nasou? <Link to="/login/otp" className="font-bold text-forest hover:underline">Create an account</Link></>}
     >
       <form onSubmit={submit} noValidate className="space-y-4">
         <Field
@@ -81,7 +82,7 @@ export default function Login() {
         <PasswordField
           value={password}
           onChange={setPassword}
-          rightLink={<Link to="/forgot-password" className="font-normal text-emerald-600 hover:text-emerald-700">Forgot password?</Link>}
+          rightLink={<Link to="/forgot-password" className="font-semibold text-forest hover:underline">Forgot password?</Link>}
         />
 
         {error && (
@@ -94,29 +95,33 @@ export default function Login() {
       </form>
 
       <div className="mt-5">
-        <div className="flex items-center gap-3 text-[12px] text-ink-35">
-          <div className="h-px flex-1 bg-line" /><span>or</span><div className="h-px flex-1 bg-line" />
+        <div className="relative py-2">
+          <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-line" /></div>
+          <div className="relative flex justify-center text-xs uppercase tracking-[0.16em] text-forest-800">
+            <span className="bg-white px-3">Or continue with</span>
+          </div>
         </div>
         <Link
           to="/login/otp"
-          className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-md border border-line text-[13.5px] font-semibold text-ink-70 transition hover:border-ink-35 hover:text-ink"
+          className="mt-3 flex w-full items-center justify-center gap-3 rounded-md border border-line bg-white/80 px-4 py-3 text-sm font-semibold text-forest transition hover:bg-sunk"
         >
-          <Icon name="phone" size={15} /> Sign in with OTP
+          <span className="grid h-5 w-5 place-items-center rounded-full bg-forest text-white"><Icon name="phone" size={11} /></span>
+          Mobile OTP
         </Link>
       </div>
 
       {MOCK && (
-        <div className="mt-5 rounded-md border border-dashed border-line bg-canvas px-3 py-2.5 text-[11.5px] leading-relaxed text-ink-50">
-          <p className="font-semibold text-ink-70">Demo accounts — password <span className="font-mono">nasou123</span></p>
+        <div className="mt-5 rounded-[14px] border border-dashed border-[#cad8d2] bg-[#f4f7f5] px-3.5 py-3 text-[11.5px] leading-relaxed text-ink-50">
+          <p className="font-bold text-forest">Demo accounts — password <span className="font-mono">nasou123</span></p>
           <ul className="mt-1 space-y-0.5">
             {DEMO_ACCOUNTS.map((a) => (
               <li key={a.role} className="flex justify-between gap-2">
                 <span className="font-mono">{a.email}</span>
-                <span className="shrink-0 rounded bg-white px-1.5 font-semibold text-ink-70">{a.role}</span>
+                <span className="shrink-0 rounded-full bg-white px-2 font-bold text-forest">{a.role}</span>
               </li>
             ))}
           </ul>
-          <p className="mt-1.5 text-[11px] text-ink-35">Or OTP login with the matching number + any 6 digits.</p>
+          <p className="mt-1.5 text-center text-[11px] text-ink-50">Or OTP login with the matching number + any 6 digits.</p>
         </div>
       )}
     </AuthCard>
