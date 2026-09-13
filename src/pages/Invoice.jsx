@@ -68,6 +68,7 @@ export default function Invoice() {
           <div className="sm:text-right">
             <p className="eyebrow mb-2">Payment</p>
             <p className="text-[14px] font-bold">{order.payment}</p>
+            {order.paymentStatus && <p className="text-[12.5px] font-semibold text-forest">{order.paymentStatus}</p>}
             <p className="text-[13px] text-ink-50">{order.items} items · {order.lines.length} lines</p>
           </div>
         </div>
@@ -103,6 +104,9 @@ export default function Invoice() {
         <div className="flex justify-end">
           <dl className="w-full max-w-xs space-y-2 text-[13.5px]">
             <div className="flex justify-between"><dt className="text-ink-50">Subtotal</dt><dd className="tnum font-semibold">{money(order.subtotal)}</dd></div>
+            {order.discount > 0 && (
+              <div className="flex justify-between text-emerald-700"><dt>Discounts{order.coupon ? ` (incl. ${order.coupon})` : ''}</dt><dd className="tnum font-semibold">− {money(order.discount)}</dd></div>
+            )}
             <div className="flex justify-between"><dt className="text-ink-50">GST (18%)</dt><dd className="tnum font-semibold">{money(order.gst)}</dd></div>
             <div className="flex justify-between">
               <dt className="text-ink-50">Delivery</dt>

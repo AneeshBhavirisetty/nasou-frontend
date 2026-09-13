@@ -3,6 +3,7 @@
    API when the backend lands; the shape is what the UI consumes. */
 
 import { products } from './catalog';
+import { loadPlacedOrders } from '../context/OrderStore';
 
 export const ORDER_STATUSES = ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'];
 export const ORDER_FLOW = ['Pending', 'Processing', 'Shipped', 'Delivered'];
@@ -61,7 +62,10 @@ export function seedOrders(count = 26) {
 
 /* One shared instance so the admin table and /invoice/:id agree. */
 export const orders = seedOrders();
-export const findOrder = (id) => orders.find((o) => o.id === id) ?? null;
+
+/* Seeded book + orders placed through checkout (context/OrderStore.jsx). */
+export const allOrders = (placed = loadPlacedOrders()) => [...placed, ...orders];
+export const findOrder = (id) => allOrders().find((o) => o.id === id) ?? null;
 
 export const formatOrderDate = (ms) =>
   new Date(ms).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });

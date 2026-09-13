@@ -10,8 +10,11 @@ const STAGES = buildTrace(products[0]);
 
 export default function OrderConfirmed() {
   const { state } = useLocation();
-  /* Generated once per mount — a re-render must not reissue the order id. */
-  const orderId = useMemo(() => `NH-${Math.floor(Math.random() * 9000 + 1000)}`, []);
+  /* The id comes from the saved order (context/OrderStore); the fallback only
+     covers someone landing here without placing an order. */
+  const fallbackId = useMemo(() => `NH-${Math.floor(Math.random() * 9000 + 1000)}`, []);
+  const orderId = state?.id || fallbackId;
+  const cod = state?.pay === 'Cash on delivery';
 
   return (
     <Container className="pb-14 pt-8 sm:pt-12">
@@ -39,6 +42,12 @@ export default function OrderConfirmed() {
           emailed the details.
         </p>
 
+        {cod && state?.total != null && (
+          <p className="mx-auto mt-5 max-w-md rounded-[14px] bg-emerald-50 px-4 py-3 text-[13.5px] font-semibold text-emerald-700">
+            Cash on delivery — please keep {money(state.total)} ready (cash or UPI) when the order arrives.
+          </p>
+        )}
+
         {state?.total != null && (
           <dl className="mx-auto mt-8 grid max-w-md grid-cols-3 gap-3">
             <div className="rounded-[16px] bg-[#f4f7f5] px-4 py-3">
@@ -46,8 +55,8 @@ export default function OrderConfirmed() {
               <dd className="tnum mt-1 text-[16px] font-bold text-ink">{state.count}</dd>
             </div>
             <div className="rounded-[16px] bg-[#f4f7f5] px-4 py-3">
-              <dt className="text-[10.5px] font-bold uppercase tracking-[0.14em] text-ink-50">Paid via</dt>
-              <dd className="mt-1 text-[16px] font-bold text-ink">{state.pay}</dd>
+              <dt className="text-[10.5px] font-bold uppercase tracking-[0.14em] text-ink-50">{cod ? 'Payment' : 'Paid via'}</dt>
+              <dd className="mt-1 text-[16px] font-bold text-ink">{cod ? 'On delivery' : state.pay}</dd>
             </div>
             <div className="rounded-[16px] bg-[#f4f7f5] px-4 py-3">
               <dt className="text-[10.5px] font-bold uppercase tracking-[0.14em] text-ink-50">Total</dt>
@@ -78,8 +87,8 @@ export default function OrderConfirmed() {
         </div>
 
         <div className="mt-9 flex flex-wrap justify-center gap-3">
-          <Button to="/shop" size="lg" iconRight="arrowRight">Keep shopping</Button>
-          <Button to="/" size="lg" variant="outline">Back to home</Button>
+          <Button to="/orders" size="lg" iconRight="arrowRight">Track this order</Button>
+          <Button to="/shop" size="lg" variant="outline">Keep shopping</Button>
         </div>
       </motion.div>
     </Container>

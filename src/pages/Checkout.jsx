@@ -7,6 +7,7 @@ import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
 import { useAdminStore, couponDiscount } from '../context/AdminStore';
+import { useOrderStore } from '../context/OrderStore';
 import { paymentMethods } from '../data/site';
 import { cx, money } from '../lib/format';
 
@@ -42,6 +43,15 @@ function Progress({ step }) {
   );
 }
 
+/* one line under each payment method */
+const PAY_NOTE = {
+  UPI: 'Any UPI app — instant confirmation',
+  Cards: 'Credit or debit card',
+  'Net banking': 'All major Indian banks',
+  'Cash on delivery': 'Pay in cash or UPI when the order arrives',
+  'GST invoice': 'Trade accounts — pay against the invoice',
+};
+
 const DELIVERY_OPTIONS = [
   { id: 'standard', name: 'Standard', note: '3–5 days · free above ₹999', price: 0 },
   { id: 'express', name: 'Express', note: 'Next day by 7 PM', price: 99 },
@@ -50,7 +60,8 @@ const DELIVERY_OPTIONS = [
 
 export default function Checkout() {
   const { items, totals, clear } = useCart();
-  const { coupons } = useAdminStore();
+  const { coupons, products: stockBook, setStock } = useAdminStore();
+  const { placeOrder: saveOrder } = useOrderStore();
   const { isAuthenticated, user } = useAuth();
   const toast = useToast();
   const [step, setStep] = useState(0);
@@ -59,6 +70,15 @@ export default function Checkout() {
   const [placed, setPlaced] = useState(false);
   const [code, setCode] = useState('');
   const [applied, setApplied] = useState(null);
+  /* delivery address — controlled so it reaches the review step and the order */
+  const [addr, setAddr] = useState(() => ({
+    name: user?.fullName || '',
+    phone: '',
+    address: '',
+    city: 'Hyderabad',
+    pin: '',
+  }));
+  const [addrErr, setAddrErr] = useState('');
   const navigate = useNavigate();
 
   /* `placed` matters: clearing the cart re-renders this page, and without
@@ -113,11 +133,75 @@ export default function Checkout() {
   const gst = Math.round(taxable * GST_RATE);
   const grand = taxable + shipFee + gst;
 
+  const setA = (k) => (e) => setAddr((a) => ({ ...a, [k]: e.target.value }));
+  const addressProblem = () => {
+    if (!addr.name.trim()) return 'Enter the name for delivery.';
+    if (!/^\d{10}$/.test(addr.phone)) return 'Enter a 10-digit mobile number.';
+    if (addr.address.trim().length < 6) return 'Enter the delivery address.';
+    if (!addr.city.trim()) return 'Enter the city.';
+    if (!/^\d{6}$/.test(addr.pin)) return 'Enter a 6-digit PIN code.';
+    return '';
+  };
+  const next = () => {
+    if (step === 0) {
+      const problem = addressProblem();
+      setAddrErr(problem);
+      if (problem) return;
+    }
+    setStep((s) => s + 1);
+  };
+
+  /* Saves the order, takes the ordered quantities out of stock (admin item 9)
+     and hands the real order id to the confirmation page. */
   const placeOrder = () => {
+    const short = items.find((l) => {
+      const live = stockBook.find((p) => p.id === l.id);
+      return live && l.qty > live.stock;
+    });
+    if (short) {
+      const live = stockBook.find((p) => p.id === short.id);
+      return toast.error(`Only ${live.stock} left of ${short.product.name} — update the quantity in your cart.`);
+    }
+
+    const order = saveOrder({
+      userId: user?.id || 'guest',
+      customer: addr.name.trim(),
+      email: user?.email || '',
+      phone: addr.phone,
+      address: addr.address.trim(),
+      city: addr.city.trim(),
+      pin: addr.pin,
+      lines: items.map((l) => ({
+        id: l.id,
+        sku: l.product.sku,
+        name: l.product.name,
+        size: l.product.size,
+        qty: l.qty,
+        price: l.price,
+        amount: l.price * l.qty - (l.bulk?.amount || 0),
+        bulk: l.bulk ? { name: l.bulk.rule.name, amount: l.bulk.amount } : null,
+      })),
+      items: totals.count,
+      subtotal: totals.subtotal,
+      discount: totals.bulk + couponAmount,
+      gst,
+      shipping: shipFee,
+      total: grand,
+      payment: pay,
+      paymentStatus: pay === 'Cash on delivery' ? 'Due on delivery' : pay === 'GST invoice' ? 'Invoice due' : 'Paid',
+      delivery: DELIVERY_OPTIONS.find((d) => d.id === delivery).name,
+      coupon: applied?.code || null,
+    });
+
+    items.forEach((l) => {
+      const live = stockBook.find((p) => p.id === l.id);
+      if (live) setStock(l.id, Math.max(0, live.stock - l.qty));
+    });
+
     setPlaced(true);
     navigate('/order-confirmed', {
       replace: true,
-      state: { total: grand, count: totals.count, delivery, pay, coupon: applied?.code, couponAmount },
+      state: { id: order.id, total: grand, count: totals.count, delivery, pay, coupon: applied?.code, couponAmount },
     });
     clear();
   };
@@ -152,31 +236,37 @@ export default function Checkout() {
                     <h2 className="text-[20px] font-semibold text-forest">Where should this go?</h2>
                     <p className="mt-1 text-[14px] text-ink-50">Choose where this order should arrive.</p>
                     <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                      <Field label="Full name" placeholder="Aarav Reddy" defaultValue={user?.fullName || 'Aarav Reddy'} />
+                      <Field label="Full name" placeholder="Name for delivery" value={addr.name} onChange={setA('name')} autoComplete="name" />
                       <Field
                         label="Mobile number"
                         type="tel"
                         inputMode="numeric"
                         maxLength={10}
                         placeholder="10-digit mobile"
-                        defaultValue="9705807551"
-                        onInput={(e) => { e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10); }}
+                        value={addr.phone}
+                        onChange={(e) => setAddr((a) => ({ ...a, phone: e.target.value.replace(/\D/g, '').slice(0, 10) }))}
+                        autoComplete="tel-national"
                       />
                       <Field
                         label="Address"
                         className="sm:col-span-2"
-                        placeholder="Flat, building, street"
-                        defaultValue="4-2-118, Kavuri Hills, Madhapur"
+                        placeholder="Flat, building, street, area"
+                        value={addr.address}
+                        onChange={setA('address')}
+                        autoComplete="street-address"
                       />
-                      <Field label="City" defaultValue="Hyderabad" />
+                      <Field label="City" value={addr.city} onChange={setA('city')} autoComplete="address-level2" />
                       <Field
                         label="PIN code"
                         inputMode="numeric"
                         maxLength={6}
-                        defaultValue="500081"
-                        onInput={(e) => { e.target.value = e.target.value.replace(/\D/g, '').slice(0, 6); }}
+                        placeholder="6 digits"
+                        value={addr.pin}
+                        onChange={(e) => setAddr((a) => ({ ...a, pin: e.target.value.replace(/\D/g, '').slice(0, 6) }))}
+                        autoComplete="postal-code"
                       />
                     </div>
+                    {addrErr && <p role="alert" className="mt-4 rounded-md bg-clay-50 px-3 py-2.5 text-[13px] text-clay-600">{addrErr}</p>}
                   </>
                 )}
 
@@ -239,7 +329,10 @@ export default function Checkout() {
                           >
                             {pay === m && <span className="h-2.5 w-2.5 rounded-full bg-forest" />}
                           </span>
-                          <span className="text-[15px] font-bold text-ink">{m}</span>
+                          <span className="min-w-0">
+                            <span className="block text-[15px] font-bold text-ink">{m}</span>
+                            <span className="block text-[12px] text-ink-50">{PAY_NOTE[m]}</span>
+                          </span>
                         </button>
                       ))}
                     </div>
@@ -259,7 +352,7 @@ export default function Checkout() {
                       <div className="flex justify-between gap-6 rounded-[16px] bg-[#f4f7f5] p-4">
                         <dt className="font-semibold text-ink-70">Deliver to</dt>
                         <dd className="text-right text-ink-50">
-                          Aarav Reddy<br />4-2-118, Kavuri Hills, Madhapur<br />Hyderabad 500081
+                          {addr.name} · +91 {addr.phone}<br />{addr.address}<br />{addr.city} {addr.pin}
                         </dd>
                       </div>
                       <div className="flex justify-between gap-6 rounded-[16px] bg-[#f4f7f5] p-4">
@@ -270,7 +363,7 @@ export default function Checkout() {
                       </div>
                       <div className="flex justify-between gap-6 rounded-[16px] bg-[#f4f7f5] p-4">
                         <dt className="font-semibold text-ink-70">Payment</dt>
-                        <dd className="text-right text-ink-50">{pay}</dd>
+                        <dd className="text-right text-ink-50">{pay}{pay === 'Cash on delivery' && <><br /><span className="font-semibold text-forest">Pay {money(grand)} when it arrives</span></>}</dd>
                       </div>
                     </dl>
                   </>
@@ -287,12 +380,12 @@ export default function Checkout() {
                 Back
               </Button>
               {step < STEPS.length - 1 ? (
-                <Button size="lg" iconRight="arrowRight" onClick={() => setStep((s) => s + 1)}>
+                <Button size="lg" iconRight="arrowRight" onClick={next}>
                   <span className="sm:hidden">Continue</span><span className="hidden sm:inline">Continue securely</span>
                 </Button>
               ) : (
                 <Button size="lg" variant="accent" icon="lock" onClick={placeOrder}>
-                  Place order · {money(grand)}
+                  {pay === 'Cash on delivery' ? <>Place order · pay on delivery</> : <>Place order · {money(grand)}</>}
                 </Button>
               )}
             </div>

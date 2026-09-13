@@ -6,6 +6,7 @@ import ExportDialog from '../../components/admin/ExportDialog';
 import { AdminPageHead, FilterTabs, SearchInput } from '../../components/admin/AdminUI';
 import { Badge, Button } from '../../components/ui';
 import { useToast } from '../../context/ToastContext';
+import { useOrderStore } from '../../context/OrderStore';
 import { orders as SEED, ORDER_FLOW, ORDER_STATUSES, formatOrderDate } from '../../data/orders';
 import { downloadSheet, hyperlink, invoiceUrl, isoDate } from '../../lib/exportSheet';
 import { money, cx } from '../../lib/format';
@@ -15,7 +16,10 @@ const DOT = { Pending: 'bg-amber', Processing: 'bg-slate', Shipped: 'bg-slate', 
 
 export default function AdminOrders() {
   const toast = useToast();
-  const [rows, setRows] = useState(SEED);
+  /* placed orders (checkout → OrderStore) on top of the seeded demo book */
+  const { placed, updateOrder } = useOrderStore();
+  const [seedRows, setSeedRows] = useState(SEED);
+  const rows = useMemo(() => [...placed, ...seedRows], [placed, seedRows]);
   const [q, setQ] = useState('');
   const [status, setStatus] = useState('');
   const [exporting, setExporting] = useState(false);
@@ -38,13 +42,17 @@ export default function AdminOrders() {
 
   const inView = filtered.reduce((sum, o) => sum + (o.status === 'Cancelled' ? 0 : o.total), 0);
 
-  const advance = (id) =>
-    setRows((r) => r.map((o) => {
-      if (o.id !== id) return o;
-      const next = ORDER_FLOW[Math.min(ORDER_FLOW.length - 1, ORDER_FLOW.indexOf(o.status) + 1)];
-      toast.success(`${id} → ${next}`);
-      return { ...o, status: next };
-    }));
+  /* Pending → Processing → Shipped → Delivered. Delivering a cash-on-delivery
+     order marks its payment collected. */
+  const advance = (id) => {
+    const o = rows.find((x) => x.id === id);
+    if (!o) return;
+    const next = ORDER_FLOW[Math.min(ORDER_FLOW.length - 1, ORDER_FLOW.indexOf(o.status) + 1)];
+    const patch = { status: next, ...(next === 'Delivered' && o.paymentStatus === 'Due on delivery' ? { paymentStatus: 'Collected' } : {}) };
+    if (placed.some((x) => x.id === id)) updateOrder(id, patch);
+    else setSeedRows((r) => r.map((x) => (x.id === id ? { ...x, ...patch } : x)));
+    toast.success(`${id} → ${next}`);
+  };
 
   const runExport = (matched, meta) => {
     const headers = [
@@ -131,9 +139,13 @@ function OrderCard({ order: o, onAdvance }) {
     <article className="flex h-full flex-col rounded-[20px] border border-line bg-white p-4 shadow-[0_18px_40px_rgba(37,88,73,0.08)] transition hover:-translate-y-0.5 hover:border-forest/30 hover:shadow-lift sm:p-5">
       <header className="flex items-start justify-between gap-3">
         <div>
-          <p className="font-mono text-[14px] font-bold">{o.id}</p>
-          <p className="mt-0.5 flex items-center gap-1.5 text-[11.5px] text-ink-35">
+          <p className="flex items-center gap-1.5 font-mono text-[14px] font-bold">
+            {o.id}
+            {o.userId && <span className="rounded-full bg-emerald-50 px-1.5 py-0.5 font-sans text-[10px] font-bold text-emerald-700">New</span>}
+          </p>
+          <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[11.5px] text-ink-35">
             <Icon name="calendar" size={12} /> {formatOrderDate(o.createdAt)} · {o.payment}
+            {o.paymentStatus === 'Due on delivery' && <span className="rounded-full bg-amber-50 px-1.5 font-bold text-amber">COD · due</span>}
           </p>
         </div>
         <Badge tone={TONE[o.status]}>{o.status}</Badge>
