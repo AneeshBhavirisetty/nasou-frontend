@@ -10,7 +10,9 @@ import Accordion, { AccordionItem } from '../components/Accordion';
 import Tabs from '../components/Tabs';
 import { Badge, Button, Container, Breadcrumbs, PriceTag, Rating, SectionHead, Stepper } from '../components/ui';
 import { categoryName, departmentName, findProduct, offersFor, relatedProducts } from '../data/catalog';
-import { useCart } from '../context/CartContext';
+import { useCart, MAX_QTY } from '../context/CartContext';
+import { useAdminStore } from '../context/AdminStore';
+import { bulkOffersFor, describeBulk } from '../lib/pricing';
 import { useWishlist } from '../context/WishlistContext';
 import { useToast } from '../context/ToastContext';
 import { money, discount, deliveryBy, cx } from '../lib/format';
@@ -39,6 +41,7 @@ export default function ProductDetail() {
   const { id } = useParams();
   const product = findProduct(id);
   const { add, setOpen } = useCart();
+  const { bulkRules } = useAdminStore();
   const wishlist = useWishlist();
   const toast = useToast();
   const navigate = useNavigate();
@@ -52,6 +55,8 @@ export default function ProductDetail() {
   const reviews = useMemo(() => (product ? reviewsFor(product) : []), [product]);
 
   if (!product) return <Navigate to="/shop" replace />;
+
+  const bulkOffers = bulkOffersFor(product, bulkRules);
 
   const out = product.stock <= 0;
   const low = !out && product.stock <= 8;
@@ -183,7 +188,7 @@ export default function ProductDetail() {
                 {qty > 1 && <p className="tnum text-[13px] text-ink-50"><span className="font-bold text-ink">{money(product.price * qty)}</span> total</p>}
               </div>
               <div className="mt-3">
-                <Stepper value={qty} onChange={setQty} min={1} max={Math.max(1, Math.min(20, product.stock || 20))} />
+                <Stepper value={qty} onChange={setQty} min={1} max={Math.max(1, Math.min(MAX_QTY, product.stock || MAX_QTY))} />
               </div>
             </div>
 
@@ -200,6 +205,24 @@ export default function ProductDetail() {
               </button>
             </div>
             <Button onClick={buyNow} disabled={out} size="lg" variant="mint" full className="mt-3" iconRight="arrowRight">Buy now</Button>
+
+            {bulkOffers.length > 0 && (
+              <div className="mt-6 rounded-[18px] border border-dashed border-forest/40 bg-emerald-50/60 p-4">
+                <p className="flex items-center gap-2 text-[14px] font-bold text-forest"><Icon name="percent" size={15} /> Bulk pricing</p>
+                <ul className="mt-2.5 space-y-1.5">
+                  {bulkOffers.map((r) => (
+                    <li key={r.id} className="flex items-center justify-between gap-3 text-[13px]">
+                      <span className="text-ink-70">
+                        Buy <span className="tnum font-bold text-ink">{r.minQty}+</span>{' '}
+                        {r.scopeType === 'product' ? 'of this item' : r.scopeType === 'brand' ? `from ${product.supplierName}` : `in ${r.scopeType === 'department' ? departmentName(product.department) : categoryName(product.category)}`}
+                      </span>
+                      <span className="tnum shrink-0 font-bold text-emerald-700">{describeBulk(r)}</span>
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-2 text-[11.5px] text-ink-50">Applied automatically in your cart{bulkOffers.some((r) => r.scopeType !== 'product') ? ' — mixed sizes count together' : ''}.</p>
+              </div>
+            )}
 
             <div className="mt-7">
               <p className="text-[16px] font-semibold text-ink">Delivery options</p>

@@ -18,14 +18,24 @@ const emptyPatch = { overrides: {}, added: [], removed: [] };
 function load() {
   try {
     const raw = JSON.parse(localStorage.getItem(KEY) || 'null');
-    if (!raw) return { patch: emptyPatch, coupons: seedCoupons() };
+    if (!raw) return { patch: emptyPatch, coupons: seedCoupons(), bulkRules: seedBulkRules() };
     return {
       patch: { ...emptyPatch, ...(raw.patch || {}) },
       coupons: Array.isArray(raw.coupons) ? raw.coupons : seedCoupons(),
+      bulkRules: Array.isArray(raw.bulkRules) ? raw.bulkRules : seedBulkRules(),
     };
   } catch {
-    return { patch: emptyPatch, coupons: seedCoupons() };
+    return { patch: emptyPatch, coupons: seedCoupons(), bulkRules: seedBulkRules() };
   }
+}
+
+/* Bulk (quantity) pricing — see lib/pricing.js for how rules apply. */
+function seedBulkRules() {
+  return [
+    { id: 'b1', name: 'PVC fittings trade pack', scopeType: 'category', scopeValue: 'pvc-fittings', minQty: 50, kind: 'percent', value: 8, active: true },
+    { id: 'b2', name: 'Astral volume', scopeType: 'brand', scopeValue: 'astral', minQty: 100, kind: 'percent', value: 5, active: true },
+    { id: 'b3', name: 'PVC Elbow ½″ box of 25', scopeType: 'product', scopeValue: 'PL00001', minQty: 25, kind: 'flat', value: 3, active: false },
+  ];
 }
 
 function seedCoupons() {
@@ -39,12 +49,13 @@ function seedCoupons() {
 export function AdminStoreProvider({ children }) {
   const [patch, setPatch] = useState(() => load().patch);
   const [coupons, setCoupons] = useState(() => load().coupons);
+  const [bulkRules, setBulkRules] = useState(() => load().bulkRules);
 
   useEffect(() => {
     try {
-      localStorage.setItem(KEY, JSON.stringify({ patch, coupons }));
+      localStorage.setItem(KEY, JSON.stringify({ patch, coupons, bulkRules }));
     } catch { /* quota — non-fatal */ }
-  }, [patch, coupons]);
+  }, [patch, coupons, bulkRules]);
 
   /* Derived product list: catalogue minus removed, with overrides applied,
      plus admin-added rows on top. */
@@ -104,14 +115,20 @@ export function AdminStoreProvider({ children }) {
 
   const deleteCoupon = useCallback((id) => setCoupons((cs) => cs.filter((c) => c.id !== id)), []);
 
+  const saveBulkRule = useCallback((rule) => {
+    setBulkRules((rs) => (rs.some((r) => r.id === rule.id) ? rs.map((r) => (r.id === rule.id ? { ...r, ...rule } : r)) : [{ ...rule }, ...rs]));
+  }, []);
+  const deleteBulkRule = useCallback((id) => setBulkRules((rs) => rs.filter((r) => r.id !== id)), []);
+
   const reset = useCallback(() => {
     setPatch(emptyPatch);
     setCoupons(seedCoupons());
+    setBulkRules(seedBulkRules());
   }, []);
 
   const value = useMemo(
-    () => ({ products, coupons, dirty, setStock, saveProduct, deleteProduct, saveCoupon, deleteCoupon, reset }),
-    [products, coupons, dirty, setStock, saveProduct, deleteProduct, saveCoupon, deleteCoupon, reset]
+    () => ({ products, coupons, bulkRules, dirty, setStock, saveProduct, deleteProduct, saveCoupon, deleteCoupon, saveBulkRule, deleteBulkRule, reset }),
+    [products, coupons, bulkRules, dirty, setStock, saveProduct, deleteProduct, saveCoupon, deleteCoupon, saveBulkRule, deleteBulkRule, reset]
   );
 
   return <AdminStoreContext.Provider value={value}>{children}</AdminStoreContext.Provider>;

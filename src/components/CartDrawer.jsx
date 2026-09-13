@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import Icon from './Icon';
 import ProductArt from './ProductArt';
 import { Button, Stepper } from './ui';
-import { useCart } from '../context/CartContext';
+import { useCart, MAX_QTY } from '../context/CartContext';
 import { money } from '../lib/format';
 
 export default function CartDrawer() {
@@ -69,7 +69,7 @@ export default function CartDrawer() {
                     <div className="mt-2 h-2 overflow-hidden rounded-full bg-sunk">
                       <div
                         className="h-full rounded-full bg-forest transition-all duration-500"
-                        style={{ width: `${Math.min(100, (totals.subtotal / 999) * 100)}%` }}
+                        style={{ width: `${Math.min(100, (totals.net / 999) * 100)}%` }}
                       />
                     </div>
                   </div>
@@ -107,15 +107,21 @@ export default function CartDrawer() {
                           <p className="mt-0.5 truncate text-[11.5px] text-ink-50">
                             Sold by {line.supplier?.name} · {line.supplier?.eta}
                           </p>
+                          {line.bulk && (
+                            <p className="mt-1 truncate text-[11.5px] font-semibold text-emerald-700">
+                              Bulk price · − {money(line.bulk.amount)}
+                            </p>
+                          )}
                           <div className="mt-2.5 flex items-center justify-between gap-2">
                             <Stepper
                               size="sm"
                               value={line.qty}
                               onChange={(q) => setQty(line.index, q)}
                               min={0}
+                              max={Math.min(MAX_QTY, line.product.stock || MAX_QTY)}
                             />
                             <span className="tnum text-[14px] font-bold">
-                              {money(line.price * line.qty)}
+                              {money(line.price * line.qty - (line.bulk?.amount || 0))}
                             </span>
                           </div>
                         </div>
@@ -130,6 +136,12 @@ export default function CartDrawer() {
                       <dt className="text-ink-50">Subtotal</dt>
                       <dd className="tnum font-semibold">{money(totals.subtotal)}</dd>
                     </div>
+                    {totals.bulk > 0 && (
+                      <div className="flex justify-between font-semibold text-emerald-700">
+                        <dt>Bulk pricing</dt>
+                        <dd className="tnum">− {money(totals.bulk)}</dd>
+                      </div>
+                    )}
                     <div className="flex justify-between">
                       <dt className="text-ink-50">Delivery</dt>
                       <dd className="tnum font-semibold">

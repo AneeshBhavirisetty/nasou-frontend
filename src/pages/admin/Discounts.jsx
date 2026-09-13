@@ -2,7 +2,8 @@ import { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Icon from '../../components/Icon';
 import Modal from '../../components/Modal';
-import { AdminPageHead } from '../../components/admin/AdminUI';
+import { AdminPageHead, FilterTabs } from '../../components/admin/AdminUI';
+import BulkPricingPanel from '../../components/admin/BulkPricing';
 import { Badge, Button, Field } from '../../components/ui';
 import { useToast } from '../../context/ToastContext';
 import { useAdminStore, couponDiscount } from '../../context/AdminStore';
@@ -91,8 +92,10 @@ const SAMPLE = 2000;
 
 export default function AdminDiscounts() {
   const toast = useToast();
-  const { coupons, saveCoupon, deleteCoupon } = useAdminStore();
+  const { coupons, bulkRules, saveCoupon, deleteCoupon } = useAdminStore();
   const [editing, setEditing] = useState(undefined);
+  const [tab, setTab] = useState('codes');
+  const [creatingBulk, setCreatingBulk] = useState(false);
 
   const active = coupons.filter((c) => c.active).length;
 
@@ -107,10 +110,29 @@ export default function AdminDiscounts() {
     <div className="space-y-5">
       <AdminPageHead
         title="Discounts"
-        note={<>{coupons.length} code{coupons.length !== 1 && 's'} · <span className="text-emerald-600">{active} active</span> · customers enter these at checkout</>}
+        note={tab === 'codes'
+          ? <>{coupons.length} code{coupons.length !== 1 && 's'} · <span className="text-emerald-600">{active} active</span> · customers enter these at checkout</>
+          : <>{bulkRules.length} bulk rule{bulkRules.length !== 1 && 's'} · <span className="text-emerald-600">{bulkRules.filter((r) => r.active).length} active</span> · applied automatically in the cart</>}
       >
-        <Button size="sm" icon="plus" onClick={() => setEditing(null)}>New discount code</Button>
+        {tab === 'codes'
+          ? <Button size="sm" icon="plus" onClick={() => setEditing(null)}>New discount code</Button>
+          : <Button size="sm" icon="plus" onClick={() => setCreatingBulk(true)}>New bulk rule</Button>}
       </AdminPageHead>
+
+      <FilterTabs
+        label="Discount type"
+        value={tab}
+        onChange={setTab}
+        options={[
+          { value: 'codes', label: 'Discount codes', count: coupons.length },
+          { value: 'bulk', label: 'Bulk pricing', count: bulkRules.length },
+        ]}
+      />
+
+      {tab === 'bulk' && <BulkPricingPanel creating={creatingBulk} setCreating={setCreatingBulk} />}
+
+      {tab === 'codes' && (
+      <>
 
       {coupons.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2">
@@ -201,6 +223,8 @@ export default function AdminDiscounts() {
       <p className="flex items-center gap-2 text-[12px] text-ink-35">
         <Icon name="tag" size={13} /> “On a ₹2,000 cart” previews the discount for a sample cart. Codes apply on the cart subtotal at checkout.
       </p>
+      </>
+      )}
 
       {editing !== undefined && (
         <CouponForm

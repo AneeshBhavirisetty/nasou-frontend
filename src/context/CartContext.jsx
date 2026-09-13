@@ -1,7 +1,11 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useState } from 'react';
 import { findProduct, offersFor } from '../data/catalog';
+import { useAdminStore } from './AdminStore';
+import { applyBulkRules } from '../lib/pricing';
 
 const CartContext = createContext(null);
+/* Per-line ceiling — high enough for trade / bulk orders (see lib/pricing.js). */
+export const MAX_QTY = 999;
 const STORAGE_KEY = 'nasou_cart';
 
 /* Persist lean cart lines so the cart survives a reload / the trip to /login. */
@@ -24,7 +28,7 @@ function reducer(state, action) {
       );
       if (existing) {
         return state.map((l) =>
-          l === existing ? { ...l, qty: Math.min(l.qty + action.qty, 99) } : l
+          l === existing ? { ...l, qty: Math.min(l.qty + action.qty, MAX_QTY) } : l
         );
       }
       return [...state, { id: action.id, supplierId: action.supplierId, qty: action.qty, price: action.price }];
@@ -49,6 +53,7 @@ export function CartProvider({ children }) {
   const [lines, dispatch] = useReducer(reducer, undefined, loadLines);
   const [open, setOpen] = useState(false);
   const [toast, setToast] = useState(null);
+  const { bulkRules } = useAdminStore();
 
   useEffect(() => {
     try {
@@ -73,15 +78,16 @@ export function CartProvider({ children }) {
 
   /* Lines are stored lean (id + supplier + qty). Everything displayable is
      rehydrated from the catalog so the cart can't hold stale product copy. */
-  const items = useMemo(
-    () =>
-      lines.map((line, index) => {
-        const product = findProduct(line.id);
-        const supplier = offersFor(product).find((o) => o.id === line.supplierId);
-        return { ...line, index, product, supplier };
-      }),
-    [lines]
-  );
+  const items = useMemo(() => {
+    const rows = lines.map((line, index) => {
+      const product = findProduct(line.id);
+      const supplier = offersFor(product).find((o) => o.id === line.supplierId);
+      return { ...line, index, product, supplier };
+    });
+    /* bulk pricing: each line may carry { amount, rule } */
+    const { perLine } = applyBulkRules(rows, bulkRules);
+    return rows.map((r, i) => ({ ...r, bulk: perLine[i] }));
+  }, [lines, bulkRules]);
 
   const totals = useMemo(() => {
     const subtotal = items.reduce((sum, i) => sum + i.price * i.qty, 0);
@@ -89,14 +95,18 @@ export function CartProvider({ children }) {
       (sum, i) => sum + Math.max(0, i.product.mrp - i.price) * i.qty,
       0
     );
-    const delivery = subtotal === 0 || subtotal >= FREE_DELIVERY_ABOVE ? 0 : DELIVERY_FEE;
+    const bulk = items.reduce((sum, i) => sum + (i.bulk?.amount || 0), 0);
+    const net = subtotal - bulk;
+    const delivery = subtotal === 0 || net >= FREE_DELIVERY_ABOVE ? 0 : DELIVERY_FEE;
     return {
       subtotal,
-      savings,
+      bulk,
+      net,
+      savings, // MRP vs selling price — informational, not deducted
       delivery,
-      total: subtotal + delivery,
+      total: net + delivery,
       count: items.reduce((n, i) => n + i.qty, 0),
-      toFreeDelivery: Math.max(0, FREE_DELIVERY_ABOVE - subtotal),
+      toFreeDelivery: Math.max(0, FREE_DELIVERY_ABOVE - net),
     };
   }, [items]);
 

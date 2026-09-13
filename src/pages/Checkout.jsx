@@ -94,21 +94,22 @@ export default function Checkout() {
 
   const cartCategories = [...new Set(items.map((i) => i.product.category))];
   const couponResult = applied
-    ? couponDiscount(applied, { subtotal: totals.subtotal, categories: cartCategories })
+    ? couponDiscount(applied, { subtotal: totals.net, categories: cartCategories })
     : null;
   const couponAmount = couponResult?.ok ? couponResult.amount : 0;
 
   const applyCode = () => {
     const c = coupons.find((x) => x.code === code.trim().toUpperCase());
     if (!c) return toast.error('That code isn’t valid.');
-    const r = couponDiscount(c, { subtotal: totals.subtotal, categories: cartCategories });
+    const r = couponDiscount(c, { subtotal: totals.net, categories: cartCategories });
     if (!r.ok) return toast.error(r.reason);
     setApplied(c);
     toast.success(`${c.code} applied — you save ${money(r.amount)}`);
   };
 
   const shipFee = DELIVERY_OPTIONS.find((d) => d.id === delivery).price || totals.delivery;
-  const taxable = Math.max(0, totals.subtotal - couponAmount);
+  /* items → bulk pricing → coupon → GST (on the discounted value) → delivery */
+  const taxable = Math.max(0, totals.net - couponAmount);
   const gst = Math.round(taxable * GST_RATE);
   const grand = taxable + shipFee + gst;
 
@@ -316,8 +317,9 @@ export default function Checkout() {
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-[13px] font-bold">{line.product.name}</p>
                     <p className="tnum text-[12px] text-ink-50">Qty {line.qty} · {line.supplier?.name}</p>
+                    {line.bulk && <p className="text-[11.5px] font-semibold text-emerald-700">Bulk price · − {money(line.bulk.amount)}</p>}
                   </div>
-                  <span className="tnum text-[13px] font-bold">{money(line.price * line.qty)}</span>
+                  <span className="tnum text-[13px] font-bold">{money(line.price * line.qty - (line.bulk?.amount || 0))}</span>
                 </li>
               ))}
             </ul>
@@ -350,6 +352,12 @@ export default function Checkout() {
                 <dt className="text-ink-50">Items total</dt>
                 <dd className="tnum font-semibold text-ink">{money(totals.subtotal)}</dd>
               </div>
+              {totals.bulk > 0 && (
+                <div className="flex justify-between font-semibold text-emerald-700">
+                  <dt>Bulk pricing</dt>
+                  <dd className="tnum font-semibold">− {money(totals.bulk)}</dd>
+                </div>
+              )}
               {couponAmount > 0 && (
                 <div className="flex justify-between font-semibold text-emerald-700">
                   <dt>Coupon savings ({applied.code})</dt>

@@ -218,7 +218,7 @@ export function Stepper({ value, onChange, min = 1, max = 99, size = 'md', label
           if (e.key === 'ArrowUp') { e.preventDefault(); onChange(clamp(value + 1)); }
           if (e.key === 'ArrowDown') { e.preventDefault(); onChange(clamp(value - 1)); }
         }}
-        className={cx('tnum bg-transparent text-center text-[14px] font-bold outline-none focus:bg-white/70', h, size === 'sm' ? 'w-8' : 'w-10')}
+        className={cx('tnum bg-transparent text-center text-[14px] font-bold outline-none focus:bg-white/70', h, size === 'sm' ? 'w-10' : 'w-12')}
       />
       <button
         type="button"

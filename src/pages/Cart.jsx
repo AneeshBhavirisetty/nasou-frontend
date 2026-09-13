@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import Icon from '../components/Icon';
 import ProductArt from '../components/ProductArt';
 import { Badge, Button, Container, Breadcrumbs, PriceTag, Stepper } from '../components/ui';
-import { useCart } from '../context/CartContext';
+import { useCart, MAX_QTY } from '../context/CartContext';
 import { money, cx } from '../lib/format';
 import { EASE } from '../lib/motion';
 
@@ -54,7 +54,7 @@ export default function Cart() {
 
       <div className="mt-5 grid gap-5 lg:grid-cols-[1fr_380px]">
         <div>
-          <div className="mb-4"><FreeDeliveryBar subtotal={totals.subtotal} toFree={totals.toFreeDelivery} /></div>
+          <div className="mb-4"><FreeDeliveryBar subtotal={totals.net} toFree={totals.toFreeDelivery} /></div>
           <ul className="space-y-3">
             <AnimatePresence initial={false}>
               {items.map((line) => (
@@ -88,13 +88,23 @@ export default function Cart() {
 
                     <div className="mt-2 flex flex-wrap gap-1.5">
                       <Badge tone="slate" icon="truck">{line.supplier?.name} · {line.supplier?.eta}</Badge>
+                      {line.bulk && <Badge tone="ok" icon="percent">Bulk price · {line.bulk.rule.name}</Badge>}
                     </div>
 
                     <div className="mt-auto flex flex-wrap items-end justify-between gap-3 pt-3">
-                      <Stepper value={line.qty} onChange={(q) => setQty(line.index, q)} min={0} size="sm" />
+                      <Stepper value={line.qty} onChange={(q) => setQty(line.index, q)} min={0} max={Math.min(MAX_QTY, line.product.stock || MAX_QTY)} size="sm" />
                       <div className="text-right">
-                        <p className="tnum text-[17px] font-semibold text-ink">{money(line.price * line.qty)}</p>
-                        {line.qty > 1 && <p className="tnum text-[11.5px] text-ink-35">{money(line.price)} each</p>}
+                        {line.bulk ? (
+                          <>
+                            <p className="tnum text-[17px] font-semibold text-forest">{money(line.price * line.qty - line.bulk.amount)}</p>
+                            <p className="tnum text-[11.5px] text-ink-35"><span className="line-through">{money(line.price * line.qty)}</span> · you save {money(line.bulk.amount)}</p>
+                          </>
+                        ) : (
+                          <>
+                            <p className="tnum text-[17px] font-semibold text-ink">{money(line.price * line.qty)}</p>
+                            {line.qty > 1 && <p className="tnum text-[11.5px] text-ink-35">{money(line.price)} each</p>}
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -109,7 +119,7 @@ export default function Cart() {
             <h2 className="text-lg font-semibold text-forest">Order summary</h2>
             <dl className="mt-5 space-y-3 text-[14px] text-ink-50">
               <div className="flex justify-between"><dt>Subtotal</dt><dd className="tnum text-ink">{money(totals.subtotal)}</dd></div>
-              {totals.savings > 0 && <div className="flex justify-between text-emerald-700"><dt>Savings</dt><dd className="tnum font-semibold">− {money(totals.savings)}</dd></div>}
+              {totals.bulk > 0 && <div className="flex justify-between font-semibold text-emerald-700"><dt>Bulk pricing</dt><dd className="tnum">− {money(totals.bulk)}</dd></div>}
               <div className="flex justify-between"><dt>Delivery</dt><dd className="tnum text-ink">{totals.delivery === 0 ? <span className="font-semibold text-emerald-700">Free</span> : money(totals.delivery)}</dd></div>
             </dl>
             <div className="mt-4 flex items-baseline justify-between border-t border-line-soft pt-4">
@@ -117,6 +127,7 @@ export default function Cart() {
               <span className="tnum text-[24px] font-semibold text-ink">{money(totals.total)}</span>
             </div>
             <p className="mt-1 text-[11.5px] text-ink-35">Exclusive of 18% GST · added at checkout</p>
+            {totals.savings > 0 && <p className="mt-3"><Badge tone="ok" icon="check">You save {money(totals.savings + totals.bulk)} vs MRP</Badge></p>}
             <div className="mt-5"><Button to="/checkout" size="lg" full iconRight="arrowRight">Checkout</Button></div>
             <Link to="/shop" className="mt-3 block text-center text-[13px] font-bold text-forest transition hover:underline">Continue shopping</Link>
             <p className="mt-5 flex items-start gap-2 rounded-[14px] bg-[#f4f7f5] p-3 text-[11.5px] leading-relaxed text-ink-50">
