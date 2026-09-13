@@ -9,7 +9,7 @@ import Reveal from '../components/Reveal';
 import Accordion, { AccordionItem } from '../components/Accordion';
 import Tabs from '../components/Tabs';
 import { Badge, Button, Container, Breadcrumbs, PriceTag, Rating, SectionHead, Stepper } from '../components/ui';
-import { categoryName, findProduct, offersFor, relatedProducts } from '../data/catalog';
+import { categoryName, departmentName, findProduct, offersFor, relatedProducts } from '../data/catalog';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useToast } from '../context/ToastContext';
@@ -83,7 +83,8 @@ export default function ProductDetail() {
         className="mb-5"
         items={[
           { label: 'Home', to: '/' },
-          { label: categoryName(product.category), to: `/shop?category=${product.category}` },
+          { label: departmentName(product.department), to: `/shop?dept=${product.department}` },
+          { label: categoryName(product.category), to: `/shop?dept=${product.department}&category=${product.category}` },
           { label: product.name },
         ]}
       />

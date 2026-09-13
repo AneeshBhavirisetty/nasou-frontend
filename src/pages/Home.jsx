@@ -2,21 +2,20 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import ProductCard from '../components/ProductCard';
 import ProductArt from '../components/ProductArt';
+import Icon from '../components/Icon';
 import Reveal from '../components/Reveal';
 import Marquee from '../components/Marquee';
 import StatTile from '../components/StatTile';
 import HeroCarousel from '../components/HeroCarousel';
 import Accordion, { AccordionItem } from '../components/Accordion';
 import { Container, Rating, SectionHead } from '../components/ui';
-import { categories, bestsellers, dealProducts, newProducts, products, suppliers } from '../data/catalog';
+import { departments, bestsellers, dealProducts, newProducts, products, suppliers } from '../data/catalog';
 import { brand, valueProps, testimonials, faqs } from '../data/site';
 
 /* Home follows the NasouHive demo customer home: campaign carousel, product
    rails, photo-style category tiles, a dark "flash deals" panel beside a
    white summary card, then supporting sections — all with our content. */
 
-const CAT_ART = { 'pvc-fittings': 'tee', 'cpvc-fittings': 'elbow', 'upvc-fittings': 'coupling', 'pvc-pipes': 'pipe', 'cpvc-pipes': 'pipe', 'upvc-pipes': 'pipe', 'plumbing-accessories': 'valve' };
-const CAT_MAT = { 'pvc-fittings': 'PVC', 'cpvc-fittings': 'cPVC', 'upvc-fittings': 'uPVC', 'pvc-pipes': 'PVC', 'cpvc-pipes': 'cPVC', 'upvc-pipes': 'uPVC', 'plumbing-accessories': 'PVC' };
 
 const SLIDES = [
   {
@@ -93,22 +92,30 @@ export default function Home() {
         </Reveal>
       </section>
 
-      {/* ── Categories (demo: Shop by Category tiles) ──────────────────── */}
+      {/* ── Shop by product family — departments (client review 2, items 3 & 5) ── */}
       <section id="categories">
-        <SectionHead serif={false} title="Shop by product family" note="Every PVC, uPVC and cPVC family, from one counter" />
+        <SectionHead serif={false} title="Shop by product family" note="Plumbing, electrical, agriculture, hardware, paints and more" />
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
-          {categories.map((c) => (
-            <motion.div key={c.slug} whileHover={{ y: -4 }} transition={{ type: 'spring', stiffness: 300, damping: 24 }}>
+          {departments.map((d) => (
+            <motion.div key={d.slug} whileHover={{ y: -4 }} transition={{ type: 'spring', stiffness: 300, damping: 24 }}>
               <Link
-                to={`/shop?category=${c.slug}`}
+                to={`/shop?dept=${d.slug}`}
                 className="group relative block aspect-[4/5] overflow-hidden rounded-[18px] text-left text-white shadow-card"
               >
                 <span className="photo-bed absolute inset-0" />
-                <ProductArt kind={CAT_ART[c.slug]} material={CAT_MAT[c.slug]} className="absolute inset-x-0 top-[6%] mx-auto h-[62%] w-[80%] transition duration-500 group-hover:scale-110" />
+                {d.slug === 'plumbing' ? (
+                  <ProductArt kind="tee" material="PVC" className="absolute inset-x-0 top-[6%] mx-auto h-[62%] w-[80%] transition duration-500 group-hover:scale-110" />
+                ) : (
+                  <span className="absolute inset-x-0 top-[16%] mx-auto grid h-[42%] w-[62%] place-items-center rounded-full bg-white/70 text-forest transition duration-500 group-hover:scale-110">
+                    <Icon name={d.icon} size={40} strokeWidth={1.4} />
+                  </span>
+                )}
                 <span className="absolute inset-0 bg-gradient-to-t from-[#173d33]/90 via-[#173d33]/10 to-transparent" />
                 <span className="absolute inset-x-0 bottom-0 p-4">
-                  <span className="block text-sm font-bold">{c.name}</span>
-                  <span className="tnum mt-1 block text-[11px] text-white/75">{c.count} items</span>
+                  <span className="block text-sm font-bold">{d.name}</span>
+                  <span className="tnum mt-1 block text-[11px] text-white/75">
+                    {d.count ? `${d.count.toLocaleString('en-IN')} items` : 'Coming soon'}
+                  </span>
                 </span>
               </Link>
             </motion.div>
@@ -147,7 +154,7 @@ export default function Home() {
           <Reveal stagger={0.07} className="mt-7 grid grid-cols-2 gap-3 lg:grid-cols-4">
             <Reveal.Item><StatTile dark icon="package" value={products.length} suffix="+" label="Live SKUs" note="from the supplier workbook" /></Reveal.Item>
             <Reveal.Item><StatTile dark icon="layers" value={suppliers.length} label="Brands stocked" note="Astral, Ashirvad, Finolex…" /></Reveal.Item>
-            <Reveal.Item><StatTile dark icon="wrench" value={categories.length} label="Product families" note="PVC · uPVC · cPVC" /></Reveal.Item>
+            <Reveal.Item><StatTile dark icon="wrench" value={departments.length} label="Product families" note="Plumbing, electrical, paints…" /></Reveal.Item>
             <Reveal.Item><StatTile dark icon="truck" value={1} prefix="< " suffix=" day" label="Metro dispatch" note="same-day on stock before 2pm" /></Reveal.Item>
           </Reveal>
         </div>

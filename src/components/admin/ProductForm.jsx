@@ -1,27 +1,46 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import Modal from '../Modal';
 import ProductArt from '../ProductArt';
 import Icon from '../Icon';
 import MediaPicker from './MediaPicker';
 import { Badge, Button, Field } from '../ui';
-import { categories } from '../../data/catalog';
+import { categoryName } from '../../data/catalog';
+import { DEPARTMENTS, DEFAULT_DEPARTMENT, slugifyCategory } from '../../data/departments';
+import { useAdminStore } from '../../context/AdminStore';
 import { retailerForName, retailerIdForName } from '../../data/retailers';
 import { MAX_IMAGES_PER_PRODUCT, MIN_IMAGES_PER_PRODUCT } from '../../lib/mediaStore';
 import { discount as pctOff, money, cx } from '../../lib/format';
 
 const ART_KINDS = ['elbow', 'tee', 'coupling', 'reducer', 'bush', 'adapter', 'bend', 'shoe', 'cap', 'union', 'valve', 'saddle', 'nipple', 'pipe'];
-const MATERIALS = ['PVC', 'uPVC', 'cPVC'];
+const MATERIALS = ['PVC', 'uPVC', 'cPVC', 'Other'];
 
 const blank = {
-  name: '', sku: '', category: 'pvc-fittings', material: 'PVC', art: 'coupling',
+  name: '', sku: '', department: DEFAULT_DEPARTMENT, subName: 'PVC fittings', material: 'PVC', art: 'coupling',
   size: '', supplierName: '', price: '', mrp: '', stock: '', images: [],
 };
 
+const SELECT = 'h-12 w-full rounded-md border border-line bg-white/80 px-4 text-[14px] text-ink outline-none transition focus:border-forest focus:shadow-[0_0_0_2px_rgba(31,92,74,0.18)] disabled:cursor-not-allowed disabled:bg-sunk/60 disabled:text-ink-50';
+const LABEL = 'mb-1.5 flex items-center gap-1.5 text-[11.5px] font-semibold uppercase tracking-[0.16em] text-forest-800';
+
+function Locked() {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-sunk px-2 py-0.5 text-[10px] font-bold normal-case tracking-normal text-ink-50">
+      <Icon name="lock" size={10} /> Locked
+    </span>
+  );
+}
+
+/* Product code (SKU) and category (department) are fixed once a product
+   exists (client review 2, admin item 2); the sub-category stays editable
+   and a new one can be typed in to create it. */
 export default function ProductForm({ open, product, onClose, onSave }) {
+  const { products: all } = useAdminStore();
   const [f, setF] = useState(() =>
     product
       ? {
           ...blank, ...product,
+          department: product.department || DEFAULT_DEPARTMENT,
+          subName: product.subcategoryName || categoryName(product.category),
           price: String(product.price ?? ''), mrp: String(product.mrp ?? ''), stock: String(product.stock ?? ''),
           images: product.images ?? [],
           supplierName: product.supplierName || '',
@@ -32,6 +51,17 @@ export default function ProductForm({ open, product, onClose, onSave }) {
   const [picking, setPicking] = useState(false);
   const isNew = !product;
   const set = (k) => (v) => setF((s) => ({ ...s, [k]: v }));
+
+  /* sub-categories already used in the chosen department (live from the admin store) */
+  const subs = useMemo(() => {
+    const m = new Map();
+    all.forEach((p) => {
+      if ((p.department || DEFAULT_DEPARTMENT) !== f.department) return;
+      const name = p.subcategoryName || categoryName(p.category);
+      if (!m.has(name.toLowerCase())) m.set(name.toLowerCase(), { slug: p.category, name });
+    });
+    return [...m.values()].sort((a, b) => a.name.localeCompare(b.name));
+  }, [all, f.department]);
 
   const price = Number(f.price) || 0;
   const mrp = Number(f.mrp) || 0;
@@ -45,14 +75,24 @@ export default function ProductForm({ open, product, onClose, onSave }) {
     setErr('');
     if (!f.name.trim()) return setErr('Enter a product name.');
     if (!f.sku.trim()) return setErr('Enter a product code (SKU).');
+    if (isNew && all.some((p) => p.sku === f.sku.trim().toUpperCase())) return setErr('That product code (SKU) is already in the catalogue.');
+    if (!f.subName.trim()) return setErr('Choose or type a sub-category.');
     if (price <= 0) return setErr('Enter a selling price.');
     if (mrp && mrp < price) return setErr('MRP cannot be lower than the selling price.');
     /* Mandatory on new products; legacy catalogue rows without images stay editable
        (they fall back to the generated illustration). */
     if (isNew && f.images.length < MIN_IMAGES_PER_PRODUCT) return setErr(`Attach at least ${MIN_IMAGES_PER_PRODUCT} product image.`);
 
-    const isPipe = /pipe/.test(f.category) || f.art === 'pipe';
-    const isAcc = f.category === 'plumbing-accessories';
+    /* existing sub-category (case-insensitive) or a new slug; a slug taken by
+       another department is prefixed so the two never merge */
+    const subName = f.subName.trim();
+    const known = subs.find((s) => s.name.toLowerCase() === subName.toLowerCase());
+    let category = known?.slug || slugifyCategory(subName);
+    if (!known && all.some((p) => p.category === category && (p.department || DEFAULT_DEPARTMENT) !== f.department)) {
+      category = `${f.department}-${category}`;
+    }
+    const isPipe = /pipe/.test(category) || f.art === 'pipe';
+    const isAcc = category === 'plumbing-accessories';
     const finalMrp = mrp || Math.round(price * 1.15);
 
     onSave({
@@ -73,7 +113,9 @@ export default function ProductForm({ open, product, onClose, onSave }) {
       supplier: retailer?.slug || (brand ? brand.toLowerCase().replace(/[^a-z0-9]+/g, '-') : 'nasou'),
       supplierName: brand || 'Nasou',
       supplierTier: retailer?.tier || product?.supplierTier || 'value',
-      category: f.category,
+      department: product?.department || f.department,
+      category,
+      subcategoryName: known?.name || subName,
       price: Math.round(price),
       mrp: Math.round(finalMrp),
       discount: pctOff(Math.round(price), Math.round(finalMrp)),
@@ -156,19 +198,53 @@ export default function ProductForm({ open, product, onClose, onSave }) {
           {/* fields */}
           <div className="grid gap-3 sm:grid-cols-2">
             <Field label="Product name" value={f.name} onChange={(e) => set('name')(e.target.value)} placeholder="e.g. cPVC Elbow" required />
-            <Field label="Product code (SKU)" value={f.sku} onChange={(e) => set('sku')(e.target.value.toUpperCase())} placeholder="e.g. PL009999" required />
-
+            <div>
+              <Field
+                label={<>Product code (SKU) {!isNew && <Locked />}</>}
+                value={f.sku}
+                onChange={(e) => set('sku')(e.target.value.toUpperCase())}
+                placeholder="e.g. PL009999"
+                disabled={!isNew}
+                required
+              />
+              {!isNew && <p className="mt-1.5 text-[11.5px] text-ink-35">Product codes can’t change once created.</p>}
+            </div>
 
             <label className="block">
-              <span className="mb-1.5 block text-[12.5px] font-semibold text-ink-70">Category</span>
-              <select value={f.category} onChange={(e) => set('category')(e.target.value)} className="h-11 w-full rounded-md border border-line bg-white px-3 text-[14px] outline-none focus:border-emerald focus:ring-2 focus:ring-emerald/15">
-                {categories.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}
+              <span className={LABEL}>Category {!isNew && <Locked />}</span>
+              <select
+                value={f.department}
+                disabled={!isNew}
+                onChange={(e) => setF((s) => ({ ...s, department: e.target.value, subName: '' }))}
+                className={SELECT}
+              >
+                {DEPARTMENTS.map((d) => <option key={d.slug} value={d.slug}>{d.name}</option>)}
               </select>
+              {!isNew && <span className="mt-1.5 block text-[11.5px] text-ink-35">Category is fixed once created; the sub-category can change.</span>}
             </label>
 
             <label className="block">
-              <span className="mb-1.5 block text-[12.5px] font-semibold text-ink-70">Material</span>
-              <select value={f.material} onChange={(e) => set('material')(e.target.value)} className="h-11 w-full rounded-md border border-line bg-white px-3 text-[14px] outline-none focus:border-emerald focus:ring-2 focus:ring-emerald/15">
+              <span className={LABEL}>Sub-category</span>
+              <input
+                list="subcategory-options"
+                value={f.subName}
+                onChange={(e) => set('subName')(e.target.value)}
+                placeholder={subs.length ? 'Pick one or type a new name' : 'Type a new sub-category'}
+                className={SELECT}
+              />
+              <datalist id="subcategory-options">
+                {subs.map((s) => <option key={s.slug} value={s.name} />)}
+              </datalist>
+              <span className="mt-1.5 block text-[11.5px] text-ink-35">
+                {f.subName.trim() && !subs.some((s) => s.name.toLowerCase() === f.subName.trim().toLowerCase())
+                  ? `“${f.subName.trim()}” will be added as a new sub-category.`
+                  : `${subs.length} existing in this category`}
+              </span>
+            </label>
+
+            <label className="block">
+              <span className={LABEL}>Material</span>
+              <select value={f.material} onChange={(e) => set('material')(e.target.value)} className={SELECT}>
                 {MATERIALS.map((m) => <option key={m}>{m}</option>)}
               </select>
             </label>
@@ -177,8 +253,8 @@ export default function ProductForm({ open, product, onClose, onSave }) {
             <Field label="Brand / supplier" value={f.supplierName} onChange={(e) => set('supplierName')(e.target.value)} placeholder="e.g. Astral" />
 
             <label className="block">
-              <span className="mb-1.5 block text-[12.5px] font-semibold text-ink-70">Fallback illustration</span>
-              <select value={f.art} onChange={(e) => set('art')(e.target.value)} className="h-11 w-full rounded-md border border-line bg-white px-3 text-[14px] capitalize outline-none focus:border-emerald focus:ring-2 focus:ring-emerald/15">
+              <span className={LABEL}>Fallback illustration</span>
+              <select value={f.art} onChange={(e) => set('art')(e.target.value)} className={`${SELECT} capitalize`}>
                 {ART_KINDS.map((k) => <option key={k} value={k}>{k}</option>)}
               </select>
             </label>

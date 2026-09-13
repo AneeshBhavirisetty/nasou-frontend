@@ -4,6 +4,7 @@ import Icon from '../Icon';
 import { Badge, Button } from '../ui';
 import { useToast } from '../../context/ToastContext';
 import { categories } from '../../data/catalog';
+import { DEPARTMENTS, DEFAULT_DEPARTMENT, slugifyCategory } from '../../data/departments';
 import { retailerForName, retailerIdForName } from '../../data/retailers';
 import { downloadSheet } from '../../lib/exportSheet';
 import { discount as pctOff, cx } from '../../lib/format';
@@ -19,8 +20,9 @@ import { discount as pctOff, cx } from '../../lib/format';
 const SCHEMA = [
   { key: 'sku', label: 'sku', required: true, hint: 'Unique product code' },
   { key: 'name', label: 'name', required: true, hint: 'Product name' },
-  { key: 'category', label: 'category', required: true, hint: categories.map((c) => c.slug).join(' | ') },
-  { key: 'material', label: 'material', required: true, hint: 'PVC | uPVC | cPVC' },
+  { key: 'department', label: 'department', required: false, hint: `${DEPARTMENTS.map((d) => d.slug).join(' | ')} (blank = plumbing)` },
+  { key: 'category', label: 'category', required: true, hint: `sub-category — plumbing: ${categories.filter((c) => c.department === 'plumbing').map((c) => c.slug).join(' | ')}; other departments: any name` },
+  { key: 'material', label: 'material', required: false, hint: 'PVC | uPVC | cPVC | Other (required for plumbing)' },
   { key: 'size', label: 'size', required: false, hint: 'e.g. 3/4 inch' },
   { key: 'brand', label: 'brand', required: false, hint: 'Supplier / brand name' },
   { key: 'price', label: 'price', required: true, hint: 'Selling price, number' },
@@ -30,8 +32,9 @@ const SCHEMA = [
   { key: 'imageUrl', label: 'imageUrl', required: false, hint: 'Optional https:// image' },
 ];
 
-const MATERIALS = { pvc: 'PVC', upvc: 'uPVC', cpvc: 'cPVC' };
-const CAT_SLUGS = new Set(categories.map((c) => c.slug));
+const MATERIALS = { pvc: 'PVC', upvc: 'uPVC', cpvc: 'cPVC', other: 'Other' };
+const CAT_SLUGS = new Set(categories.filter((c) => c.department === DEFAULT_DEPARTMENT).map((c) => c.slug));
+const DEPT_SLUGS = new Set(DEPARTMENTS.map((d) => d.slug));
 
 /* RFC-4180-ish CSV parser: quotes, escaped quotes, embedded newlines. */
 function parseCsv(text) {
@@ -73,8 +76,10 @@ function validate(raw, existingSkus) {
     const errors = [];
     const sku = String(r.sku || '').trim().toUpperCase();
     const name = String(r.name || '').trim();
-    const category = String(r.category || '').trim();
-    const material = MATERIALS[String(r.material || '').trim().toLowerCase()] || '';
+    const department = String(r.department || '').trim().toLowerCase() || DEFAULT_DEPARTMENT;
+    const rawCategory = String(r.category || '').trim();
+    const category = department === DEFAULT_DEPARTMENT ? rawCategory : slugifyCategory(rawCategory);
+    const material = MATERIALS[String(r.material || '').trim().toLowerCase()] || (department === DEFAULT_DEPARTMENT ? '' : 'Other');
     const brand = String(r.brand || '').trim();
     const retailer = retailerForName(brand);
     const price = Math.round(Number(String(r.price || '').replace(/[^\d.]/g, '')) || 0);
@@ -86,7 +91,9 @@ function validate(raw, existingSkus) {
     else if (existingSkus.has(sku)) errors.push('sku already in catalogue');
     if (sku) seen.add(sku);
     if (!name) errors.push('name missing');
-    if (!CAT_SLUGS.has(category)) errors.push('unknown category');
+    if (!DEPT_SLUGS.has(department)) errors.push('unknown department');
+    if (department === DEFAULT_DEPARTMENT && !CAT_SLUGS.has(category)) errors.push('unknown plumbing sub-category');
+    if (department !== DEFAULT_DEPARTMENT && !category) errors.push('sub-category missing');
     if (!material) errors.push('material must be PVC / uPVC / cPVC');
     if (price <= 0) errors.push('price must be > 0');
     if (mrpRaw && mrpRaw < price) errors.push('mrp below price');
@@ -113,7 +120,10 @@ function validate(raw, existingSkus) {
         supplier: retailer?.slug || (brand ? brand.toLowerCase().replace(/[^a-z0-9]+/g, '-') : 'nasou'),
         supplierName: retailer?.name || brand || 'Nasou',
         supplierTier: retailer?.tier || 'value',
-        category, price, mrp,
+        department,
+        category,
+        subcategoryName: department === DEFAULT_DEPARTMENT ? undefined : rawCategory,
+        price, mrp,
         discount: pctOff(price, mrp),
         stock,
         images: image ? [image] : [],

@@ -5,7 +5,7 @@ import Icon from '../components/Icon';
 import { Badge, Button, Container, Breadcrumbs, Field } from '../components/ui';
 import PhoneField from '../components/auth/PhoneField';
 import { useToast } from '../context/ToastContext';
-import { categories } from '../data/catalog';
+import { departments } from '../data/catalog';
 import { brand, whatsappLink } from '../data/site';
 import { isMobile10, cx } from '../lib/format';
 
@@ -121,7 +121,16 @@ export default function Enquiry() {
                   className="h-12 w-full rounded-md border border-line bg-white/80 px-4 text-[14px] text-ink outline-none transition focus:border-forest focus:shadow-[0_0_0_2px_rgba(31,92,74,0.18)]"
                 >
                   <option value="">Any / not sure</option>
-                  {categories.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}
+                  {departments.map((d) => (
+                    d.subs.length
+                      ? (
+                        <optgroup key={d.slug} label={d.name}>
+                          <option value={d.slug}>All {d.name.toLowerCase()}</option>
+                          {d.subs.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}
+                        </optgroup>
+                      )
+                      : <option key={d.slug} value={d.slug}>{d.name} (coming soon)</option>
+                  ))}
                 </select>
               </label>
 

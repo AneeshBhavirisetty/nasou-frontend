@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import Icon from '../components/Icon';
 import ProductCard from '../components/ProductCard';
 import { Badge, Button, Container, Breadcrumbs, Skeleton } from '../components/ui';
-import { categories, categoryName, products, suppliers } from '../data/catalog';
+import { categories, categoryName, departments, departmentName, products, suppliers } from '../data/catalog';
 import { money, cx } from '../lib/format';
 import { EASE } from '../lib/motion';
 
@@ -125,8 +125,10 @@ function Stars({ value }) {
 
 export default function Shop() {
   const [params, setParams] = useSearchParams();
+  const location = useLocation();
   const q = params.get('q') ?? '';
 
+  const [depts, setDepts] = useState(() => (params.get('dept') ? [params.get('dept')] : []));
   const [cats, setCats] = useState(() => (params.get('category') ? [params.get('category')] : []));
   const [mats, setMats] = useState([]);
   const [sups, setSups] = useState(() => (params.get('brand') ? [params.get('brand')] : []));
@@ -149,17 +151,28 @@ export default function Shop() {
   const [allBrands, setAllBrands] = useState(false);
 
   useEffect(() => { const t = setTimeout(() => setBooting(false), 260); return () => clearTimeout(t); }, []);
-  useEffect(() => { setPage(1); }, [q, cats, mats, sups, tiers, kinds, sizes, cols, minPrice, maxPrice, minOff, minRating, inStockOnly, dealOnly, sort]);
+  /* The header menu / home tiles navigate here with a new ?dept / ?category.
+     Our own URL sync below is tagged (state.shopSync) so it never resets a
+     multi-select the shopper made on this page. */
+  useEffect(() => {
+    if (location.state?.shopSync) return;
+    setDepts(params.get('dept') ? [params.get('dept')] : []);
+    setCats(params.get('category') ? [params.get('category')] : []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.key]);
+
+  useEffect(() => { setPage(1); }, [q, depts, cats, mats, sups, tiers, kinds, sizes, cols, minPrice, maxPrice, minOff, minRating, inStockOnly, dealOnly, sort]);
 
   useEffect(() => {
     const next = new URLSearchParams();
     if (q) next.set('q', q);
+    if (depts.length === 1) next.set('dept', depts[0]);
     if (cats.length === 1) next.set('category', cats[0]);
     if (sups.length === 1) next.set('brand', sups[0]);
     if (dealOnly) next.set('deal', '1');
     if (sort !== 'relevance') next.set('sort', sort);
-    setParams(next, { replace: true });
-  }, [q, cats, sups, dealOnly, sort, setParams]);
+    setParams(next, { replace: true, state: { shopSync: true } });
+  }, [q, depts, cats, sups, dealOnly, sort, setParams]);
 
   const toggle = (list, setList) => (v) => setList(list.includes(v) ? list.filter((x) => x !== v) : [...list, v]);
 
@@ -176,6 +189,7 @@ export default function Shop() {
   }, [q]);
 
   const matches = (p, skip) => {
+    if (skip !== 'dept' && depts.length && !depts.includes(p.department)) return false;
     if (skip !== 'cat' && cats.length && !cats.includes(p.category)) return false;
     if (skip !== 'mat' && mats.length && !mats.includes(p.material)) return false;
     if (skip !== 'sup' && sups.length && !sups.includes(p.supplier)) return false;
@@ -213,9 +227,10 @@ export default function Shop() {
     if (by[sort]) out = [...out].sort(by[sort]);
     return out;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searched, cats, mats, sups, tiers, kinds, sizes, cols, minPrice, maxPrice, minOff, minRating, inStockOnly, dealOnly, sort]);
+  }, [searched, depts, cats, mats, sups, tiers, kinds, sizes, cols, minPrice, maxPrice, minOff, minRating, inStockOnly, dealOnly, sort]);
 
   const counts = useMemo(() => ({
+    dept: facet('dept', (p) => p.department),
     cat: facet('cat', (p) => p.category),
     mat: facet('mat', (p) => p.material),
     sup: facet('sup', (p) => p.supplier),
@@ -228,14 +243,14 @@ export default function Shop() {
     priceBase: searched.filter((p) => matches(p, 'price')),
     avail: searched.filter((p) => matches(p, 'avail')),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [searched, cats, mats, sups, tiers, kinds, sizes, cols, minPrice, maxPrice, minOff, minRating, inStockOnly, dealOnly]);
+  }), [searched, depts, cats, mats, sups, tiers, kinds, sizes, cols, minPrice, maxPrice, minOff, minRating, inStockOnly, dealOnly]);
 
   const shown = results.slice(0, page * PAGE);
   const priceActive = minPrice > 0 || maxPrice < PRICE_MAX;
-  const activeCount = cats.length + mats.length + sups.length + tiers.length + kinds.length + sizes.length + cols.length
+  const activeCount = depts.length + cats.length + mats.length + sups.length + tiers.length + kinds.length + sizes.length + cols.length
     + (priceActive ? 1 : 0) + (minOff ? 1 : 0) + (minRating ? 1 : 0) + (inStockOnly ? 1 : 0) + (dealOnly ? 1 : 0);
   const clearAll = () => {
-    setCats([]); setMats([]); setSups([]); setTiers([]); setKinds([]); setSizes([]); setCols([]);
+    setDepts([]); setCats([]); setMats([]); setSups([]); setTiers([]); setKinds([]); setSizes([]); setCols([]);
     setMinPrice(0); setMaxPrice(PRICE_MAX); setMinOff(0); setMinRating(0); setInStock(false); setDealOnly(false);
   };
 
@@ -243,6 +258,9 @@ export default function Shop() {
     const n = brandQ.trim().toLowerCase();
     return BRANDS_BY_SIZE.filter((s) => !n || s.name.toLowerCase().includes(n));
   }, [brandQ]);
+
+  /* sub-categories of the chosen departments (all of them when none chosen) */
+  const subList = depts.length ? categories.filter((c) => depts.includes(c.department)) : categories;
 
   const sizeList = allSizes ? ALL_SIZES : ALL_SIZES.filter((s) => sizes.includes(s) || (counts.size.get(s) || 0) >= 15).slice(0, 14);
 
@@ -258,11 +276,19 @@ export default function Shop() {
 
   const filters = (
     <>
-      <Group title="Category" active={cats.length}>
-        {categories.map((c) => (
-          <Check key={c.slug} label={c.name} checked={cats.includes(c.slug)} onChange={() => toggle(cats, setCats)(c.slug)} count={counts.cat.get(c.slug) || 0} />
+      <Group title="Category" active={depts.length}>
+        {departments.map((d) => (
+          <Check key={d.slug} label={d.name} note={d.count ? null : 'Coming soon'} checked={depts.includes(d.slug)} onChange={() => toggle(depts, setDepts)(d.slug)} count={counts.dept.get(d.slug) || 0} />
         ))}
       </Group>
+
+      {subList.length > 0 && (
+        <Group title="Sub-category" active={cats.length}>
+          {subList.map((c) => (
+            <Check key={c.slug} label={c.name} checked={cats.includes(c.slug)} onChange={() => toggle(cats, setCats)(c.slug)} count={counts.cat.get(c.slug) || 0} />
+          ))}
+        </Group>
+      )}
 
       <Group title="Brand" active={sups.length}>
         <label className="relative mb-2 block">
@@ -383,6 +409,7 @@ export default function Shop() {
 
   /* chips for every active choice, each removable */
   const chips = [
+    ...depts.map((d) => [departmentName(d), () => toggle(depts, setDepts)(d)]),
     ...cats.map((c) => [categoryName(c), () => toggle(cats, setCats)(c)]),
     ...sups.map((s) => [suppliers.find((x) => x.slug === s)?.name ?? s, () => toggle(sups, setSups)(s)]),
     ...(priceActive ? [[`${money(minPrice)} – ${maxPrice < PRICE_MAX ? money(maxPrice) : 'any'}`, () => { setMinPrice(0); setMaxPrice(PRICE_MAX); }]] : []),
@@ -402,12 +429,16 @@ export default function Shop() {
       {/* demo: page header card */}
       <div className="rounded-[24px] border border-white/80 bg-white/70 p-5 shadow-card backdrop-blur sm:p-6">
         <Breadcrumbs
-          items={[{ label: 'Home', to: '/' }, { label: cats.length === 1 ? categoryName(cats[0]) : 'All products' }]}
+          items={[
+            { label: 'Home', to: '/' },
+            ...(depts.length === 1 ? [{ label: departmentName(depts[0]), to: `/shop?dept=${depts[0]}` }] : []),
+            { label: cats.length === 1 ? categoryName(cats[0]) : depts.length === 1 ? 'All products' : 'All products' },
+          ]}
         />
         <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
           <div className="min-w-0">
             <h1 className="flex flex-wrap items-baseline gap-x-2 text-[clamp(1.6rem,4vw,2.1rem)] font-semibold text-forest">
-              {q ? `“${q}”` : cats.length === 1 ? categoryName(cats[0]) : 'Every fitting we stock'}
+              {q ? `“${q}”` : cats.length === 1 ? categoryName(cats[0]) : depts.length === 1 ? departmentName(depts[0]) : 'Everything we stock'}
               <span className="tnum text-[14px] font-semibold text-ink-50">— {results.length.toLocaleString('en-IN')} products</span>
             </h1>
             <p className="mt-1.5 text-[14px] text-ink-50">
@@ -502,9 +533,22 @@ export default function Shop() {
           ) : results.length === 0 ? (
             <div className="rounded-[18px] border border-dashed border-[#cad8d2] bg-[#f4f7f5] py-20 text-center">
               <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-white text-forest shadow-card"><Icon name="search" size={22} /></span>
-              <p className="mt-4 text-[18px] font-semibold text-ink">Nothing matches those filters</p>
-              <p className="mt-1.5 text-[13px] text-ink-50">Try widening the price range or clearing a filter.</p>
-              <div className="mt-5"><Button onClick={clearAll} variant="outline">Clear all filters</Button></div>
+              {depts.length === 1 && !departments.find((d) => d.slug === depts[0])?.count ? (
+                <>
+                  <p className="mt-4 text-[18px] font-semibold text-forest">{departmentName(depts[0])} is coming soon</p>
+                  <p className="mt-1.5 text-[13px] text-ink-50">We are adding products to this department. Tell us what you need and we will quote it.</p>
+                  <div className="mt-5 flex flex-wrap justify-center gap-2">
+                    <Button to="/enquiry" iconRight="arrowRight">Send an enquiry</Button>
+                    <Button onClick={clearAll} variant="outline">Browse everything</Button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p className="mt-4 text-[18px] font-semibold text-forest">Nothing matches those filters</p>
+                  <p className="mt-1.5 text-[13px] text-ink-50">Try widening the price range or clearing a filter.</p>
+                  <div className="mt-5"><Button onClick={clearAll} variant="outline">Clear all filters</Button></div>
+                </>
+              )}
             </div>
           ) : (
             <>

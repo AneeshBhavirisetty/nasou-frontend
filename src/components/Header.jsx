@@ -5,7 +5,7 @@ import Icon from './Icon';
 import Logo from './Logo';
 import ProductArt from './ProductArt';
 import { Badge } from './ui';
-import { categories, searchProducts } from '../data/catalog';
+import { departments, searchProducts } from '../data/catalog';
 import { announcements } from '../data/site';
 import { money, cx } from '../lib/format';
 import { useCart } from '../context/CartContext';
@@ -217,8 +217,10 @@ function AccountMenu() {
   );
 }
 
-/* ── categories mega menu ──────────────────────────────────────────────── */
+/* ── categories mega menu: departments → sub-categories ──────────────── */
 function MegaMenu({ onClose }) {
+  const [dept, setDept] = useState(departments[0].slug);
+  const d = departments.find((x) => x.slug === dept) ?? departments[0];
   return (
     <motion.div
       initial={{ opacity: 0, y: -8 }}
@@ -228,29 +230,75 @@ function MegaMenu({ onClose }) {
       className="absolute left-0 right-0 top-full z-40 px-4 pt-2 sm:px-6 lg:px-8"
       onMouseLeave={onClose}
     >
-      <div className="mx-auto grid max-w-[1440px] gap-5 rounded-[24px] border border-white/80 bg-white p-5 shadow-lift sm:p-6 lg:grid-cols-[1fr_300px]">
-        <div className="grid gap-1 sm:grid-cols-2">
-          {categories.map((c) => (
-            <Link
-              key={c.slug}
-              to={`/shop?category=${c.slug}`}
-              onClick={onClose}
-              className="group flex items-start gap-3 rounded-[14px] px-3 py-2.5 transition hover:bg-sunk/60"
-            >
-              <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-[12px] bg-sunk text-forest transition group-hover:bg-forest group-hover:text-white">
-                <Icon name="wrench" size={15} />
-              </span>
-              <span>
-                <span className="flex items-center gap-1.5 text-[14px] font-bold text-ink">
-                  {c.name}
-                  <span className="tnum text-[11px] font-semibold text-ink-35">{c.count}</span>
+      <div className="mx-auto grid max-w-[1440px] gap-5 rounded-[24px] border border-white/80 bg-white p-5 shadow-lift lg:grid-cols-[260px_1fr_280px]">
+        {/* departments */}
+        <ul className="space-y-1 border-line-soft lg:border-r lg:pr-4">
+          {departments.map((x) => (
+            <li key={x.slug}>
+              <Link
+                to={`/shop?dept=${x.slug}`}
+                onMouseEnter={() => setDept(x.slug)}
+                onFocus={() => setDept(x.slug)}
+                onClick={onClose}
+                className={cx(
+                  'flex items-center gap-3 rounded-[14px] px-3 py-2.5 transition',
+                  dept === x.slug ? 'bg-forest text-white shadow-btn' : 'text-ink-70 hover:bg-sunk/60'
+                )}
+              >
+                <span className={cx('grid h-8 w-8 shrink-0 place-items-center rounded-[10px]', dept === x.slug ? 'bg-white/15' : 'bg-sunk text-forest')}>
+                  <Icon name={x.icon} size={15} />
                 </span>
-                <span className="mt-0.5 block text-[12px] leading-snug text-ink-50">{c.blurb}</span>
-              </span>
-            </Link>
+                <span className="flex-1 text-[14px] font-bold">{x.name}</span>
+                <span className={cx('tnum text-[11px] font-semibold', dept === x.slug ? 'text-white/70' : 'text-ink-35')}>
+                  {x.count || 'Soon'}
+                </span>
+              </Link>
+            </li>
           ))}
+        </ul>
+
+        {/* sub-categories of the hovered department */}
+        <div>
+          <div className="flex items-baseline justify-between gap-3">
+            <p className="text-[18px] font-semibold text-forest">{d.name}</p>
+            <Link to={`/shop?dept=${d.slug}`} onClick={onClose} className="text-[12.5px] font-bold text-forest hover:underline">
+              Shop all {d.name.toLowerCase()} →
+            </Link>
+          </div>
+          <p className="mt-0.5 text-[12.5px] text-ink-50">{d.blurb}</p>
+          {d.subs.length > 0 ? (
+            <div className="mt-4 grid gap-1 sm:grid-cols-2">
+              {d.subs.map((c) => (
+                <Link
+                  key={c.slug}
+                  to={`/shop?dept=${d.slug}&category=${c.slug}`}
+                  onClick={onClose}
+                  className="group flex items-start gap-3 rounded-[14px] px-3 py-2.5 transition hover:bg-sunk/60"
+                >
+                  <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-[10px] bg-sunk text-forest transition group-hover:bg-forest group-hover:text-white">
+                    <Icon name="wrench" size={14} />
+                  </span>
+                  <span>
+                    <span className="flex items-center gap-1.5 text-[14px] font-bold text-ink">
+                      {c.name}
+                      <span className="tnum text-[11px] font-semibold text-ink-35">{c.count}</span>
+                    </span>
+                    {c.blurb && <span className="mt-0.5 block text-[12px] leading-snug text-ink-50">{c.blurb}</span>}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="mt-4 rounded-[18px] border border-dashed border-[#cad8d2] bg-[#f4f7f5] px-5 py-8 text-center">
+              <span className="mx-auto grid h-11 w-11 place-items-center rounded-full bg-white text-forest shadow-card"><Icon name={d.icon} size={18} /></span>
+              <p className="mt-3 text-[14px] font-bold text-forest">{d.name} is coming soon</p>
+              <p className="mt-1 text-[12.5px] text-ink-50">We are adding products to this department. Send an enquiry for anything you need now.</p>
+              <Link to="/enquiry" onClick={onClose} className="mt-3 inline-flex text-[12.5px] font-bold text-forest hover:underline">Enquire now →</Link>
+            </div>
+          )}
         </div>
-        <div className="forest-band relative overflow-hidden rounded-[18px] p-5 text-white">
+
+        <div className="forest-band relative hidden overflow-hidden rounded-[18px] p-5 text-white lg:block">
           <Badge tone="dark" icon="tag" className="border-white/20 bg-white/10">This week</Badge>
           <p className="mt-3 text-[19px] font-semibold leading-tight">Up to 30% off fast-moving PVC fittings.</p>
           <p className="mt-1.5 text-[12.5px] leading-relaxed text-emerald-100">
@@ -388,16 +436,28 @@ export default function Header() {
           >
             <div className="max-h-[70dvh] overflow-y-auto px-4 pb-5 pt-3 sm:px-6">
               <p className="eyebrow mb-2 px-1">Categories</p>
-              <div className="grid gap-1.5 rounded-[18px] bg-white p-1.5 shadow-card">
-                {categories.map((c) => (
-                  <Link
-                    key={c.slug}
-                    to={`/shop?category=${c.slug}`}
-                    className="flex items-center justify-between rounded-[12px] px-3 py-2.5 text-[14px] font-semibold text-ink-70 hover:bg-sunk/70"
-                  >
-                    {c.name}
-                    <span className="tnum text-[12px] text-ink-35">{c.count}</span>
-                  </Link>
+              <div className="grid gap-1 rounded-[18px] bg-white p-1.5 shadow-card">
+                {departments.map((d) => (
+                  <div key={d.slug}>
+                    <Link
+                      to={`/shop?dept=${d.slug}`}
+                      className="flex items-center gap-3 rounded-[12px] px-3 py-2.5 text-[14px] font-bold text-ink hover:bg-sunk/70"
+                    >
+                      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-[10px] bg-sunk text-forest"><Icon name={d.icon} size={15} /></span>
+                      <span className="flex-1">{d.name}</span>
+                      <span className="tnum text-[12px] font-semibold text-ink-35">{d.count || 'Soon'}</span>
+                    </Link>
+                    {d.subs.length > 0 && (
+                      <div className="mb-1 ml-14 grid gap-0.5 border-l border-line-soft pl-3">
+                        {d.subs.map((c) => (
+                          <Link key={c.slug} to={`/shop?dept=${d.slug}&category=${c.slug}`} className="flex items-center justify-between rounded-[10px] px-2 py-2 text-[13px] font-semibold text-ink-70 hover:bg-sunk/70">
+                            {c.name}
+                            <span className="tnum text-[11.5px] text-ink-35">{c.count}</span>
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 ))}
               </div>
               <div className="mt-3 grid grid-cols-2 gap-2">

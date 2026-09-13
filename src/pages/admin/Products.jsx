@@ -10,7 +10,8 @@ import { AdminPageHead, SearchInput } from '../../components/admin/AdminUI';
 import { Badge, Button } from '../../components/ui';
 import { useToast } from '../../context/ToastContext';
 import { useAdminStore } from '../../context/AdminStore';
-import { catalogBase as CATALOG, categories, categoryName, suppliers } from '../../data/catalog';
+import { catalogBase as CATALOG, categoryName, suppliers } from '../../data/catalog';
+import { DEPARTMENTS, DEFAULT_DEPARTMENT, departmentMeta } from '../../data/departments';
 import { money, cx } from '../../lib/format';
 
 const PAGE = 20;
@@ -19,6 +20,7 @@ export default function AdminProducts() {
   const toast = useToast();
   const { products: rows, dirty, setStock, saveProduct, deleteProduct, reset } = useAdminStore();
   const [q, setQ] = useState('');
+  const [dept, setDept] = useState('');
   const [cat, setCat] = useState('');
   const [brand, setBrand] = useState('');
   const [page, setPage] = useState(1);
@@ -37,12 +39,23 @@ export default function AdminProducts() {
   const filtered = useMemo(() => {
     const n = q.trim().toLowerCase();
     return rows.filter((p) => {
+      if (dept && (p.department || DEFAULT_DEPARTMENT) !== dept) return false;
       if (cat && p.category !== cat) return false;
       if (brand && p.supplier !== brand) return false;
       if (n && !`${p.name} ${p.sku} ${p.supplierName}`.toLowerCase().includes(n)) return false;
       return true;
     });
-  }, [rows, q, cat, brand]);
+  }, [rows, q, dept, cat, brand]);
+
+  /* sub-categories present in the chosen department (live, includes admin-created ones) */
+  const subOptions = useMemo(() => {
+    const m = new Map();
+    rows.forEach((p) => {
+      if (dept && (p.department || DEFAULT_DEPARTMENT) !== dept) return;
+      if (!m.has(p.category)) m.set(p.category, p.subcategoryName || categoryName(p.category));
+    });
+    return [...m.entries()].sort((a, b) => a[1].localeCompare(b[1]));
+  }, [rows, dept]);
 
   const shown = filtered.slice(0, page * PAGE);
 
@@ -77,16 +90,20 @@ export default function AdminProducts() {
         <ExcelExportButton
           filename="nasou-products"
           label="Export"
-          headers={['SKU', 'Name', 'Category', 'Material', 'Size', 'Brand', 'Price', 'MRP', 'Discount %', 'Stock']}
-          rows={filtered.map((p) => [p.sku, p.name, categoryName(p.category), p.material, p.size, p.supplierName, p.price, p.mrp, p.discount, p.stock])}
+          headers={['SKU', 'Name', 'Category', 'Sub-category', 'Material', 'Size', 'Brand', 'Price', 'MRP', 'Discount %', 'Stock']}
+          rows={filtered.map((p) => [p.sku, p.name, departmentMeta(p.department || DEFAULT_DEPARTMENT).name, p.subcategoryName || categoryName(p.category), p.material, p.size, p.supplierName, p.price, p.mrp, p.discount, p.stock])}
         />
       </AdminPageHead>
 
       <div className="flex flex-wrap gap-3 rounded-[20px] border border-line bg-white/86 p-3 shadow-[0_18px_40px_rgba(37,88,73,0.08)]">
         <SearchInput placeholder="Search name, SKU or brand" value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} />
-        <select value={cat} onChange={(e) => { setCat(e.target.value); setPage(1); }} aria-label="Category" className="h-12 rounded-[18px] border border-line bg-white px-4 text-[13px] font-semibold text-forest outline-none transition focus:border-forest/40">
+        <select value={dept} onChange={(e) => { setDept(e.target.value); setCat(''); setPage(1); }} aria-label="Category" className="h-12 rounded-[18px] border border-line bg-white px-4 text-[13px] font-semibold text-forest outline-none transition focus:border-forest/40">
           <option value="">All categories</option>
-          {categories.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}
+          {DEPARTMENTS.map((d) => <option key={d.slug} value={d.slug}>{d.name}</option>)}
+        </select>
+        <select value={cat} onChange={(e) => { setCat(e.target.value); setPage(1); }} aria-label="Sub-category" className="h-12 rounded-[18px] border border-line bg-white px-4 text-[13px] font-semibold text-forest outline-none transition focus:border-forest/40">
+          <option value="">All sub-categories</option>
+          {subOptions.map(([slug, name]) => <option key={slug} value={slug}>{name}</option>)}
         </select>
         <select value={brand} onChange={(e) => { setBrand(e.target.value); setPage(1); }} aria-label="Brand" className="h-12 rounded-[18px] border border-line bg-white px-4 text-[13px] font-semibold text-forest outline-none transition focus:border-forest/40">
           <option value="">All brands</option>
@@ -117,7 +134,7 @@ export default function AdminProducts() {
                     {p.name}
                     {isCustom && <Badge tone="ok">Added</Badge>}
                   </p>
-                  <p className="text-[11px] text-ink-50">{p.sku} · {categoryName(p.category)}</p>
+                  <p className="text-[11px] text-ink-50">{p.sku} · {departmentMeta(p.department || DEFAULT_DEPARTMENT).name} › {p.subcategoryName || categoryName(p.category)}</p>
                 </div>
               </div>
               <span className="tnum text-[13px] font-semibold">{money(p.price)}</span>

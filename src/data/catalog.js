@@ -10,6 +10,7 @@
 import generated from './catalog.generated.json';
 import supplierList from './suppliers.json';
 import { retailerIdForSupplier } from './retailers';
+import { DEPARTMENTS, DEFAULT_DEPARTMENT, departmentMeta } from './departments';
 
 /* Admin edits (add / edit / delist done in /admin/products) are persisted by
    AdminStore under this key. We fold them in here at load so the storefront and
@@ -33,17 +34,41 @@ function applyAdminPatch(list) {
    (empty until an admin attaches one — the UI falls back to ProductArt). */
 const withOwnership = generated.products.map((p) => ({
   ...p,
+  department: p.department ?? DEFAULT_DEPARTMENT,
   retailerId: retailerIdForSupplier(p.supplier),
   images: p.images ?? [],
 }));
 
+/* Rows added before departments existed default to plumbing. */
+const withDepartment = (p) => (p.department ? p : { ...p, department: DEFAULT_DEPARTMENT });
+
 /* The as-shipped catalogue, before admin edits — AdminStore builds its patch on this. */
 export const catalogBase = withOwnership;
-export const products = applyAdminPatch(withOwnership);
+export const products = applyAdminPatch(withOwnership).map(withDepartment);
 export const suppliers = supplierList;
 export const generatedAt = generated.generatedAt;
 
-export const categories = generated.categories;
+/* Sub-categories: the seven generated plumbing categories plus any that
+   admins created on products (name carried as product.subcategoryName). */
+const baseSubs = generated.categories.map((c) => ({ ...c, department: DEFAULT_DEPARTMENT }));
+const extraSubs = [];
+for (const p of products) {
+  if (baseSubs.some((c) => c.slug === p.category) || extraSubs.some((c) => c.slug === p.category)) continue;
+  extraSubs.push({ slug: p.category, name: p.subcategoryName || p.category, department: p.department, blurb: '' });
+}
+export const categories = [...baseSubs, ...extraSubs].map((c) => ({
+  ...c,
+  count: products.filter((p) => p.category === c.slug).length,
+}));
+
+/* Departments → with live counts and their sub-categories. */
+export const departments = DEPARTMENTS.map((d) => ({
+  ...d,
+  subs: categories.filter((c) => c.department === d.slug),
+  count: products.filter((p) => p.department === d.slug).length,
+}));
+export const departmentName = (slug) => departmentMeta(slug).name;
+export const subcategoriesOf = (dept) => categories.filter((c) => c.department === dept);
 
 const _byId = new Map(products.map((p) => [p.id, p]));
 const _bySku = new Map(products.map((p) => [p.sku, p]));
@@ -51,6 +76,14 @@ const _catName = new Map(categories.map((c) => [c.slug, c.name]));
 const _supplierName = new Map(suppliers.map((s) => [s.slug, s.name]));
 
 export const findProduct = (id) => _byId.get(id) ?? _bySku.get(id) ?? null;
+
+/* Keep the in-memory storefront copy in step with admin edits and orders
+   (stock after checkout, price/stock edits) without a page reload. The
+   persisted source of truth is still the AdminStore patch in localStorage. */
+export function syncLiveProduct(id, fields) {
+  const p = _byId.get(id);
+  if (p) Object.assign(p, fields);
+}
 export const categoryName = (slug) => _catName.get(slug) ?? slug;
 export const supplierName = (slug) => _supplierName.get(slug) ?? slug;
 

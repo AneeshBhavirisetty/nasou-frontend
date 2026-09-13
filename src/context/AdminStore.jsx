@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useMemo, useState, useEffect } from 'react';
-import { catalogBase as CATALOG } from '../data/catalog';
+import { catalogBase as CATALOG, syncLiveProduct } from '../data/catalog';
 
 /* ============================================================================
  * AdminStore — the admin's working copy of catalogue + discount data.
@@ -60,6 +60,7 @@ export function AdminStoreProvider({ children }) {
 
   const setStock = useCallback((id, stock) => {
     const n = Math.max(0, Math.round(Number(stock) || 0));
+    syncLiveProduct(id, { stock: n });
     setPatch((pt) => {
       if (pt.added.some((p) => p.id === id)) {
         return { ...pt, added: pt.added.map((p) => (p.id === id ? { ...p, stock: n } : p)) };
@@ -69,6 +70,7 @@ export function AdminStoreProvider({ children }) {
   }, []);
 
   const saveProduct = useCallback((prod) => {
+    syncLiveProduct(prod.id, prod);
     setPatch((pt) => {
       // editing an admin-added row
       if (pt.added.some((p) => p.id === prod.id)) {
