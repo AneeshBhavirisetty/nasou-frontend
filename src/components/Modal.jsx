@@ -49,7 +49,7 @@ export default function Modal({ open, onClose, title, size = 'md', children }) {
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+      className="fixed inset-0 z-[100] flex items-end justify-center sm:items-center sm:p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby={title ? 'modal-title' : undefined}
@@ -65,14 +65,16 @@ export default function Modal({ open, onClose, title, size = 'md', children }) {
       <div
         ref={panelRef}
         className={cx(
-          'relative w-full rounded-[22px] border border-white/80 bg-white shadow-[0_24px_48px_rgba(37,88,73,0.16)]',
+          /* capped height + scrolling body, so long forms stay usable; a
+             bottom sheet on phones, a centred card from sm up */
+          'relative flex max-h-[92dvh] w-full flex-col rounded-t-[22px] border border-white/80 bg-white shadow-[0_24px_48px_rgba(37,88,73,0.16)] sm:max-h-[calc(100dvh-2rem)] sm:rounded-[22px]',
           'animate-[rise_.26s_cubic-bezier(.22,1,.36,1)_both]',
           SIZE[size]
         )}
       >
         {title && (
-          <div className="flex items-center justify-between border-b border-line-soft px-6 py-4">
-            <h2 id="modal-title" className="text-[19px] font-bold text-forest">
+          <div className="flex flex-none items-center justify-between gap-3 border-b border-line-soft px-4 py-3.5 sm:px-6 sm:py-4">
+            <h2 id="modal-title" className="min-w-0 truncate text-[17px] font-bold text-forest sm:text-[19px]">
               {title}
             </h2>
             <button
@@ -95,7 +97,7 @@ export default function Modal({ open, onClose, title, size = 'md', children }) {
           </button>
         )}
 
-        <div className="px-6 py-5">{children}</div>
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-4 sm:px-6 sm:py-5">{children}</div>
       </div>
     </div>
   );

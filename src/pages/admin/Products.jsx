@@ -6,7 +6,8 @@ import ProductArt from '../../components/ProductArt';
 import ExcelExportButton from '../../components/ExcelExportButton';
 import ProductForm from '../../components/admin/ProductForm';
 import BulkImportDialog from '../../components/admin/BulkImportDialog';
-import { AdminPageHead, SearchInput } from '../../components/admin/AdminUI';
+import { AdminPageHead, SearchInput, ViewOnlyBanner } from '../../components/admin/AdminUI';
+import { useIam } from '../../context/IamStore';
 import { Badge, Button } from '../../components/ui';
 import { useToast } from '../../context/ToastContext';
 import { useAdminStore } from '../../context/AdminStore';
@@ -27,11 +28,12 @@ export default function AdminProducts() {
   const [editing, setEditing] = useState(undefined); // undefined = closed, null = new, object = edit
   const [bulk, setBulk] = useState(false);
   const [params, setParams] = useSearchParams();
+  const canEdit = useIam().can('products', 'edit');
 
   /* /admin/products?new=1 (the dashboard's "Add product") opens the form. */
   useEffect(() => {
     if (params.get('new')) {
-      setEditing(null);
+      if (canEdit) setEditing(null);
       setParams({}, { replace: true });
     }
   }, [params, setParams]);
@@ -80,13 +82,13 @@ export default function AdminProducts() {
           {dirty && <span className="ml-2 text-emerald-600">· unsaved admin changes are stored locally</span>}
         </>}
       >
-        {dirty && (
+        {canEdit && dirty && (
           <Button size="sm" variant="ghost" icon="refresh" onClick={() => { if (window.confirm('Discard all admin changes and restore the shipped catalogue?')) { reset(); toast.info('Catalogue restored'); } }}>
             Reset
           </Button>
         )}
-        <Button size="sm" variant="outline" icon="upload" onClick={() => setBulk(true)}>Bulk import</Button>
-        <Button size="sm" icon="plus" onClick={() => setEditing(null)}>Add product</Button>
+        {canEdit && <Button size="sm" variant="outline" icon="upload" onClick={() => setBulk(true)}>Bulk import</Button>}
+        {canEdit && <Button size="sm" icon="plus" onClick={() => setEditing(null)}>Add product</Button>}
         <ExcelExportButton
           filename="nasou-products"
           label="Export"
@@ -94,6 +96,8 @@ export default function AdminProducts() {
           rows={filtered.map((p) => [p.sku, p.name, departmentMeta(p.department || DEFAULT_DEPARTMENT).name, p.subcategoryName || categoryName(p.category), p.material, p.size, p.supplierName, p.price, p.mrp, p.discount, p.stock])}
         />
       </AdminPageHead>
+
+      {!canEdit && <ViewOnlyBanner what="the catalogue" />}
 
       <div className="flex flex-wrap gap-3 rounded-[20px] border border-line bg-white/86 p-3 shadow-[0_18px_40px_rgba(37,88,73,0.08)]">
         <SearchInput placeholder="Search name, SKU or brand" value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} />
@@ -139,14 +143,16 @@ export default function AdminProducts() {
               </div>
               <span className="tnum text-[13px] font-semibold">{money(p.price)}</span>
               <span className="tnum text-right text-[13px] text-ink-50 sm:text-left"><span className="sm:hidden">MRP </span>{money(p.mrp)}</span>
-              <StockCell value={p.stock} onChange={(n) => setStock(p.id, n)} />
+              {canEdit
+                ? <StockCell value={p.stock} onChange={(n) => setStock(p.id, n)} />
+                : <span className={cx('tnum text-[13px] font-bold', p.stock === 0 ? 'text-clay' : 'text-ink')}>{p.stock} in stock</span>}
               <div className="flex justify-end gap-1.5">
-                <button onClick={() => setEditing(p)} className="grid h-8 w-8 place-items-center rounded-md border border-line text-ink-50 transition hover:border-ink-35 hover:text-ink" aria-label={`Edit ${p.name}`}>
+                {canEdit && <button onClick={() => setEditing(p)} className="grid h-8 w-8 place-items-center rounded-md border border-line text-ink-50 transition hover:border-ink-35 hover:text-ink" aria-label={`Edit ${p.name}`}>
                   <Icon name="wrench" size={14} />
-                </button>
-                <button onClick={() => onDelete(p)} className="grid h-8 w-8 place-items-center rounded-md border border-line text-ink-50 transition hover:border-clay/40 hover:text-clay" aria-label={`Delete ${p.name}`}>
+                </button>}
+                {canEdit && <button onClick={() => onDelete(p)} className="grid h-8 w-8 place-items-center rounded-md border border-line text-ink-50 transition hover:border-clay/40 hover:text-clay" aria-label={`Delete ${p.name}`}>
                   <Icon name="trash" size={14} />
-                </button>
+                </button>}
               </div>
             </motion.div>
           );

@@ -4,6 +4,8 @@ import Icon from '../../components/Icon';
 import Modal from '../../components/Modal';
 import { AdminPageHead, FilterTabs } from '../../components/admin/AdminUI';
 import BulkPricingPanel from '../../components/admin/BulkPricing';
+import { ViewOnlyBanner } from '../../components/admin/AdminUI';
+import { useIam } from '../../context/IamStore';
 import { Badge, Button, Field } from '../../components/ui';
 import { useToast } from '../../context/ToastContext';
 import { useAdminStore, couponDiscount } from '../../context/AdminStore';
@@ -96,6 +98,7 @@ export default function AdminDiscounts() {
   const [editing, setEditing] = useState(undefined);
   const [tab, setTab] = useState('codes');
   const [creatingBulk, setCreatingBulk] = useState(false);
+  const canEdit = useIam().can('discounts', 'edit');
 
   const active = coupons.filter((c) => c.active).length;
 
@@ -114,10 +117,12 @@ export default function AdminDiscounts() {
           ? <>{coupons.length} code{coupons.length !== 1 && 's'} · <span className="text-emerald-600">{active} active</span> · customers enter these at checkout</>
           : <>{bulkRules.length} bulk rule{bulkRules.length !== 1 && 's'} · <span className="text-emerald-600">{bulkRules.filter((r) => r.active).length} active</span> · applied automatically in the cart</>}
       >
-        {tab === 'codes'
+        {canEdit && (tab === 'codes'
           ? <Button size="sm" icon="plus" onClick={() => setEditing(null)}>New discount code</Button>
-          : <Button size="sm" icon="plus" onClick={() => setCreatingBulk(true)}>New bulk rule</Button>}
+          : <Button size="sm" icon="plus" onClick={() => setCreatingBulk(true)}>New bulk rule</Button>)}
       </AdminPageHead>
+
+      {!canEdit && <ViewOnlyBanner what="discounts" />}
 
       <FilterTabs
         label="Discount type"
@@ -129,7 +134,7 @@ export default function AdminDiscounts() {
         ]}
       />
 
-      {tab === 'bulk' && <BulkPricingPanel creating={creatingBulk} setCreating={setCreatingBulk} />}
+      {tab === 'bulk' && <BulkPricingPanel creating={creatingBulk} setCreating={setCreatingBulk} canEdit={canEdit} />}
 
       {tab === 'codes' && (
       <>
@@ -169,7 +174,7 @@ export default function AdminDiscounts() {
                           {c.code}
                         </span>
                       </div>
-                      <div className="flex shrink-0 gap-1.5">
+                      {canEdit && <div className="flex shrink-0 gap-1.5">
                         <button
                           onClick={() => { saveCoupon({ ...c, active: !c.active }); }}
                           className={cx('grid h-8 w-8 place-items-center rounded-md border transition', c.active ? 'border-line text-emerald-600 hover:border-emerald' : 'border-line text-ink-35 hover:text-ink')}
@@ -188,7 +193,7 @@ export default function AdminDiscounts() {
                         >
                           <Icon name="trash" size={14} />
                         </button>
-                      </div>
+                      </div>}
                     </div>
 
                     <p className="mt-2.5 text-[13px]">
@@ -216,7 +221,7 @@ export default function AdminDiscounts() {
         <div className="rounded-[20px] border border-dashed border-[#cad8d2] bg-[#f4f7f5] px-4 py-12 text-center">
           <span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-sunk text-ink-35"><Icon name="tag" size={22} /></span>
           <p className="mt-3 text-[13px] text-ink-50">No discount codes yet.</p>
-          <div className="mt-4"><Button size="sm" icon="plus" onClick={() => setEditing(null)}>Create your first code</Button></div>
+          {canEdit && <div className="mt-4"><Button size="sm" icon="plus" onClick={() => setEditing(null)}>Create your first code</Button></div>}
         </div>
       )}
 

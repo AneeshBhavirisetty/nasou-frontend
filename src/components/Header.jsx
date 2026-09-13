@@ -5,6 +5,7 @@ import Icon from './Icon';
 import Logo from './Logo';
 import ProductArt from './ProductArt';
 import NotificationBell from './NotificationBell';
+import { roleLabel } from '../lib/roles';
 import { Badge } from './ui';
 import { departments, searchProducts } from '../data/catalog';
 import { announcements } from '../data/site';
@@ -135,7 +136,7 @@ function SearchBox({ onDone }) {
 
 /* ── account menu (demo avatar circle) ─────────────────────────────────── */
 function AccountMenu() {
-  const { isAuthenticated, user, isAdmin, logout } = useAuth();
+  const { isAuthenticated, user, isAdmin, isRetailer, logout } = useAuth();
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   const navigate = useNavigate();
@@ -164,7 +165,7 @@ function AccountMenu() {
     { label: 'Orders', to: '/orders', icon: 'package' },
     { label: 'Wishlist', to: '/wishlist', icon: 'heart' },
     { label: 'Addresses', to: '/checkout', icon: 'pin' },
-    ...(isAdmin ? [{ label: 'Admin dashboard', to: '/admin/dashboard', icon: 'gauge' }] : []),
+    ...(isAdmin || isRetailer ? [{ label: 'Admin console', to: '/admin/dashboard', icon: 'gauge' }] : []),
   ];
 
   return (
@@ -190,7 +191,7 @@ function AccountMenu() {
               <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white text-[12px] font-black text-forest">{initials}</span>
               <div className="min-w-0">
                 <p className="truncate text-[13.5px] font-bold">{user?.fullName || 'Your account'}</p>
-                <p className="text-[11.5px] text-emerald-100">{isAdmin ? 'Administrator' : 'Customer'}</p>
+                <p className="text-[11.5px] text-emerald-100">{roleLabel(user?.role)}</p>
               </div>
             </div>
             <div className="py-1">

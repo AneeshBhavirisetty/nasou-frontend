@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import Icon from '../components/Icon';
-import { AdminPageHead } from '../components/admin/AdminUI';
+import { AdminPageHead, ViewOnlyBanner } from '../components/admin/AdminUI';
+import { useIam } from '../context/IamStore';
 import { Button } from '../components/ui';
 import { useToast } from '../context/ToastContext';
 import { products, categories } from '../data/catalog';
@@ -13,6 +14,7 @@ export default function AdminCatalogImport() {
   const [drag, setDrag] = useState(false);
   const [phase, setPhase] = useState('idle'); // idle | working | done
   const [result, setResult] = useState(null);
+  const canEdit = useIam().can('products', 'edit');
 
   const take = (f) => {
     if (!f) return;
@@ -40,6 +42,7 @@ export default function AdminCatalogImport() {
   return (
     <div className="space-y-5">
       <AdminPageHead title="Catalogue import" note="Upsert product metadata from a supplier workbook." />
+      {!canEdit && <ViewOnlyBanner what="catalogue imports" />}
 
       <div className="max-w-2xl rounded-[20px] border border-line bg-white/86 p-5 shadow-[0_18px_40px_rgba(37,88,73,0.08)] sm:p-6">
         <label
@@ -62,7 +65,7 @@ export default function AdminCatalogImport() {
         </label>
 
         <div className="mt-4 flex gap-2">
-          <Button onClick={run} disabled={!file || phase === 'working'} loading={phase === 'working'} icon="package">
+          <Button onClick={run} disabled={!canEdit || !file || phase === 'working'} loading={phase === 'working'} icon="package">
             {phase === 'working' ? 'Importing…' : 'Import workbook'}
           </Button>
           {file && phase !== 'working' && (

@@ -7,6 +7,8 @@ import { AdminPageHead, FilterTabs, SearchInput } from '../../components/admin/A
 import { Badge, Button } from '../../components/ui';
 import { useToast } from '../../context/ToastContext';
 import { useOrderStore } from '../../context/OrderStore';
+import { useIam } from '../../context/IamStore';
+import { ViewOnlyBanner } from '../../components/admin/AdminUI';
 import { orders as SEED, ORDER_FLOW, ORDER_STATUSES, formatOrderDate } from '../../data/orders';
 import { downloadSheet, hyperlink, invoiceUrl, isoDate } from '../../lib/exportSheet';
 import { money, cx } from '../../lib/format';
@@ -18,6 +20,7 @@ export default function AdminOrders() {
   const toast = useToast();
   /* placed orders (checkout → OrderStore) on top of the seeded demo book */
   const { placed, updateOrder } = useOrderStore();
+  const canEdit = useIam().can('orders', 'edit');
   const [seedRows, setSeedRows] = useState(SEED);
   const rows = useMemo(() => [...placed, ...seedRows], [placed, seedRows]);
   const [q, setQ] = useState('');
@@ -82,6 +85,8 @@ export default function AdminOrders() {
         </Button>
       </AdminPageHead>
 
+      {!canEdit && <ViewOnlyBanner what="orders" />}
+
       <div className="space-y-3 rounded-[20px] border border-line bg-white/86 p-3 shadow-[0_18px_40px_rgba(37,88,73,0.08)]">
         <SearchInput placeholder="Search order # or customer" value={q} onChange={(e) => setQ(e.target.value)} />
         <FilterTabs
@@ -102,7 +107,7 @@ export default function AdminOrders() {
               key={o.id}
               initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(i, 12) * 0.03 }}
             >
-              <OrderCard order={o} onAdvance={() => advance(o.id)} />
+              <OrderCard order={o} onAdvance={canEdit ? () => advance(o.id) : null} />
             </motion.div>
           ))}
         </div>
@@ -201,7 +206,7 @@ function OrderCard({ order: o, onAdvance }) {
         >
           <Icon name="fileText" size={13} /> Invoice
         </Link>
-        {open && (
+        {open && onAdvance && (
           <button onClick={onAdvance} className="flex items-center gap-1 rounded-md border border-forest bg-forest px-2.5 py-2 text-[12px] font-semibold text-white transition hover:bg-forest-800">
             <Icon name="chevronsRight" size={13} /> Advance
           </button>

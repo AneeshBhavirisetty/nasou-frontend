@@ -9,6 +9,7 @@ import AuthCard from '../../components/auth/AuthCard';
 import PasswordField from '../../components/auth/PasswordField';
 import { DEMO_ACCOUNTS } from '../../lib/api';
 import { landingFor } from '../../lib/auth';
+import { roleLabel } from '../../lib/roles';
 
 const MOCK = import.meta.env.VITE_API_BASE_URL === undefined || import.meta.env.VITE_MOCK_API === 'true';
 
@@ -117,7 +118,7 @@ export default function Login() {
             {DEMO_ACCOUNTS.map((a) => (
               <li key={a.role} className="flex justify-between gap-2">
                 <span className="font-mono">{a.email}</span>
-                <span className="shrink-0 rounded-full bg-white px-2 font-bold text-forest">{a.role}</span>
+                <span className="shrink-0 rounded-full bg-white px-2 font-bold text-forest">{roleLabel(a.role)}</span>
               </li>
             ))}
           </ul>

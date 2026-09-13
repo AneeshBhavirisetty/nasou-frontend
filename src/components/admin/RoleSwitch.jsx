@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import Icon from '../Icon';
 import { useAuth } from '../../context/AuthContext';
 import { cx } from '../../lib/format';
+import { roleLabel } from '../../lib/roles';
 
 const MOCK = import.meta.env.VITE_API_BASE_URL === undefined || import.meta.env.VITE_MOCK_API === 'true';
 
@@ -32,7 +33,7 @@ export default function RoleSwitch() {
                 onClick={() => { devSetRole(r); setOpen(false); }}
                 className={cx('flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-[12.5px] font-semibold transition', role === r ? 'bg-forest text-white' : 'text-ink-70 hover:bg-sunk')}
               >
-                <Icon name={r === 'ADMIN' ? 'gauge' : 'user'} size={13} /> {r}
+                <Icon name={r === 'ADMIN' ? 'gauge' : r === 'RETAILER' ? 'users' : 'user'} size={13} /> {roleLabel(r)}
               </button>
             ))}
             {role && (
@@ -48,7 +49,7 @@ export default function RoleSwitch() {
         className="flex h-9 items-center gap-1.5 rounded-full border border-line bg-white px-3.5 text-[11.5px] font-bold text-ink-70 shadow-lift"
       >
         <span className="h-1.5 w-1.5 rounded-full bg-emerald" />
-        DEMO · {role || 'guest'}
+        DEMO · {role ? roleLabel(role) : 'guest'}
       </button>
     </div>
   );

@@ -5,6 +5,8 @@ import ProtectedRoute from '../components/ProtectedRoute';
 import Icon from '../components/Icon';
 import { AdminBottomNav, AdminSideRail, ADMIN_NAV } from '../components/admin/AdminSidebar';
 import { useAuth } from '../context/AuthContext';
+import { useIam } from '../context/IamStore';
+import { roleLabel } from '../lib/roles';
 import { cx } from '../lib/format';
 
 /* Admin console in the NasouHive demo dashboard shell: sidebar on the left,
@@ -44,7 +46,7 @@ function AvatarMenu() {
           >
             <div className="rounded-[12px] bg-forest px-3 py-3 text-white">
               <p className="truncate text-[13.5px] font-bold">{name}</p>
-              <p className="text-[11.5px] text-emerald-100">Administrator</p>
+              <p className="text-[11.5px] text-emerald-100">{roleLabel(user?.role)}</p>
             </div>
             <Link to="/" onClick={() => setOpen(false)} className="mt-1 flex items-center gap-2.5 rounded-[12px] px-3 py-2.5 text-[13px] font-semibold text-ink-70 hover:bg-sunk/70 hover:text-forest">
               <Icon name="store" size={15} className="text-ink-35" /> View store
@@ -62,14 +64,34 @@ function AvatarMenu() {
   );
 }
 
+/* Shown instead of a module the signed-in person has no permission for. */
+function NoAccess({ suspended }) {
+  return (
+    <div className="mx-auto mt-6 max-w-md rounded-[24px] border border-white/80 bg-white p-8 text-center shadow-card">
+      <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-sunk text-forest"><Icon name="key" size={24} /></span>
+      <h2 className="mt-4 text-[20px] font-semibold">{suspended ? 'Your access is paused' : 'No access to this section'}</h2>
+      <p className="mt-2 text-[13.5px] leading-relaxed text-ink-50">
+        {suspended
+          ? 'An admin has suspended this account. Ask them to re-activate it in Users & access.'
+          : 'Your role does not include this module. An admin can grant it in Users & access.'}
+      </p>
+      <Link to="/admin/dashboard" className="mt-5 inline-flex rounded-md bg-forest px-4 py-2.5 text-[13px] font-bold text-white">Back to dashboard</Link>
+    </div>
+  );
+}
+
 export default function AdminLayout({ children }) {
   const [rail, setRail] = useState(true);
   const { pathname } = useLocation();
-  const current = ADMIN_NAV.find((n) => pathname.startsWith(n.to));
+  const { can, suspended } = useIam();
+  const current = ADMIN_NAV.find((n) => pathname.startsWith(n.to))
+    ?? (pathname.startsWith('/admin/billing') ? { label: 'Billing & payments', module: 'billing' } : null)
+    ?? (pathname.startsWith('/admin/reports') ? { label: 'Reports & analytics', module: 'reports' } : null);
   const title = current?.label ?? 'Admin';
+  const allowed = !current || can(current.module);
 
   return (
-    <ProtectedRoute allowedRoles={['ADMIN']}>
+    <ProtectedRoute allowedRoles={['ADMIN', 'RETAILER']}>
       <div className="min-h-dvh overflow-x-hidden bg-canvas text-forest">
         <div className="min-h-dvh bg-[radial-gradient(circle_at_top_left,rgba(31,92,74,0.16),transparent_28%),radial-gradient(circle_at_top_right,rgba(229,216,199,0.8),transparent_24%),linear-gradient(180deg,#efeae1_0%,#f5f1ea_48%,#efeae1_100%)]">
           <AdminSideRail open={rail} onClose={() => setRail(false)} />
@@ -104,7 +126,7 @@ export default function AdminLayout({ children }) {
 
             <main className="mx-auto max-w-[1600px] px-4 pb-[calc(110px+env(safe-area-inset-bottom))] pt-5 sm:px-6 lg:px-10 lg:pb-10 lg:pt-8">
               <motion.div key={pathname} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.32 }}>
-                {children ?? <Outlet />}
+                {allowed ? (children ?? <Outlet />) : <NoAccess suspended={suspended} />}
               </motion.div>
             </main>
           </div>

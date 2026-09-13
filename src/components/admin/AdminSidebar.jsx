@@ -4,19 +4,27 @@ import { AnimatePresence, motion } from 'framer-motion';
 import Icon from '../Icon';
 import Logo from '../Logo';
 import { useAuth } from '../../context/AuthContext';
+import { useIam } from '../../context/IamStore';
 import { cx } from '../../lib/format';
 
 /* Admin navigation in the NasouHive demo dashboard shell: a full-height
    sidebar on desktop, a bottom bar with a "More" sheet on phones. */
 
+/* `module` ties each entry to an IAM permission (context/IamStore.jsx). */
 export const ADMIN_NAV = [
-  { to: '/admin/dashboard', label: 'Dashboard', short: 'Home', icon: 'gauge' },
-  { to: '/admin/products', label: 'Products', short: 'Products', icon: 'package' },
-  { to: '/admin/orders', label: 'Orders', short: 'Orders', icon: 'truck' },
-  { to: '/admin/users', label: 'Users', short: 'Users', icon: 'user' },
-  { to: '/admin/discounts', label: 'Discounts', short: 'Discounts', icon: 'tag' },
-  { to: '/admin/catalog/import', label: 'Catalog import', short: 'Import', icon: 'layers' },
+  { to: '/admin/dashboard', label: 'Dashboard', short: 'Home', icon: 'gauge', module: 'dashboard' },
+  { to: '/admin/products', label: 'Products', short: 'Products', icon: 'package', module: 'products' },
+  { to: '/admin/orders', label: 'Orders', short: 'Orders', icon: 'truck', module: 'orders' },
+  { to: '/admin/users', label: 'Users & access', short: 'Users', icon: 'users', module: 'users' },
+  { to: '/admin/discounts', label: 'Discounts', short: 'Discounts', icon: 'tag', module: 'discounts' },
+  { to: '/admin/catalog/import', label: 'Catalog import', short: 'Import', icon: 'layers', module: 'products' },
 ];
+
+/* entries the signed-in person may open */
+export function useAdminNav() {
+  const { can } = useIam();
+  return ADMIN_NAV.filter((n) => can(n.module));
+}
 
 const link = ({ isActive }) =>
   cx(
@@ -26,6 +34,7 @@ const link = ({ isActive }) =>
 
 export function AdminSideRail({ open, onClose }) {
   const { logout } = useAuth();
+  const nav = useAdminNav();
   return (
     <aside
       className={cx(
@@ -53,7 +62,7 @@ export function AdminSideRail({ open, onClose }) {
       </Link>
 
       <nav className="grid gap-2 overflow-y-auto pb-4">
-        {ADMIN_NAV.map((n) => (
+        {nav.map((n) => (
           <NavLink key={n.to} to={n.to} className={link}>
             <Icon name={n.icon} size={19} />
             <span className="truncate">{n.label}</span>
@@ -77,8 +86,9 @@ export function AdminBottomNav() {
   const [more, setMore] = useState(false);
   const { pathname } = useLocation();
   const { logout } = useAuth();
-  const primary = ADMIN_NAV.slice(0, 4);
-  const rest = ADMIN_NAV.slice(4);
+  const nav = useAdminNav();
+  const primary = nav.slice(0, 4);
+  const rest = nav.slice(4);
   const inRest = rest.some((n) => pathname.startsWith(n.to));
 
   useEffect(() => { setMore(false); }, [pathname]);

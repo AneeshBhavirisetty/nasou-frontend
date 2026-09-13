@@ -67,3 +67,12 @@ export function SearchInput({ value, onChange, placeholder }) {
     </label>
   );
 }
+
+/* Shown on a module the signed-in team member can see but not change. */
+export function ViewOnlyBanner({ what = 'this section' }) {
+  return (
+    <p className="flex items-center gap-2 rounded-[14px] border border-amber/20 bg-amber-50 px-4 py-2.5 text-[12.5px] font-semibold text-amber">
+      <Icon name="eye" size={15} /> View only — you can browse {what} but not change it. Ask an admin for edit access.
+    </p>
+  );
+}

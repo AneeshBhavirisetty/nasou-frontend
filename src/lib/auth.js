@@ -69,7 +69,8 @@ export function parseJwt(token) {
 export function landingFor(session, explicit) {
   if (explicit) return explicit;
   const role = session?.role ?? parseJwt(session?.accessToken)?.role;
-  return role === 'ADMIN' ? '/admin/dashboard' : '/';
+  /* admins and team members (RETAILER) work in the console */
+  return role === 'ADMIN' || role === 'RETAILER' ? '/admin/dashboard' : '/';
 }
 
 export function isTokenExpired(token) {

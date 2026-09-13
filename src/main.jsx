@@ -9,6 +9,7 @@ import { WishlistProvider } from './context/WishlistContext';
 import { AdminStoreProvider } from './context/AdminStore';
 import { OrderStoreProvider } from './context/OrderStore';
 import { NotificationProvider } from './context/NotificationStore';
+import { IamProvider } from './context/IamStore';
 import './index.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
@@ -17,6 +18,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       <ToastProvider>
       <BrowserRouter>
         <NotificationProvider>
+          <IamProvider>
           <AdminStoreProvider>
             <OrderStoreProvider>
               <CartProvider>
@@ -26,6 +28,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
               </CartProvider>
             </OrderStoreProvider>
           </AdminStoreProvider>
+          </IamProvider>
         </NotificationProvider>
       </BrowserRouter>
       </ToastProvider>
