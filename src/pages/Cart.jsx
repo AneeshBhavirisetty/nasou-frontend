@@ -115,7 +115,7 @@ export default function Cart() {
         </div>
 
         <aside>
-          <div className="sticky top-[136px] rounded-[20px] bg-white p-5 shadow-card sm:p-6">
+          <div className="sticky top-[136px] rounded-[20px] bg-white p-4 shadow-card sm:p-6">
             <h2 className="text-lg font-semibold text-forest">Order summary</h2>
             <dl className="mt-5 space-y-3 text-[14px] text-ink-50">
               <div className="flex justify-between"><dt>Subtotal</dt><dd className="tnum text-ink">{money(totals.subtotal)}</dd></div>

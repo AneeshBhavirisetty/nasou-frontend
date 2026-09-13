@@ -126,20 +126,20 @@ export default function ProductDetail() {
               </div>
             </>
           ) : (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-2 sm:grid-cols-2 sm:gap-3">
               <div
                 ref={tilt.ref}
                 onMouseMove={tilt.onMouseMove}
                 onMouseLeave={tilt.onMouseLeave}
                 style={tilt.style}
-                className="photo-bed relative overflow-hidden rounded-[18px] border border-white/80 shadow-card"
+                className="photo-bed relative col-span-3 overflow-hidden rounded-[18px] border border-white/80 shadow-card sm:col-span-1"
               >
-                <ProductArt kind={product.art} material={product.material} title={product.title} className="aspect-[4/5] w-full p-8 sm:p-10" />
+                <ProductArt kind={product.art} material={product.material} title={product.title} className="aspect-[4/3] w-full p-6 sm:aspect-[4/5] sm:p-10" />
                 {product.badges[0] && <span className="absolute left-4 top-4 rounded-full bg-forest px-3 py-1 text-[10.5px] font-bold uppercase tracking-[0.08em] text-white">{product.badges[0]}</span>}
               </div>
               {['socket', 'thread', 'pack'].map((v, i) => (
-                <div key={v} className="photo-bed overflow-hidden rounded-[18px] border border-white/80">
-                  <ProductArt kind={product.art} material={i === 2 ? 'PVC' : product.material} className={cx('aspect-[4/5] w-full p-8 sm:p-10', i === 0 && 'scale-x-[-1]')} />
+                <div key={v} className="photo-bed overflow-hidden rounded-[14px] border border-white/80 sm:rounded-[18px]">
+                  <ProductArt kind={product.art} material={i === 2 ? 'PVC' : product.material} className={cx('aspect-square w-full p-3 sm:aspect-[4/5] sm:p-10', i === 0 && 'scale-x-[-1]')} />
                 </div>
               ))}
             </div>
@@ -148,7 +148,7 @@ export default function ProductDetail() {
 
         {/* buy box — demo info card */}
         <div>
-          <div className="rounded-[24px] border border-white/80 bg-white p-6 shadow-card sm:p-7 lg:sticky lg:top-[136px]">
+          <div className="rounded-[20px] bg-white p-4 shadow-card sm:rounded-[24px] sm:border sm:border-white/80 sm:p-7 lg:sticky lg:top-[136px]">
             <p className="text-[11.5px] font-bold uppercase tracking-[0.18em] text-ink-50">
               {product.supplierName} · {categoryName(product.category)}
             </p>
@@ -245,7 +245,7 @@ export default function ProductDetail() {
 
       {/* details */}
       <div className="mt-10 grid gap-6 lg:grid-cols-[1.4fr_1fr]">
-        <div className="rounded-[24px] border border-white/80 bg-white p-4 shadow-card sm:p-6">
+        <div className="min-w-0 rounded-[24px] border border-white/80 bg-white p-4 shadow-card sm:p-6">
           <Tabs
             tabs={[
               {
@@ -304,7 +304,7 @@ export default function ProductDetail() {
           />
         </div>
 
-        <div className="space-y-4">
+        <div className="min-w-0 space-y-4">
           <div className="rounded-[24px] border border-white/80 bg-white p-5 shadow-card">
             <p className="text-[11.5px] font-bold uppercase tracking-[0.18em] text-ink-50">Traceability</p>
             <div className="mt-4">

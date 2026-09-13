@@ -213,7 +213,7 @@ export default function Checkout() {
     <Container className="pb-12 pt-5">
       <Breadcrumbs className="mb-4" items={[{ label: 'Cart', to: '/cart' }, { label: 'Checkout' }]} />
 
-      <div className="rounded-[24px] border border-white/80 bg-white/70 p-5 shadow-card backdrop-blur sm:p-6">
+      <div className="rounded-[20px] bg-white/70 p-4 shadow-card backdrop-blur sm:rounded-[24px] sm:border sm:border-white/80 sm:p-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-ink-50">Nasou secure checkout</p>
@@ -228,7 +228,7 @@ export default function Checkout() {
 
       <div className="mt-5 grid gap-5 lg:grid-cols-[1fr_380px]">
         <div>
-          <div className="rounded-[24px] border border-white/80 bg-white p-5 shadow-card sm:p-7">
+          <div className="rounded-[20px] bg-white p-4 shadow-card sm:rounded-[24px] sm:border sm:border-white/80 sm:p-7">
             {/* Keyed div + CSS animation rather than a wait-mode presence
                 transition: gating the next step on the previous one's exit
                 can strand a shopper mid-checkout if that frame never runs.
@@ -396,7 +396,7 @@ export default function Checkout() {
         </div>
 
         <aside>
-          <div className="sticky top-[136px] rounded-[24px] border border-white/80 bg-white p-5 shadow-card sm:p-6">
+          <div className="sticky top-[136px] rounded-[20px] bg-white p-4 shadow-card sm:rounded-[24px] sm:border sm:border-white/80 sm:p-6">
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-[18px] font-semibold text-forest">Order summary</h2>
               <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[10.5px] font-bold uppercase tracking-[0.08em] text-emerald-700">

@@ -37,11 +37,11 @@ function Newsletter() {
 
 export default function Footer() {
   return (
-    <footer className="mt-10 pb-6 sm:mt-14">
+    <footer className="mt-8 pb-4 sm:mt-14 sm:pb-6">
       <Container>
         <div className="forest-band relative overflow-hidden rounded-[24px] text-white shadow-pop">
           <div className="field-dots-dark pointer-events-none absolute inset-0 opacity-40" />
-          <div className="relative px-6 py-10 sm:px-10 sm:py-12">
+          <div className="relative px-5 py-8 sm:px-10 sm:py-12">
             <div className="grid gap-10 lg:grid-cols-[1.15fr_2fr]">
               <div>
                 <Link to="/" className="inline-flex items-center gap-3 text-white">

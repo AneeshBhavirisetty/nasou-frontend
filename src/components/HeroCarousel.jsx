@@ -50,7 +50,7 @@ export default function HeroCarousel({ slides }) {
 
   return (
     <section
-      className="forest-band group relative min-h-[460px] overflow-hidden rounded-[24px] shadow-pop sm:min-h-[500px]"
+      className="forest-band group relative min-h-[400px] overflow-hidden rounded-[20px] shadow-pop sm:min-h-[500px] sm:rounded-[24px]"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       aria-roledescription="carousel"
@@ -89,7 +89,7 @@ export default function HeroCarousel({ slides }) {
       {/* readability wash, as in the demo */}
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(18,54,44,0.97)_0%,rgba(18,54,44,0.82)_38%,rgba(18,54,44,0.2)_70%,rgba(18,54,44,0)_100%)]" />
 
-      <div className="relative z-10 flex min-h-[460px] max-w-3xl flex-col justify-center px-6 pb-20 pt-12 text-white sm:min-h-[500px] sm:px-12 lg:px-14">
+      <div className="relative z-10 flex min-h-[400px] max-w-3xl flex-col justify-center px-5 pb-16 pt-8 text-white sm:min-h-[500px] sm:px-12 sm:pb-20 sm:pt-12 lg:px-14">
         <AnimatePresence mode="wait">
           <motion.div
             key={`${s.id}-copy`}

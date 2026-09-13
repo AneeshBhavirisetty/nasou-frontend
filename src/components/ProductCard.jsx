@@ -66,26 +66,26 @@ export default function ProductCard({ product, compact = false }) {
           <Icon name="heart" size={16} fill={saved ? 'currentColor' : 'none'} strokeWidth={1.8} />
         </button>
 
-        <span className="absolute bottom-3 left-3 rounded-full bg-white/90 px-2 py-0.5 font-mono text-[10px] font-bold text-ink-70">
+        <span className="absolute bottom-2 left-2 rounded-full bg-white/90 px-2 py-0.5 font-mono text-[10px] font-bold text-ink-70 sm:bottom-3 sm:left-3">
           {product.sku}
         </span>
       </div>
 
-      <div className="flex flex-1 flex-col p-4">
-        <p className="truncate text-[11px] font-bold uppercase tracking-[0.12em] text-ink-50">
+      <div className="flex flex-1 flex-col p-3 sm:p-4">
+        <p className="truncate text-[10.5px] font-bold uppercase tracking-[0.1em] text-ink-50 sm:text-[11px] sm:tracking-[0.12em]">
           {categoryName(product.category)} · {product.size || 'standard'}
         </p>
         <h3 className="mt-1 text-[15px] font-semibold leading-snug text-ink sm:text-base">
           <Link to={to} className="line-clamp-2 transition hover:text-forest">{product.name}</Link>
         </h3>
         {product.rating > 0 && (
-          <Rating value={product.rating} count={product.reviewCount} size={13} className="mt-2" />
+          <Rating value={product.rating} count={product.reviewCount} size={13} className="mt-1.5 sm:mt-2" />
         )}
 
-        <div className="mt-auto flex items-end justify-between gap-3 pt-4">
+        <div className="mt-auto flex items-end justify-between gap-2 pt-3 sm:gap-3 sm:pt-4">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-x-2">
-              <p className="tnum text-lg font-semibold text-ink">{money(product.price)}</p>
+              <p className="tnum text-base font-semibold text-ink sm:text-lg">{money(product.price)}</p>
               {off > 0 && <span className="text-[12px] font-bold text-emerald-700">{off}% off</span>}
             </div>
             {off > 0
@@ -100,7 +100,7 @@ export default function ProductCard({ product, compact = false }) {
             disabled={out}
             aria-label={`Add ${product.name} to cart`}
             className={cx(
-              'grid h-10 w-10 shrink-0 place-items-center rounded-md transition',
+              'grid h-9 w-9 shrink-0 place-items-center rounded-md transition sm:h-10 sm:w-10',
               out
                 ? 'cursor-not-allowed bg-sunk text-ink-35'
                 : 'bg-forest text-white shadow-btn hover:-translate-y-0.5 hover:bg-forest-800 active:translate-y-px'

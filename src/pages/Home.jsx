@@ -74,7 +74,7 @@ const inStock = products.filter((p) => p.stock > 0).length;
 
 export default function Home() {
   return (
-    <Container className="space-y-12 pb-14 pt-5 sm:space-y-14">
+    <Container className="space-y-9 pb-10 pt-4 sm:space-y-14 sm:pb-14 sm:pt-5">
       <HeroCarousel slides={SLIDES} />
 
       {/* ── Bestsellers (demo: Recommended For You) ─────────────────────── */}

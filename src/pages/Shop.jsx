@@ -427,7 +427,7 @@ export default function Shop() {
   return (
     <Container className="pb-12 pt-5">
       {/* demo: page header card */}
-      <div className="rounded-[24px] border border-white/80 bg-white/70 p-5 shadow-card backdrop-blur sm:p-6">
+      <div className="rounded-[20px] bg-white/70 p-4 shadow-card backdrop-blur sm:rounded-[24px] sm:border sm:border-white/80 sm:p-6">
         <Breadcrumbs
           items={[
             { label: 'Home', to: '/' },
@@ -435,25 +435,25 @@ export default function Shop() {
             { label: cats.length === 1 ? categoryName(cats[0]) : depts.length === 1 ? 'All products' : 'All products' },
           ]}
         />
-        <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
+        <div className="mt-2 flex items-end justify-between gap-3 sm:gap-4">
           <div className="min-w-0">
-            <h1 className="flex flex-wrap items-baseline gap-x-2 text-[clamp(1.6rem,4vw,2.1rem)] font-semibold text-forest">
+            <h1 className="flex flex-wrap items-baseline gap-x-2 text-[clamp(1.35rem,4vw,2.1rem)] font-semibold text-forest">
               {q ? `“${q}”` : cats.length === 1 ? categoryName(cats[0]) : depts.length === 1 ? departmentName(depts[0]) : 'Everything we stock'}
               <span className="tnum text-[14px] font-semibold text-ink-50">— {results.length.toLocaleString('en-IN')} products</span>
             </h1>
-            <p className="mt-1.5 text-[14px] text-ink-50">
+            <p className="mt-1.5 hidden text-[14px] text-ink-50 sm:block">
               Filter by brand, size, type, price, discount and rating{q ? ' — showing matches for your search' : ''}.
             </p>
           </div>
-          <button onClick={() => setDrawer(true)} className="flex h-11 items-center gap-2 rounded-md border border-line bg-white px-4 text-[13px] font-bold text-forest lg:hidden">
+          <button onClick={() => setDrawer(true)} className="flex h-10 shrink-0 items-center gap-2 rounded-md bg-forest px-3.5 text-[13px] font-bold text-white shadow-btn lg:hidden">
             <Icon name="filter" size={15} /> Filters
-            {activeCount > 0 && <span className="tnum grid h-5 min-w-5 place-items-center rounded-full bg-forest px-1 text-[11px] text-white">{activeCount}</span>}
+            {activeCount > 0 && <span className="tnum grid h-5 min-w-5 place-items-center rounded-full bg-white px-1 text-[11px] text-forest">{activeCount}</span>}
           </button>
         </div>
       </div>
 
       {/* demo: smart filters row — quick toggles over the same filter state */}
-      <div className="mt-4 flex items-center gap-3 rounded-[18px] bg-white/40 px-3 py-2.5 sm:px-4">
+      <div className="mt-3 flex items-center gap-3 sm:mt-4 sm:rounded-[18px] sm:bg-white/40 sm:px-4 sm:py-2.5">
         <span className="hidden shrink-0 text-[11px] font-bold uppercase tracking-[0.18em] text-ink sm:inline">Quick filters</span>
         <div className="no-bar -my-1 flex gap-2 overflow-x-auto py-1">
           {[
@@ -473,7 +473,7 @@ export default function Shop() {
               onClick={c.act}
               aria-pressed={c.on}
               className={cx(
-                'flex shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-[13.5px] font-semibold transition',
+                'flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] font-semibold transition sm:gap-2 sm:px-4 sm:py-2 sm:text-[13.5px]',
                 c.on ? 'border-forest bg-forest text-white shadow-btn' : 'border-line bg-white text-ink-70 hover:border-forest/40 hover:text-forest'
               )}
             >
@@ -483,7 +483,7 @@ export default function Shop() {
         </div>
       </div>
 
-      <div className="mt-4 grid gap-5 lg:grid-cols-[280px_1fr]">
+      <div className="mt-3 grid gap-5 sm:mt-4 lg:grid-cols-[280px_1fr]">
         <aside className="hidden lg:block">
           <div className="thin-bar sticky top-[136px] max-h-[calc(100dvh-152px)] overflow-y-auto overscroll-contain rounded-[24px] border border-white/80 bg-white shadow-card">
             <div className="sticky top-0 z-10 flex items-center justify-between border-b border-line-soft bg-white px-4 py-4">
@@ -497,16 +497,16 @@ export default function Shop() {
           </div>
         </aside>
 
-        <div className="min-w-0 rounded-[24px] border border-white/80 bg-white/50 p-3 sm:p-4">
+        <div className="min-w-0 sm:rounded-[24px] sm:border sm:border-white/80 sm:bg-white/50 sm:p-4">
           {/* demo: results toolbar */}
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-[16px] bg-white/70 px-3 py-2.5">
+          <div className="mb-3 flex items-center justify-between gap-2 sm:mb-4 sm:flex-wrap sm:gap-3 sm:rounded-[16px] sm:bg-white/70 sm:px-3 sm:py-2.5">
             <div>
               <p className="tnum text-[14px] font-bold text-ink">{results.length.toLocaleString('en-IN')} products</p>
-              <p className="tnum text-[12px] text-ink-50">Showing {Math.min(shown.length, results.length).toLocaleString('en-IN')} · prices and stock from the catalogue</p>
+              <p className="tnum hidden text-[12px] text-ink-50 sm:block">Showing {Math.min(shown.length, results.length).toLocaleString('en-IN')} · prices and stock from the catalogue</p>
             </div>
-            <label className="relative flex h-11 items-center rounded-[12px] border border-line bg-white pl-3.5 pr-9">
+            <label className="relative flex h-10 items-center rounded-[12px] border border-line bg-white pl-3 pr-8 sm:h-11 sm:pl-3.5 sm:pr-9">
               <span className="mr-2 text-[10.5px] font-bold uppercase tracking-[0.1em] text-ink-35">Sort</span>
-              <select value={sort} onChange={(e) => setSort(e.target.value)} className="cursor-pointer appearance-none bg-transparent text-[14px] font-semibold text-ink outline-none">
+              <select value={sort} onChange={(e) => setSort(e.target.value)} className="cursor-pointer appearance-none bg-transparent text-[13px] font-semibold text-ink outline-none sm:text-[14px]">
                 {SORTS.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
               </select>
               <Icon name="chevronDown" size={14} className="pointer-events-none absolute right-3 text-ink-50" />
@@ -552,7 +552,7 @@ export default function Shop() {
             </div>
           ) : (
             <>
-              <motion.div layout className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 2xl:grid-cols-4">
+              <motion.div layout className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 2xl:grid-cols-4">
                 {shown.map((p) => (
                   <motion.div key={p.id} layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.28, ease: EASE }}>
                     <ProductCard product={p} />
