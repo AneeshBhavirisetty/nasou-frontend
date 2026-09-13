@@ -29,7 +29,7 @@ export default function CartDrawer() {
             className="fixed right-0 top-0 z-[61] flex h-full w-full max-w-[420px] flex-col bg-canvas shadow-pop sm:rounded-l-[24px]"
           >
             <header className="flex items-center justify-between border-b border-white/70 px-5 py-4 sm:rounded-tl-[24px]">
-              <h2 className="flex items-center gap-2 text-[18px] font-semibold text-ink">
+              <h2 className="flex items-center gap-2 text-[18px] font-semibold text-forest">
                 Shopping cart
                 <span className="tnum rounded-full bg-forest px-2 py-0.5 text-[12px] font-bold text-white">
                   {totals.count}

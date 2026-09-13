@@ -9,7 +9,7 @@ export default function Unauthorized() {
         <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-amber-50 text-amber">
           <Icon name="lock" size={26} />
         </span>
-        <h1 className="mt-5 text-[24px] font-semibold text-ink">Not your door</h1>
+        <h1 className="mt-5 text-[24px] font-semibold text-forest">Not your door</h1>
         <p className="mt-2 text-[13.5px] leading-relaxed text-ink-50">
           This area needs an administrator account. If you think that&rsquo;s wrong, sign in with the right account or head back to the shop.
         </p>

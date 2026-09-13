@@ -6,7 +6,7 @@ import { Badge, Button, Container, Breadcrumbs, Field } from '../components/ui';
 import PhoneField from '../components/auth/PhoneField';
 import { useToast } from '../context/ToastContext';
 import { categories } from '../data/catalog';
-import { brand } from '../data/site';
+import { brand, whatsappLink } from '../data/site';
 import { isMobile10, cx } from '../lib/format';
 
 const PURPOSE = [
@@ -48,7 +48,7 @@ export default function Enquiry() {
           <span className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-forest text-white shadow-btn">
             <Icon name="check" size={28} strokeWidth={2.6} />
           </span>
-          <h1 className="mt-5 text-[24px] font-semibold text-ink">Enquiry received</h1>
+          <h1 className="mt-5 text-[24px] font-semibold text-forest">Enquiry received</h1>
           <p className="mt-2 text-[13.5px] leading-relaxed text-ink-50">
             Thanks {f.name.split(' ')[0]} — our trade desk will call{' '}
             <span className="tnum font-semibold text-ink">+91 {f.phone}</span> within one working day.
@@ -88,7 +88,7 @@ export default function Enquiry() {
       <Container className="pb-12 pt-5">
         <div className="grid gap-5 lg:grid-cols-[1.3fr_1fr]">
           <form onSubmit={submit} noValidate className="rounded-[24px] border border-white/80 bg-white p-5 shadow-card sm:p-7">
-            <h2 className="text-[20px] font-semibold text-ink">What is this about?</h2>
+            <h2 className="text-[20px] font-semibold text-forest">What is this about?</h2>
             <p className="mb-4 mt-1 text-[14px] text-ink-50">Pick the closest match — it routes your enquiry to the right desk.</p>
             <div className="grid gap-2 sm:grid-cols-2">
               {PURPOSE.map((p) => (
@@ -184,9 +184,17 @@ export default function Enquiry() {
                   <Icon name="clock" size={15} /> Mon–Sat, 9am to 7pm
                 </p>
               </div>
+              <a
+                href={whatsappLink('Hi Nasou Hive, I have a trade enquiry.')}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-5 flex w-full items-center justify-center gap-2 rounded-md bg-forest px-4 py-3 text-[14px] font-bold text-white shadow-btn transition hover:-translate-y-0.5 hover:bg-forest-800"
+              >
+                <Icon name="whatsapp" size={18} /> WhatsApp us
+              </a>
             </div>
 
-            <div className="rounded-[24px] bg-ink p-5 text-white sm:p-6">
+            <div className="forest-band rounded-[24px] p-5 text-white sm:p-6">
               <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.18em] text-[#c9d7d2]">Why buy trade from Nasou</p>
               <ul className="space-y-2.5 text-[13.5px] text-white/85">
                 {[
@@ -200,8 +208,8 @@ export default function Enquiry() {
                   </li>
                 ))}
               </ul>
-              <Link to="/contact" className="mt-5 inline-flex items-center gap-1.5 rounded-md bg-white px-4 py-2.5 text-[12.5px] font-bold text-forest transition hover:-translate-y-0.5">
-                General contact details <Icon name="arrowRight" size={13} />
+              <Link to="/shop" className="mt-5 inline-flex items-center gap-1.5 rounded-md bg-white px-4 py-2.5 text-[12.5px] font-bold text-forest transition hover:-translate-y-0.5">
+                Browse the catalogue <Icon name="arrowRight" size={13} />
               </Link>
             </div>
           </aside>

@@ -75,7 +75,7 @@ export default function Checkout() {
           <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-forest text-white shadow-btn">
             <Icon name="lock" size={24} />
           </span>
-          <h1 className="mt-5 text-[24px] font-semibold text-ink">Sign in to check out</h1>
+          <h1 className="mt-5 text-[24px] font-semibold text-forest">Sign in to check out</h1>
           <p className="mt-2 text-[14px] leading-relaxed text-ink-50">
             You need an account to place an order — for your GST invoice, order tracking and returns.
             Your {totals.count} item{totals.count !== 1 && 's'} {totals.count === 1 ? 'is' : 'are'} saved.
@@ -129,7 +129,7 @@ export default function Checkout() {
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-ink-50">Nasou secure checkout</p>
-            <h1 className="mt-2 text-[clamp(1.6rem,4vw,2rem)] font-semibold text-ink">Complete your order</h1>
+            <h1 className="mt-2 text-[clamp(1.6rem,4vw,2rem)] font-semibold text-forest">Complete your order</h1>
           </div>
           <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-[12px] font-bold text-emerald-700">
             <Icon name="shieldCheck" size={14} /> GST invoice · secure checkout
@@ -148,7 +148,7 @@ export default function Checkout() {
             <div key={step} className="animate-[stepIn_.26s_cubic-bezier(.22,1,.36,1)_both]">
                 {step === 0 && (
                   <>
-                    <h2 className="text-[20px] font-semibold text-ink">Where should this go?</h2>
+                    <h2 className="text-[20px] font-semibold text-forest">Where should this go?</h2>
                     <p className="mt-1 text-[14px] text-ink-50">Choose where this order should arrive.</p>
                     <div className="mt-6 grid gap-4 sm:grid-cols-2">
                       <Field label="Full name" placeholder="Aarav Reddy" defaultValue={user?.fullName || 'Aarav Reddy'} />
@@ -181,7 +181,7 @@ export default function Checkout() {
 
                 {step === 1 && (
                   <>
-                    <h2 className="text-[20px] font-semibold text-ink">How fast do you need it?</h2>
+                    <h2 className="text-[20px] font-semibold text-forest">How fast do you need it?</h2>
                     <p className="mt-1 text-[14px] text-ink-50">Pick a delivery speed — fees update in the summary.</p>
                     <div className="mt-6 space-y-2.5">
                       {DELIVERY_OPTIONS.map((d) => (
@@ -218,7 +218,7 @@ export default function Checkout() {
 
                 {step === 2 && (
                   <>
-                    <h2 className="text-[20px] font-semibold text-ink">How would you like to pay?</h2>
+                    <h2 className="text-[20px] font-semibold text-forest">How would you like to pay?</h2>
                     <p className="mt-1 text-[14px] text-ink-50">Every method is covered by a GST invoice.</p>
                     <div className="mt-6 grid gap-2.5 sm:grid-cols-2">
                       {paymentMethods.map((m) => (
@@ -252,7 +252,7 @@ export default function Checkout() {
 
                 {step === 3 && (
                   <>
-                    <h2 className="text-[20px] font-semibold text-ink">Check it over</h2>
+                    <h2 className="text-[20px] font-semibold text-forest">Check it over</h2>
                     <p className="mt-1 text-[14px] text-ink-50">Review the details before placing your order.</p>
                     <dl className="mt-6 space-y-3 text-[13.5px]">
                       <div className="flex justify-between gap-6 rounded-[16px] bg-[#f4f7f5] p-4">
@@ -301,7 +301,7 @@ export default function Checkout() {
         <aside>
           <div className="sticky top-[136px] rounded-[24px] border border-white/80 bg-white p-5 shadow-card sm:p-6">
             <div className="flex items-center justify-between gap-3">
-              <h2 className="text-[18px] font-semibold text-ink">Order summary</h2>
+              <h2 className="text-[18px] font-semibold text-forest">Order summary</h2>
               <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[10.5px] font-bold uppercase tracking-[0.08em] text-emerald-700">
                 {totals.count} {totals.count === 1 ? 'item' : 'items'}
               </span>

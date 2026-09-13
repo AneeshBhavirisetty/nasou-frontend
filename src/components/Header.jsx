@@ -33,7 +33,7 @@ function Ticker({ className = '' }) {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: -10, opacity: 0 }}
           transition={{ duration: 0.32, ease: EASE }}
-          className="truncate text-right text-[12px] font-semibold text-ink-50"
+          className="truncate text-right text-[12px] font-semibold text-emerald-100"
         >
           {announcements[i]}
         </motion.p>
@@ -275,8 +275,12 @@ function CountBadge({ n }) {
   );
 }
 
+/* Tab row sits on a forest band; the active tab gets a white underline. */
 const TAB = ({ isActive }) =>
-  cx('relative py-3 text-[14px] font-bold transition hover:text-forest', isActive ? 'text-forest' : 'text-ink-70');
+  cx(
+    "relative py-3 text-[14px] font-bold transition after:absolute after:inset-x-0 after:bottom-1.5 after:h-0.5 after:rounded-full after:bg-white after:transition-transform after:content-['']",
+    isActive ? 'text-white after:scale-x-100' : 'text-white/75 hover:text-white after:scale-x-0'
+  );
 
 /* ── header ────────────────────────────────────────────────────────────── */
 export default function Header() {
@@ -340,7 +344,7 @@ export default function Header() {
       </div>
 
       {/* tab row */}
-      <nav className="relative hidden border-t border-white/60 bg-white/35 lg:block" aria-label="Primary">
+      <nav className="forest-band relative hidden lg:block" aria-label="Primary">
         <div className="mx-auto flex max-w-[1440px] items-center gap-7 px-8">
           <NavLink to="/" end className={TAB}>Home</NavLink>
           <NavLink to="/shop" className={TAB}>Shop</NavLink>
@@ -349,7 +353,7 @@ export default function Header() {
             onMouseLeave={closeMega}
             onClick={() => setMega((v) => !v)}
             aria-expanded={mega}
-            className={cx('flex items-center gap-1 py-3 text-[14px] font-bold transition hover:text-forest', mega ? 'text-forest' : 'text-ink-70')}
+            className={cx('flex items-center gap-1 py-3 text-[14px] font-bold transition hover:text-white', mega ? 'text-white' : 'text-white/75')}
           >
             Categories
             <Icon name="chevronDown" size={14} className={cx('transition', mega && 'rotate-180')} />
@@ -357,8 +361,7 @@ export default function Header() {
           <NavLink to="/deals" className={TAB}>Deals</NavLink>
           {isAuthenticated && <NavLink to="/orders" className={TAB}>Orders</NavLink>}
           <NavLink to="/wishlist" className={TAB}>Wishlist</NavLink>
-          <NavLink to="/contact" className={TAB}>Contact us</NavLink>
-          <NavLink to="/enquiry" className={({ isActive }) => cx('flex items-center gap-1.5 py-3 text-[14px] font-bold transition hover:text-forest', isActive ? 'text-forest' : 'text-ink-70')}>
+          <NavLink to="/enquiry" className={({ isActive }) => cx(TAB({ isActive }), 'flex items-center gap-1.5')}>
             <Icon name="mail" size={14} /> Enquire now
           </NavLink>
           <Ticker className="ml-auto min-w-0 max-w-[420px] flex-1" />
@@ -399,9 +402,10 @@ export default function Header() {
               </div>
               <div className="mt-3 grid grid-cols-2 gap-2">
                 <Link to="/deals" className="rounded-[14px] bg-white px-3 py-3 text-center text-[13px] font-bold text-forest shadow-card">Deals</Link>
-                <Link to="/contact" className="rounded-[14px] bg-white px-3 py-3 text-center text-[13px] font-bold text-forest shadow-card">Contact us</Link>
-                {!isAuthenticated && <Link to="/login" className="rounded-[14px] bg-white px-3 py-3 text-center text-[13px] font-bold text-forest shadow-card">Sign in</Link>}
-                <Link to="/enquiry" className={cx('rounded-[14px] bg-forest px-3 py-3 text-center text-[13px] font-bold text-white shadow-btn', isAuthenticated && 'col-span-2')}>Enquire now</Link>
+                {!isAuthenticated
+                  ? <Link to="/login" className="rounded-[14px] bg-white px-3 py-3 text-center text-[13px] font-bold text-forest shadow-card">Sign in</Link>
+                  : <Link to="/orders" className="rounded-[14px] bg-white px-3 py-3 text-center text-[13px] font-bold text-forest shadow-card">Orders</Link>}
+                <Link to="/enquiry" className="col-span-2 rounded-[14px] bg-forest px-3 py-3 text-center text-[13px] font-bold text-white shadow-btn">Enquire now</Link>
               </div>
               <p className="mt-4 px-1 text-[12px] font-semibold text-ink-50">{announcements[0]}</p>
             </div>

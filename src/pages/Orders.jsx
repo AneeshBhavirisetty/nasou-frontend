@@ -41,7 +41,7 @@ export default function Orders() {
 
       <div className="grid gap-5 lg:grid-cols-[0.8fr_1.2fr]">
         <section>
-          <h1 className="text-[clamp(1.5rem,4vw,1.75rem)] font-semibold text-ink">Your orders</h1>
+          <h1 className="text-[clamp(1.5rem,4vw,1.75rem)] font-semibold text-forest">Your orders</h1>
           <p className="mt-1 text-[14px] text-ink-50">Track, reorder and download invoices · signed in as {user?.fullName || 'customer'}</p>
 
           <div className="mt-4 space-y-3">
@@ -95,7 +95,7 @@ export default function Orders() {
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-ink-50">Order tracking</p>
-                <h2 className="mt-2 text-xl font-semibold text-ink">Order {o.id}</h2>
+                <h2 className="mt-2 text-xl font-semibold text-forest">Order {o.id}</h2>
                 <p className="mt-1 text-sm text-ink-50">Ordered {o.date} · {o.lines.length} item{o.lines.length !== 1 && 's'}</p>
               </div>
               <Badge tone={STATUS_TONE[o.status]} className="shrink-0">{o.status}</Badge>

@@ -4,7 +4,7 @@ import Icon from './Icon';
 import Logo from './Logo';
 import { Container } from './ui';
 import { useToast } from '../context/ToastContext';
-import { brand, footerColumns, paymentMethods, socials } from '../data/site';
+import { brand, footerColumns, paymentMethods, socials, whatsappLink } from '../data/site';
 
 function Newsletter() {
   const toast = useToast();
@@ -39,7 +39,7 @@ export default function Footer() {
   return (
     <footer className="mt-10 pb-6 sm:mt-14">
       <Container>
-        <div className="relative overflow-hidden rounded-[24px] bg-ink text-white shadow-pop">
+        <div className="forest-band relative overflow-hidden rounded-[24px] text-white shadow-pop">
           <div className="field-dots-dark pointer-events-none absolute inset-0 opacity-40" />
           <div className="relative px-6 py-10 sm:px-10 sm:py-12">
             <div className="grid gap-10 lg:grid-cols-[1.15fr_2fr]">
@@ -60,6 +60,14 @@ export default function Footer() {
                     <Icon name="pin" size={13} className="mt-0.5 shrink-0" /> {brand.address}
                   </span>
                 </div>
+                <a
+                  href={whatsappLink()}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-4 inline-flex items-center gap-2 rounded-md bg-white px-4 py-2.5 text-[13px] font-bold text-forest shadow-btn transition hover:-translate-y-0.5"
+                >
+                  <Icon name="whatsapp" size={16} /> WhatsApp us
+                </a>
                 <Newsletter />
               </div>
 
@@ -85,7 +93,6 @@ export default function Footer() {
                 <span className="hidden sm:inline">·</span>
                 <span>GSTIN {brand.gst}</span>
                 <Link to="/returns" className="transition hover:text-white/80">Returns</Link>
-                <Link to="/contact" className="transition hover:text-white/80">Contact</Link>
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 {socials.map((s) => (

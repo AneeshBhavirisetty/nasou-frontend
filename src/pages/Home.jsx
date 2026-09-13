@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import Icon from '../components/Icon';
 import ProductCard from '../components/ProductCard';
 import ProductArt from '../components/ProductArt';
 import Reveal from '../components/Reveal';
@@ -9,7 +8,7 @@ import StatTile from '../components/StatTile';
 import HeroCarousel from '../components/HeroCarousel';
 import Accordion, { AccordionItem } from '../components/Accordion';
 import { Container, Rating, SectionHead } from '../components/ui';
-import { categories, bestsellers, dealProducts, products, suppliers } from '../data/catalog';
+import { categories, bestsellers, dealProducts, newProducts, products, suppliers } from '../data/catalog';
 import { brand, valueProps, testimonials, faqs } from '../data/site';
 
 /* Home follows the NasouHive demo customer home: campaign carousel, product
@@ -67,7 +66,7 @@ const SLIDES = [
     heading: 'Slab pricing on orders above ₹25,000.',
     sub: faqs[3].a,
     primary: { label: 'Enquire now', to: '/enquiry' },
-    secondary: { label: 'Contact us', to: '/contact' },
+    secondary: { label: 'See this week’s deals', to: '/deals' },
     art: { kind: 'coupling', material: 'uPVC' },
   },
 ];
@@ -136,7 +135,7 @@ export default function Home() {
 
       {/* ── Store numbers (demo: Flash Deals panel + Rewards card) ────── */}
       <section className="grid gap-4 lg:grid-cols-[1.25fr_0.75fr]">
-        <div className="overflow-hidden rounded-[24px] bg-ink p-6 text-white sm:p-8">
+        <div className="forest-band overflow-hidden rounded-[24px] p-6 text-white sm:p-8">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#c9d7d2]">Since {brand.since}</p>
@@ -175,21 +174,22 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Value props ────────────────────────────────────────────────── */}
-      <section>
-        <SectionHead serif={false} title="Why contractors keep the tab open" note={`Serving plumbers and site teams since ${brand.since}`} />
-        <Reveal stagger={0.07} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {valueProps.map((v) => (
-            <Reveal.Item key={v.title} className="h-full rounded-[18px] border border-white/75 bg-white p-5 shadow-card">
-              <span className="grid h-11 w-11 place-items-center rounded-[14px] bg-sunk text-forest">
-                <Icon name={v.icon} size={19} />
-              </span>
-              <h3 className="mt-4 text-[15px] font-semibold text-ink">{v.title}</h3>
-              <p className="mt-1.5 text-[13px] leading-relaxed text-ink-50">{v.body}</p>
-            </Reveal.Item>
-          ))}
-        </Reveal>
-      </section>
+      {/* ── New arrivals (client review 2: replaces "Why contractors keep the tab open") ── */}
+      {newProducts.length > 0 && (
+        <section>
+          <SectionHead
+            serif={false}
+            title="New arrivals"
+            note="Fresh additions to the catalogue from our brands"
+            action={<Link to="/shop?sort=new" className="shrink-0 text-[13px] font-bold text-forest hover:underline">View all</Link>}
+          />
+          <Reveal stagger={0.05} className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
+            {newProducts.slice(0, 8).map((p) => (
+              <Reveal.Item key={p.id}><ProductCard product={p} /></Reveal.Item>
+            ))}
+          </Reveal>
+        </section>
+      )}
 
       {/* ── Brands ─────────────────────────────────────────────────────── */}
       <section className="rounded-[24px] border border-white/75 bg-white/70 px-4 py-8 shadow-card sm:px-8">
@@ -226,7 +226,7 @@ export default function Home() {
       <section className="grid gap-6 lg:grid-cols-[0.8fr_1.2fr]">
         <div>
           <p className="eyebrow mb-2">Help &amp; support</p>
-          <h2 className="text-[clamp(1.5rem,4vw,2rem)] font-semibold text-ink">Questions, answered</h2>
+          <h2 className="text-[clamp(1.5rem,4vw,2rem)] font-semibold text-forest">Questions, answered</h2>
           <p className="mt-2 max-w-sm text-[14px] text-ink-50">Delivery, GST, returns and trade pricing — the things contractors ask first.</p>
         </div>
         <Accordion>
@@ -234,20 +234,6 @@ export default function Home() {
         </Accordion>
       </section>
 
-      {/* ── CTA band ───────────────────────────────────────────────────── */}
-      <section className="forest-band relative overflow-hidden rounded-[24px] px-6 py-9 text-white shadow-pop sm:px-10">
-        <div className="field-dots-dark pointer-events-none absolute inset-0 opacity-40" />
-        <div className="relative flex flex-col items-start gap-5 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#d5e5df]">Your next order</p>
-            <h2 className="mt-2 text-[clamp(1.6rem,4vw,2.3rem)] font-semibold text-white">Open the catalogue.</h2>
-            <p className="mt-2 text-[14px] text-sunk">1,400+ fittings, real prices, one cart.</p>
-          </div>
-          <Link to="/shop" className="inline-flex items-center gap-2 rounded-md bg-white px-6 py-3.5 text-sm font-bold text-forest shadow-lg transition hover:-translate-y-0.5">
-            Start shopping <Icon name="arrowRight" size={15} />
-          </Link>
-        </div>
-      </section>
     </Container>
   );
 }

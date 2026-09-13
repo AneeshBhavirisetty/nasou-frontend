@@ -18,7 +18,7 @@ export default function Invoice() {
           <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-amber-50 text-amber">
             <Icon name="fileText" size={24} />
           </span>
-          <h1 className="mt-5 text-[22px] font-semibold text-ink">Invoice not found</h1>
+          <h1 className="mt-5 text-[22px] font-semibold text-forest">Invoice not found</h1>
           <p className="mt-2 text-[13.5px] text-ink-50">
             No order matches <span className="font-mono">{id}</span>.
           </p>

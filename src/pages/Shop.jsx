@@ -68,13 +68,9 @@ function Group({ title, children, defaultOpen = true, active = 0 }) {
         </span>
         <Icon name="chevronDown" size={16} className={cx('text-ink-50 transition', open && 'rotate-180')} />
       </button>
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.22, ease: EASE }} className="overflow-hidden">
-            <div className="pt-3">{children}</div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Plain show/hide with a fade — animating height to 'auto' inside the
+          sticky, scrolling panel could stall half-open near the page end. */}
+      {open && <div className="animate-[rise_.2s_ease-out_both] pt-3">{children}</div>}
     </div>
   );
 }
@@ -150,6 +146,7 @@ export default function Shop() {
   const [booting, setBooting] = useState(true);
   const [brandQ, setBrandQ] = useState('');
   const [allSizes, setAllSizes] = useState(false);
+  const [allBrands, setAllBrands] = useState(false);
 
   useEffect(() => { const t = setTimeout(() => setBooting(false), 260); return () => clearTimeout(t); }, []);
   useEffect(() => { setPage(1); }, [q, cats, mats, sups, tiers, kinds, sizes, cols, minPrice, maxPrice, minOff, minRating, inStockOnly, dealOnly, sort]);
@@ -279,12 +276,16 @@ export default function Shop() {
             className="h-10 w-full rounded-[12px] border border-line bg-white pl-9 pr-3 text-[13px] outline-none transition placeholder:text-ink-35 focus:border-forest/40"
           />
         </label>
-        <div className="max-h-[260px] overflow-y-auto pr-1">
-          {brandList.map((s) => (
-            <Check key={s.slug} label={s.name} checked={sups.includes(s.slug)} onChange={() => toggle(sups, setSups)(s.slug)} count={counts.sup.get(s.slug) || 0} />
-          ))}
-          {brandList.length === 0 && <p className="px-1 py-2 text-[12.5px] text-ink-35">No brand matches “{brandQ}”.</p>}
-        </div>
+        {/* no inner scrollbar: the first 8 (plus any ticked) show; the rest expand in place */}
+        {(allBrands || brandQ ? brandList : brandList.filter((s, i) => i < 8 || sups.includes(s.slug))).map((s) => (
+          <Check key={s.slug} label={s.name} checked={sups.includes(s.slug)} onChange={() => toggle(sups, setSups)(s.slug)} count={counts.sup.get(s.slug) || 0} />
+        ))}
+        {brandList.length === 0 && <p className="px-1 py-2 text-[12.5px] text-ink-35">No brand matches “{brandQ}”.</p>}
+        {!brandQ && brandList.length > 8 && (
+          <button type="button" onClick={() => setAllBrands((v) => !v)} className="mt-1 text-[12.5px] font-bold text-forest hover:underline">
+            {allBrands ? 'Show fewer brands' : `Show all ${brandList.length} brands`}
+          </button>
+        )}
       </Group>
 
       <Group title="Price" active={priceActive ? 1 : 0}>
@@ -405,7 +406,7 @@ export default function Shop() {
         />
         <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
           <div className="min-w-0">
-            <h1 className="flex flex-wrap items-baseline gap-x-2 text-[clamp(1.6rem,4vw,2.1rem)] font-semibold text-ink">
+            <h1 className="flex flex-wrap items-baseline gap-x-2 text-[clamp(1.6rem,4vw,2.1rem)] font-semibold text-forest">
               {q ? `“${q}”` : cats.length === 1 ? categoryName(cats[0]) : 'Every fitting we stock'}
               <span className="tnum text-[14px] font-semibold text-ink-50">— {results.length.toLocaleString('en-IN')} products</span>
             </h1>
@@ -453,15 +454,15 @@ export default function Shop() {
 
       <div className="mt-4 grid gap-5 lg:grid-cols-[280px_1fr]">
         <aside className="hidden lg:block">
-          <div className="sticky top-[136px] overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-card">
-            <div className="flex items-center justify-between border-b border-line-soft px-4 py-4">
+          <div className="thin-bar sticky top-[136px] max-h-[calc(100dvh-152px)] overflow-y-auto overscroll-contain rounded-[24px] border border-white/80 bg-white shadow-card">
+            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-line-soft bg-white px-4 py-4">
               <div>
-                <h2 className="text-[13px] font-bold uppercase tracking-[0.16em] text-ink">Filters</h2>
+                <h2 className="text-[13px] font-bold uppercase tracking-[0.16em] text-forest">Filters</h2>
                 <p className="mt-0.5 text-[12px] text-ink-50">{activeCount} active filter{activeCount === 1 ? '' : 's'}</p>
               </div>
               {activeCount > 0 && <button onClick={clearAll} className="text-[12px] font-bold text-clay transition hover:text-clay-600">Clear all</button>}
             </div>
-            <div className="max-h-[calc(100vh-240px)] overflow-y-auto">{filters}</div>
+            {filters}
           </div>
         </aside>
 
@@ -538,7 +539,7 @@ export default function Shop() {
             >
               <div className="flex items-center justify-between border-b border-line-soft px-5 py-4">
                 <div>
-                  <h2 className="text-[17px] font-bold text-ink">Filters</h2>
+                  <h2 className="text-[17px] font-bold text-forest">Filters</h2>
                   <p className="text-[12px] text-ink-50">{activeCount} active</p>
                 </div>
                 <button onClick={() => setDrawer(false)} aria-label="Close filters" className="grid h-10 w-10 place-items-center rounded-full bg-sunk text-forest"><Icon name="close" size={18} /></button>

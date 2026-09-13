@@ -146,7 +146,7 @@ export default function ProductDetail() {
             <p className="text-[11.5px] font-bold uppercase tracking-[0.18em] text-ink-50">
               {product.supplierName} · {categoryName(product.category)}
             </p>
-            <h1 className="mt-2 text-[clamp(1.6rem,4vw,2rem)] font-semibold leading-tight text-ink">{product.name}</h1>
+            <h1 className="mt-2 text-[clamp(1.6rem,4vw,2rem)] font-semibold leading-tight text-forest">{product.name}</h1>
             <p className="mt-3 text-[14.5px] leading-6 text-ink-50">{product.description}</p>
 
             <div className="mt-4 flex flex-wrap items-center gap-2">

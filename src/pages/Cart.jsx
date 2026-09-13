@@ -36,7 +36,7 @@ export default function Cart() {
       <Container className="py-16 sm:py-24">
         <div className="mx-auto max-w-md rounded-[24px] border border-white/80 bg-white p-10 text-center shadow-card sm:p-12">
           <span className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-sunk text-forest"><Icon name="cart" size={28} /></span>
-          <h1 className="mt-6 text-[24px] font-semibold text-ink">Your cart is empty</h1>
+          <h1 className="mt-6 text-[24px] font-semibold text-forest">Your cart is empty</h1>
           <p className="mt-2.5 text-[14px] leading-relaxed text-ink-50">1,400+ fittings with real prices are one search away.</p>
           <div className="mt-7"><Button to="/shop" size="lg" iconRight="arrowRight">Start shopping</Button></div>
         </div>
@@ -47,7 +47,7 @@ export default function Cart() {
   return (
     <Container className="pb-12 pt-5">
       <Breadcrumbs className="mb-4" items={[{ label: 'Home', to: '/' }, { label: 'Cart' }]} />
-      <h1 className="text-[clamp(1.5rem,4vw,1.75rem)] font-semibold text-ink">Shopping cart</h1>
+      <h1 className="text-[clamp(1.5rem,4vw,1.75rem)] font-semibold text-forest">Shopping cart</h1>
       <p className="mt-1 text-[14px] text-ink-50">
         <span className="tnum font-semibold text-ink">{totals.count}</span> item{totals.count !== 1 && 's'} ready for checkout
       </p>
@@ -106,7 +106,7 @@ export default function Cart() {
 
         <aside>
           <div className="sticky top-[136px] rounded-[20px] bg-white p-5 shadow-card sm:p-6">
-            <h2 className="text-lg font-semibold text-ink">Order summary</h2>
+            <h2 className="text-lg font-semibold text-forest">Order summary</h2>
             <dl className="mt-5 space-y-3 text-[14px] text-ink-50">
               <div className="flex justify-between"><dt>Subtotal</dt><dd className="tnum text-ink">{money(totals.subtotal)}</dd></div>
               {totals.savings > 0 && <div className="flex justify-between text-emerald-700"><dt>Savings</dt><dd className="tnum font-semibold">− {money(totals.savings)}</dd></div>}

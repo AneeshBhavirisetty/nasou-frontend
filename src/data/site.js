@@ -7,6 +7,8 @@ export const brand = {
   email: 'hello@nasouhive.com',
   phone: '+91 97058 07551',
   toll: '1800 120 000 066',
+  /* WhatsApp Business number (digits only, with country code) for wa.me links */
+  whatsapp: '919705807551',
   address: 'Plot 14, Industrial Estate, Sanathnagar, Hyderabad 500018',
   gst: '36ABCDE1234F1Z5',
   since: 2016,
@@ -83,7 +85,6 @@ export const footerColumns = [
     title: 'Company',
     links: [
       { label: 'About Nasou', to: '/about' },
-      { label: 'Contact', to: '/contact' },
       { label: 'Trade enquiries', to: '/enquiry' },
       { label: 'Returns policy', to: '/returns' },
     ],
@@ -97,4 +98,8 @@ export const socials = [
   { label: 'YouTube', href: 'https://youtube.com' },
 ];
 
-export const paymentMethods = ['UPI', 'Cards', 'Net banking', 'GST invoice'];
+export const paymentMethods = ['UPI', 'Cards', 'Net banking', 'Cash on delivery', 'GST invoice'];
+
+/* wa.me deep link with an optional prefilled message */
+export const whatsappLink = (text = 'Hi Nasou Hive, I have a question about an order.') =>
+  `https://wa.me/${brand.whatsapp}?text=${encodeURIComponent(text)}`;

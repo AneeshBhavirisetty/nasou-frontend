@@ -15,7 +15,7 @@ export function SectionHead({ eyebrow, title, note, action, serif = true, classN
     <div className={cx('mb-5 flex flex-wrap items-end justify-between gap-4', className)}>
       <div className="max-w-2xl">
         {eyebrow && <p className="eyebrow mb-2">{eyebrow}</p>}
-        <h2 className={cx('text-[clamp(1.3rem,3vw,1.6rem)] font-semibold text-ink', serif && 'display-serif')}>{title}</h2>
+        <h2 className={cx('text-[clamp(1.3rem,3vw,1.6rem)] font-semibold text-forest', serif && 'display-serif')}>{title}</h2>
         {note && <p className="mt-1 text-[14px] leading-relaxed text-ink-50">{note}</p>}
       </div>
       {action}

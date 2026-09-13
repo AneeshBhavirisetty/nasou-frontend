@@ -9,7 +9,7 @@
    ============================================================ */
 @theme {
   /* Neutrals — cream paper. Never grey, never blue. */
-  --color-canvas: #efeae1;
+  --color-canvas: #efe7da;
   --color-surface: #ffffff;
   --color-sunk: #e6ecea;
   --color-line: #e5d8c7;
@@ -96,6 +96,8 @@
     line-height: 1.1;
     font-weight: 600;
   }
+  /* Page and section titles carry the brand green (client review 2). */
+  h1, h2 { color: var(--color-forest); }
 
   ::selection {
     background: var(--color-forest);
@@ -153,6 +155,10 @@
   }
 
   .no-bar { scrollbar-width: none; -ms-overflow-style: none; }
+  /* Slim, quiet scrollbar for tall side panels (filters). */
+  .thin-bar { scrollbar-width: thin; scrollbar-color: #cad8d2 transparent; }
+  .thin-bar::-webkit-scrollbar { width: 6px; }
+  .thin-bar::-webkit-scrollbar-thumb { background: #cad8d2; border-radius: 999px; }
   .no-bar::-webkit-scrollbar { display: none; }
 
   /* Product imagery bed under transparent / blown-out art. */

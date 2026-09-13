@@ -1,22 +1,28 @@
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import ProductCard from '../components/ProductCard';
 import Icon from '../components/Icon';
 import { Button, Container, Breadcrumbs } from '../components/ui';
 import { useWishlist } from '../context/WishlistContext';
-import { money } from '../lib/format';
+import { categoryName } from '../data/catalog';
+import { cx } from '../lib/format';
 
-/* NasouHive demo wishlist: forest banner, three stat cards, saved grid. */
+/* Wishlist: forest banner, category filter tabs, saved grid.
+   (Client review 2: the KPI stat cards were removed; filter by category added.) */
 export default function Wishlist() {
   const { items } = useWishlist();
-  const value = items.reduce((s, p) => s + p.price, 0);
-  const inStock = items.filter((p) => p.stock > 0).length;
+  const [cat, setCat] = useState('');
 
-  const stats = [
-    { label: 'Total saved items', value: items.length, note: 'Curated by you', icon: 'heart' },
-    { label: 'Wishlist value', value: money(value), note: 'Current combined price', icon: 'tag' },
-    { label: 'Ready to ship', value: inStock, note: 'Saved items in stock now', icon: 'truck' },
-  ];
+  /* tabs come from the categories actually present in the wishlist */
+  const tabs = useMemo(() => {
+    const m = new Map();
+    items.forEach((p) => m.set(p.category, (m.get(p.category) || 0) + 1));
+    return [...m.entries()].sort((a, b) => b[1] - a[1]).map(([slug, n]) => ({ slug, n, name: categoryName(slug) }));
+  }, [items]);
+
+  const active = cat && tabs.some((t) => t.slug === cat) ? cat : '';
+  const shown = active ? items.filter((p) => p.category === active) : items;
 
   return (
     <Container className="pb-12 pt-5">
@@ -40,43 +46,47 @@ export default function Wishlist() {
         </div>
       </motion.section>
 
-      <div className="mt-5 grid gap-3 sm:grid-cols-3">
-        {stats.map((s, i) => (
-          <motion.div
-            key={s.label}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.05 * i }}
-            className="flex items-start justify-between gap-3 rounded-[18px] border border-white/80 bg-white/80 p-4 shadow-card"
-          >
-            <div>
-              <p className="text-[12.5px] font-semibold text-ink-70">{s.label}</p>
-              <p className="tnum mt-2 text-[24px] font-semibold text-ink">{s.value}</p>
-              <p className="mt-1 text-[11.5px] text-ink-50">{s.note}</p>
-            </div>
-            <span className="grid h-11 w-11 place-items-center rounded-[14px] bg-sunk text-forest"><Icon name={s.icon} size={18} /></span>
-          </motion.div>
-        ))}
-      </div>
-
-      <div className="mb-4 mt-8 flex items-end justify-between gap-3">
+      <div className="mb-4 mt-8 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="text-[clamp(1.3rem,3vw,1.6rem)] font-semibold text-ink">Saved products</h2>
+          <h2 className="text-[clamp(1.3rem,3vw,1.6rem)] font-semibold">Saved products</h2>
           <p className="mt-1 text-[14px] text-ink-50">Prices and stock come straight from the catalogue.</p>
         </div>
         <span className="tnum shrink-0 rounded-full bg-sunk px-3 py-1 text-[12px] font-bold text-forest">{items.length} saved</span>
       </div>
 
+      {tabs.length > 0 && (
+        <div role="tablist" aria-label="Filter by category" className="no-bar -mx-1 mb-5 flex gap-2 overflow-x-auto px-1 py-0.5">
+          {[{ slug: '', name: 'All', n: items.length }, ...tabs].map((t) => {
+            const on = active === t.slug;
+            return (
+              <button
+                key={t.slug || 'all'}
+                role="tab"
+                aria-selected={on}
+                onClick={() => setCat(t.slug)}
+                className={cx(
+                  'flex shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-[13.5px] font-semibold transition',
+                  on ? 'border-forest bg-forest text-white shadow-btn' : 'border-line bg-white text-ink-70 hover:border-forest/40 hover:text-forest'
+                )}
+              >
+                {t.name}
+                <span className={cx('tnum rounded-full px-1.5 text-[11px] font-bold', on ? 'bg-white/20 text-white' : 'bg-sunk text-ink-50')}>{t.n}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {items.length === 0 ? (
         <div className="rounded-[18px] border border-dashed border-[#cad8d2] bg-[#f4f7f5] py-16 text-center">
           <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-white text-forest shadow-card"><Icon name="heart" size={24} /></span>
-          <p className="mt-4 text-[18px] font-semibold text-ink">Nothing saved yet</p>
+          <p className="mt-4 text-[18px] font-semibold text-forest">Nothing saved yet</p>
           <p className="mt-1.5 text-[13px] text-ink-50">Tap the heart on any product to keep it here.</p>
           <div className="mt-5"><Button to="/shop" iconRight="arrowRight">Browse the catalogue</Button></div>
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
-          {items.map((p) => <ProductCard key={p.id} product={p} />)}
+          {shown.map((p) => <ProductCard key={p.id} product={p} />)}
         </div>
       )}
     </Container>
