@@ -30,6 +30,8 @@ import AdminProducts from './pages/admin/Products';
 import AdminUsers from './pages/admin/Users';
 import AdminOrders from './pages/admin/Orders';
 import AdminDiscounts from './pages/admin/Discounts';
+import AdminBilling from './pages/admin/Billing';
+import AdminReports from './pages/admin/Reports';
 import AuthLayout from './layouts/AuthLayout';
 import PublicLayout from './layouts/PublicLayout';
 import ProtectedLayout from './layouts/ProtectedLayout';
@@ -87,6 +89,8 @@ export default function App() {
           <Route path="/admin/discounts" element={<AdminDiscounts />} />
           <Route path="/admin/users" element={<AdminUsers />} />
           <Route path="/admin/orders" element={<AdminOrders />} />
+          <Route path="/admin/billing" element={<AdminBilling />} />
+          <Route path="/admin/reports" element={<AdminReports />} />
           <Route path="/admin/catalog/import" element={<AdminCatalogImport />} />
         </Route>
       </Routes>

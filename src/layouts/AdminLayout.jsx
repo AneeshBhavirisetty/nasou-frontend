@@ -84,9 +84,7 @@ export default function AdminLayout({ children }) {
   const [rail, setRail] = useState(true);
   const { pathname } = useLocation();
   const { can, suspended } = useIam();
-  const current = ADMIN_NAV.find((n) => pathname.startsWith(n.to))
-    ?? (pathname.startsWith('/admin/billing') ? { label: 'Billing & payments', module: 'billing' } : null)
-    ?? (pathname.startsWith('/admin/reports') ? { label: 'Reports & analytics', module: 'reports' } : null);
+  const current = ADMIN_NAV.find((n) => pathname.startsWith(n.to));
   const title = current?.label ?? 'Admin';
   const allowed = !current || can(current.module);
 

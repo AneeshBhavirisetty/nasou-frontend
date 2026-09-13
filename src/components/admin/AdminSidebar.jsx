@@ -15,8 +15,10 @@ export const ADMIN_NAV = [
   { to: '/admin/dashboard', label: 'Dashboard', short: 'Home', icon: 'gauge', module: 'dashboard' },
   { to: '/admin/products', label: 'Products', short: 'Products', icon: 'package', module: 'products' },
   { to: '/admin/orders', label: 'Orders', short: 'Orders', icon: 'truck', module: 'orders' },
+  { to: '/admin/billing', label: 'Billing & payments', short: 'Billing', icon: 'rupee', module: 'billing' },
   { to: '/admin/users', label: 'Users & access', short: 'Users', icon: 'users', module: 'users' },
   { to: '/admin/discounts', label: 'Discounts', short: 'Discounts', icon: 'tag', module: 'discounts' },
+  { to: '/admin/reports', label: 'Reports & analytics', short: 'Reports', icon: 'barChart', module: 'reports' },
   { to: '/admin/catalog/import', label: 'Catalog import', short: 'Import', icon: 'layers', module: 'products' },
 ];
 
