@@ -15,8 +15,8 @@ import { money, cx } from '../../lib/format';
 
 /* Billing & payments (client review 2, admin item 4).
    Invoices = every order in the book; payment status comes from the order
-   (Paid · Collected · Due on delivery · Invoice due · Refunded). Team members
-   with billing "edit" can mark cash-on-delivery / invoice payments collected. */
+   (Paid · Collected · Due on delivery · Invoice due · Refunded). Admins with
+   billing "edit" access can mark cash-on-delivery / invoice payments collected. */
 
 const TONE = { Paid: 'ok', Collected: 'ok', 'Due on delivery': 'amber', 'Invoice due': 'amber', Refunded: 'clay' };
 const TABS = [

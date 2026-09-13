@@ -14,7 +14,7 @@ export default function RoleSwitch() {
   const [open, setOpen] = useState(false);
   if (!MOCK) return null;
 
-  const roles = ['CUSTOMER', 'RETAILER', 'ADMIN'];
+  const roles = ['CUSTOMER', 'ADMIN'];
 
   return (
     <div className="fixed bottom-[calc(var(--tabbar-h,0px)+1rem)] left-4 z-[150]">
@@ -33,7 +33,7 @@ export default function RoleSwitch() {
                 onClick={() => { devSetRole(r); setOpen(false); }}
                 className={cx('flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-[12.5px] font-semibold transition', role === r ? 'bg-forest text-white' : 'text-ink-70 hover:bg-sunk')}
               >
-                <Icon name={r === 'ADMIN' ? 'gauge' : r === 'RETAILER' ? 'users' : 'user'} size={13} /> {roleLabel(r)}
+                <Icon name={r === 'ADMIN' ? 'gauge' : 'user'} size={13} /> {roleLabel(r)}
               </button>
             ))}
             {role && (

@@ -89,7 +89,7 @@ export default function AdminLayout({ children }) {
   const allowed = !current || can(current.module);
 
   return (
-    <ProtectedRoute allowedRoles={['ADMIN', 'RETAILER']}>
+    <ProtectedRoute allowedRoles={['ADMIN']}>
       <div className="min-h-dvh overflow-x-hidden bg-canvas text-forest">
         <div className="min-h-dvh bg-[radial-gradient(circle_at_top_left,rgba(31,92,74,0.16),transparent_28%),radial-gradient(circle_at_top_right,rgba(229,216,199,0.8),transparent_24%),linear-gradient(180deg,#efeae1_0%,#f5f1ea_48%,#efeae1_100%)]">
           <AdminSideRail open={rail} onClose={() => setRail(false)} />

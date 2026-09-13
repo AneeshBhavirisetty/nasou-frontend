@@ -11,7 +11,7 @@ import { isMobile10, cx } from '../lib/format';
 
 const PURPOSE = [
   { id: 'bulk', label: 'Bulk / project order', note: 'Slab pricing above ₹25,000' },
-  { id: 'dealer', label: 'Dealer / retailer tie-up', note: 'Stock our catalogue' },
+  { id: 'dealer', label: 'Dealer tie-up', note: 'Stock our catalogue' },
   { id: 'quote', label: 'Price quote', note: 'Specific SKUs and sizes' },
   { id: 'other', label: 'Something else', note: 'General enquiry' },
 ];

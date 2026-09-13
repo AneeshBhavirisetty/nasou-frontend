@@ -68,7 +68,7 @@ export function SearchInput({ value, onChange, placeholder }) {
   );
 }
 
-/* Shown on a module the signed-in team member can see but not change. */
+/* Shown on a module the signed-in admin can see but not change (IAM "view"). */
 export function ViewOnlyBanner({ what = 'this section' }) {
   return (
     <p className="flex items-center gap-2 rounded-[14px] border border-amber/20 bg-amber-50 px-4 py-2.5 text-[12.5px] font-semibold text-amber">

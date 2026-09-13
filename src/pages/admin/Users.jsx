@@ -7,15 +7,14 @@ import { AdminPageHead, FilterTabs, SearchInput, ViewOnlyBanner } from '../../co
 import { Badge, Button, Field } from '../../components/ui';
 import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
-import { useIam, MODULES, ADMIN_PERMS, TEAM_DEFAULTS } from '../../context/IamStore';
+import { useIam, MODULES, FULL_ACCESS } from '../../context/IamStore';
 import { useOrderStore } from '../../context/OrderStore';
 import { allOrders, formatOrderDate } from '../../data/orders';
-import { roleLabel } from '../../lib/roles';
 import { money, cx, isMobile10 } from '../../lib/format';
 
-/* Users & access (client review 2, admin items 3, 5, 6)
-   - Internal users: Admins + Team members, each with per-module IAM
-     permissions; admins can add, edit access, suspend and remove them.
+/* Users & access (client review 2, admin items 5 & 6). Two roles only:
+   - Admins: people who use this console. Each admin's access can be narrowed
+     per module (IAM); the owner always keeps full access.
    - Customers: everyone who shops, with their order count and spend. */
 
 const LEVEL_LABEL = { none: 'No access', view: 'View', edit: 'Edit' };
@@ -25,17 +24,17 @@ function initials(name = '') {
   return name.split(' ').filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join('') || '?';
 }
 
-/* ── add / edit an internal user ─────────────────────────────────────────── */
+/* ── add / edit an admin ────────────────────────────────────────────────── */
 function InternalUserForm({ user, users, onClose, onSave }) {
   const isNew = !user;
   const [f, setF] = useState(() => ({
-    fullName: '', email: '', phone: '', title: '', role: 'RETAILER', status: 'active', permissions: TEAM_DEFAULTS,
+    fullName: '', email: '', phone: '', title: '', status: 'active', permissions: FULL_ACCESS,
     ...(user || {}),
   }));
   const [err, setErr] = useState('');
   const set = (k, v) => setF((s) => ({ ...s, [k]: v }));
-  const admin = f.role === 'ADMIN';
-  const perms = admin ? ADMIN_PERMS : f.permissions;
+  const locked = Boolean(user?.owner); // the owner always keeps full access
+  const perms = locked ? FULL_ACCESS : f.permissions;
 
   const submit = (e) => {
     e.preventDefault();
@@ -50,14 +49,14 @@ function InternalUserForm({ user, users, onClose, onSave }) {
       fullName: f.fullName.trim(),
       email: f.email.trim().toLowerCase(),
       title: f.title.trim(),
-      permissions: admin ? ADMIN_PERMS : f.permissions,
+      permissions: locked ? FULL_ACCESS : f.permissions,
       createdAt: user?.createdAt || Date.now(),
     });
     onClose();
   };
 
   return (
-    <Modal open onClose={onClose} title={isNew ? 'Add internal user' : `Access · ${user.fullName}`} size="lg">
+    <Modal open onClose={onClose} title={isNew ? 'Add admin' : `Access · ${user.fullName}`} size="lg">
       <form onSubmit={submit} className="space-y-5">
         <div className="grid gap-3 sm:grid-cols-2">
           <Field label="Full name" value={f.fullName} onChange={(e) => set('fullName', e.target.value)} placeholder="e.g. Anita Rao" />
@@ -66,40 +65,19 @@ function InternalUserForm({ user, users, onClose, onSave }) {
           <Field label="Job title" value={f.title} onChange={(e) => set('title', e.target.value)} placeholder="e.g. Dispatch lead" />
         </div>
 
-        <div>
-          <p className="mb-2 text-[11.5px] font-semibold uppercase tracking-[0.16em] text-forest-800">Role</p>
-          <div className="grid gap-2 sm:grid-cols-2">
-            {[['RETAILER', 'Works on the modules you allow below'], ['ADMIN', 'Full access to every module, including users']].map(([r, note]) => (
-              <button
-                key={r}
-                type="button"
-                onClick={() => set('role', r)}
-                aria-pressed={f.role === r}
-                className={cx('flex items-start gap-3 rounded-[16px] border p-3.5 text-left transition', f.role === r ? 'border-forest bg-emerald-50/60' : 'border-line bg-white hover:border-forest/40')}
-              >
-                <span className={cx('mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full border-2', f.role === r ? 'border-forest' : 'border-[#cad8d2]')}>
-                  {f.role === r && <span className="h-2.5 w-2.5 rounded-full bg-forest" />}
-                </span>
-                <span>
-                  <span className="block text-[14px] font-bold text-ink">{roleLabel(r)}</span>
-                  <span className="block text-[12px] text-ink-50">{note}</span>
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
-
         {/* IAM permission matrix */}
         <div>
           <div className="mb-2 flex flex-wrap items-end justify-between gap-2">
             <p className="text-[11.5px] font-semibold uppercase tracking-[0.16em] text-forest-800">Permissions</p>
-            {!admin && (
-              <button type="button" onClick={() => set('permissions', TEAM_DEFAULTS)} className="text-[12px] font-bold text-forest hover:underline">
-                Reset to team defaults
+            {!locked && (
+              <button type="button" onClick={() => set('permissions', FULL_ACCESS)} className="text-[12px] font-bold text-forest hover:underline">
+                Give full access
               </button>
             )}
           </div>
-          {admin && <p className="mb-2 rounded-[12px] bg-sunk px-3 py-2 text-[12px] font-semibold text-forest">Admins always have edit access to every module.</p>}
+          {locked
+            ? <p className="mb-2 rounded-[12px] bg-sunk px-3 py-2 text-[12px] font-semibold text-forest">The owner always has full access to every module.</p>
+            : <p className="mb-2 text-[12px] text-ink-50">New admins start with full access — narrow any module to View or None.</p>}
           <div className="divide-y divide-line-soft overflow-hidden rounded-[16px] border border-line-soft">
             {MODULES.map((m) => (
               <div key={m.key} className="flex flex-wrap items-center justify-between gap-2 bg-white px-3 py-2.5 sm:px-4">
@@ -114,7 +92,7 @@ function InternalUserForm({ user, users, onClose, onSave }) {
                       type="button"
                       role="radio"
                       aria-checked={perms[m.key] === l}
-                      disabled={admin}
+                      disabled={locked}
                       onClick={() => set('permissions', { ...f.permissions, [m.key]: l })}
                       className={cx(
                         'rounded-[9px] px-3 py-1.5 text-[12px] font-bold transition disabled:cursor-not-allowed',
@@ -133,7 +111,7 @@ function InternalUserForm({ user, users, onClose, onSave }) {
         {err && <p role="alert" className="rounded-md bg-clay-50 px-3 py-2.5 text-[13px] text-clay-600">{err}</p>}
         <div className="flex justify-end gap-3 border-t border-line pt-4">
           <button type="button" onClick={onClose} className="h-10 rounded-md border border-line px-5 text-[13.5px] font-semibold text-ink-70 transition hover:border-ink-35">Cancel</button>
-          <Button type="submit" icon={isNew ? 'userPlus' : 'check'}>{isNew ? 'Add & send invite' : 'Save access'}</Button>
+          <Button type="submit" icon={isNew ? 'userPlus' : 'check'}>{isNew ? 'Add admin & send invite' : 'Save access'}</Button>
         </div>
       </form>
     </Modal>
@@ -147,9 +125,8 @@ export default function AdminUsers() {
   const { users, saveUser, removeUser, me, can } = useIam();
   const { placed } = useOrderStore();
   const canEdit = can('users', 'edit');
-  const [tab, setTab] = useState('internal');
+  const [tab, setTab] = useState('admins');
   const [q, setQ] = useState('');
-  const [role, setRole] = useState('');
   const [editing, setEditing] = useState(undefined); // undefined closed · null new · object edit
 
   /* customers = everyone in the order book (seeded + placed), with totals */
@@ -167,12 +144,11 @@ export default function AdminUsers() {
   }, [placed]);
 
   const needle = q.trim().toLowerCase();
-  const internal = users.filter((u) => (!role || u.role === role) && (!needle || `${u.fullName} ${u.email} ${u.title}`.toLowerCase().includes(needle)));
+  const admins = users.filter((u) => !needle || `${u.fullName} ${u.email} ${u.title}`.toLowerCase().includes(needle));
   const shoppers = customers.filter((c) => !needle || `${c.fullName} ${c.email} ${c.city}`.toLowerCase().includes(needle));
 
-  const activeAdmins = users.filter((u) => u.role === 'ADMIN' && u.status === 'active');
-  const isLastAdmin = (u) => u.role === 'ADMIN' && u.status === 'active' && activeAdmins.length <= 1;
   const isMe = (u) => me?.id === u.id;
+  const protectedUser = (u) => u.owner || isMe(u); // owner and yourself can't be suspended or removed
 
   const toggleStatus = (u) => {
     const next = u.status === 'active' ? 'suspended' : 'active';
@@ -184,17 +160,17 @@ export default function AdminUsers() {
     <div className="space-y-5">
       <AdminPageHead
         title="Users & access"
-        note={tab === 'internal'
-          ? `${users.length} internal users · ${users.filter((u) => u.status === 'active').length} active`
+        note={tab === 'admins'
+          ? `${users.length} admins · ${users.filter((u) => u.status === 'active').length} active`
           : `${customers.length} customers from the order book`}
       >
-        {tab === 'internal' && canEdit && <Button size="sm" icon="userPlus" onClick={() => setEditing(null)}>Add internal user</Button>}
-        {tab === 'internal' ? (
+        {tab === 'admins' && canEdit && <Button size="sm" icon="userPlus" onClick={() => setEditing(null)}>Add admin</Button>}
+        {tab === 'admins' ? (
           <ExcelExportButton
-            filename="nasou-internal-users"
+            filename="nasou-admins"
             label="Export"
-            headers={['Name', 'Email', 'Phone', 'Title', 'Role', 'Status', ...MODULES.map((m) => m.label)]}
-            rows={internal.map((u) => [u.fullName, u.email, u.phone, u.title, roleLabel(u.role), u.status, ...MODULES.map((m) => LEVEL_LABEL[(u.role === 'ADMIN' ? ADMIN_PERMS : u.permissions)[m.key] || 'none'])])}
+            headers={['Name', 'Email', 'Phone', 'Title', 'Status', ...MODULES.map((m) => m.label)]}
+            rows={admins.map((u) => [u.fullName, u.email, u.phone, u.title, u.status, ...MODULES.map((m) => LEVEL_LABEL[(u.owner ? FULL_ACCESS : u.permissions)[m.key] || 'none'])])}
           />
         ) : (
           <ExcelExportButton
@@ -211,34 +187,23 @@ export default function AdminUsers() {
       <FilterTabs
         label="User type"
         value={tab}
-        onChange={(t) => { setTab(t); setRole(''); }}
+        onChange={setTab}
         options={[
-          { value: 'internal', label: 'Internal users', count: users.length },
+          { value: 'admins', label: 'Admins', count: users.length },
           { value: 'customers', label: 'Customers', count: customers.length },
         ]}
       />
 
       <div className="space-y-3 rounded-[20px] border border-line bg-white/86 p-3 shadow-card">
-        <SearchInput placeholder={tab === 'internal' ? 'Search name, email or title' : 'Search name, email or city'} value={q} onChange={(e) => setQ(e.target.value)} />
-        {tab === 'internal' && (
-          <FilterTabs
-            label="Role"
-            value={role}
-            onChange={setRole}
-            options={[
-              { value: '', label: 'Everyone', count: users.length },
-              { value: 'ADMIN', label: 'Admins', count: users.filter((u) => u.role === 'ADMIN').length },
-              { value: 'RETAILER', label: 'Team members', count: users.filter((u) => u.role === 'RETAILER').length },
-            ]}
-          />
-        )}
+        <SearchInput placeholder={tab === 'admins' ? 'Search name, email or title' : 'Search name, email or city'} value={q} onChange={(e) => setQ(e.target.value)} />
+
       </div>
 
-      {tab === 'internal' ? (
+      {tab === 'admins' ? (
         <div className="grid gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-3">
           <AnimatePresence initial={false}>
-            {internal.map((u) => {
-              const p = u.role === 'ADMIN' ? ADMIN_PERMS : u.permissions;
+            {admins.map((u) => {
+              const p = u.owner ? FULL_ACCESS : u.permissions;
               const granted = MODULES.filter((m) => (p[m.key] || 'none') !== 'none');
               return (
                 <motion.article
@@ -248,16 +213,16 @@ export default function AdminUsers() {
                   className={cx('flex flex-col rounded-[18px] border border-line bg-white p-4 shadow-card', u.status === 'suspended' && 'opacity-70')}
                 >
                   <div className="flex items-start gap-3">
-                    <span className={cx('grid h-11 w-11 shrink-0 place-items-center rounded-full text-[13px] font-black', u.role === 'ADMIN' ? 'bg-forest text-white' : 'bg-sunk text-forest')}>
+                    <span className={cx('grid h-11 w-11 shrink-0 place-items-center rounded-full text-[13px] font-black', u.owner ? 'bg-forest text-white' : 'bg-sunk text-forest')}>
                       {initials(u.fullName)}
                     </span>
                     <div className="min-w-0 flex-1">
                       <p className="flex items-center gap-1.5 truncate text-[14.5px] font-bold text-ink">
                         {u.fullName}{isMe(u) && <span className="rounded-full bg-emerald-50 px-1.5 text-[10px] font-bold text-emerald-700">You</span>}
                       </p>
-                      <p className="truncate text-[12px] text-ink-50">{u.title || roleLabel(u.role)}</p>
+                      <p className="truncate text-[12px] text-ink-50">{u.title || 'Admin'}</p>
                     </div>
-                    <Badge tone={u.role === 'ADMIN' ? 'dark' : 'neutral'} className="shrink-0">{roleLabel(u.role)}</Badge>
+                    <Badge tone={u.owner ? 'dark' : 'neutral'} className="shrink-0">{u.owner ? 'Owner' : 'Admin'}</Badge>
                   </div>
 
                   <div className="mt-3 space-y-1 text-[12.5px] text-ink-70">
@@ -267,9 +232,11 @@ export default function AdminUsers() {
 
                   <div className="mt-3 flex flex-wrap gap-1.5">
                     {granted.length === 0 && <span className="text-[12px] text-ink-35">No modules granted</span>}
-                    {granted.map((m) => (
+                    {granted.length === MODULES.length && MODULES.every((m) => p[m.key] === 'edit')
+                      ? <Badge tone="ok" className="!py-0.5">Full access</Badge>
+                      : granted.map((m) => (
                       <Badge key={m.key} tone={LEVEL_TONE[p[m.key]]} className="!py-0.5">{m.label.split(' ')[0]} · {LEVEL_LABEL[p[m.key]]}</Badge>
-                    ))}
+                      ))}
                   </div>
 
                   <div className="mt-auto flex items-center justify-between gap-2 border-t border-line-soft pt-3">
@@ -282,7 +249,7 @@ export default function AdminUsers() {
                         <button onClick={() => setEditing(u)} className="flex h-8 items-center gap-1 rounded-md border border-line px-2.5 text-[12px] font-bold text-forest transition hover:border-forest" aria-label={`Edit access for ${u.fullName}`}>
                           <Icon name="key" size={13} /> Access
                         </button>
-                        {!isMe(u) && !isLastAdmin(u) && (
+                        {!protectedUser(u) && (
                           <>
                             <button onClick={() => toggleStatus(u)} className="grid h-8 w-8 place-items-center rounded-md border border-line text-ink-50 transition hover:text-ink" aria-label={u.status === 'active' ? `Suspend ${u.fullName}` : `Activate ${u.fullName}`} title={u.status === 'active' ? 'Suspend' : 'Activate'}>
                               <Icon name={u.status === 'active' ? 'lock' : 'check'} size={14} />
@@ -299,7 +266,7 @@ export default function AdminUsers() {
               );
             })}
           </AnimatePresence>
-          {internal.length === 0 && <p className="rounded-[18px] border border-dashed border-line bg-white/60 px-4 py-12 text-center text-[13px] text-ink-50 md:col-span-2 xl:col-span-3">No internal users match.</p>}
+          {admins.length === 0 && <p className="rounded-[18px] border border-dashed border-line bg-white/60 px-4 py-12 text-center text-[13px] text-ink-50 md:col-span-2 xl:col-span-3">No admins match.</p>}
         </div>
       ) : (
         <div className="grid gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -334,8 +301,6 @@ export default function AdminUsers() {
           users={users}
           onClose={() => setEditing(undefined)}
           onSave={(u) => {
-            /* an admin must not demote the last admin (or themselves) by accident */
-            if (editing && isLastAdmin(editing) && u.role !== 'ADMIN') { toast.error('Keep at least one active admin.'); return; }
             saveUser(u);
             toast.success(editing ? `Access updated for ${u.fullName}` : `${u.fullName} added — invite sent to ${u.email}`);
           }}
@@ -344,7 +309,7 @@ export default function AdminUsers() {
 
       <p className="flex items-start gap-2 text-[12px] text-ink-35">
         <Icon name="shieldCheck" size={13} className="mt-0.5 shrink-0" />
-        Team members only see the modules you allow; “View” opens a module read-only. Signed in as {signedIn?.fullName} ({roleLabel(signedIn?.role)}).
+        Each admin only sees the modules you allow; “View” opens a module read-only. The owner always has full access. Signed in as {signedIn?.fullName}.
       </p>
     </div>
   );

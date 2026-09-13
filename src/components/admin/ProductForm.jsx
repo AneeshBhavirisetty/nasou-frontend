@@ -4,10 +4,9 @@ import ProductArt from '../ProductArt';
 import Icon from '../Icon';
 import MediaPicker from './MediaPicker';
 import { Badge, Button, Field } from '../ui';
-import { categoryName } from '../../data/catalog';
+import { brandForName, brandSlug, categoryName } from '../../data/catalog';
 import { DEPARTMENTS, DEFAULT_DEPARTMENT, slugifyCategory } from '../../data/departments';
 import { useAdminStore } from '../../context/AdminStore';
-import { retailerForName, retailerIdForName } from '../../data/retailers';
 import { MAX_IMAGES_PER_PRODUCT, MIN_IMAGES_PER_PRODUCT } from '../../lib/mediaStore';
 import { discount as pctOff, money, cx } from '../../lib/format';
 
@@ -65,10 +64,10 @@ export default function ProductForm({ open, product, onClose, onSave }) {
 
   const price = Number(f.price) || 0;
   const mrp = Number(f.mrp) || 0;
-  /* Retailer is schema-only — resolved from the brand name, never picked in the UI.
-     Unknown brands stay unassigned for the backend to mint an id on onboarding. */
+  /* Known brands resolve to their catalogue record (slug + tier); new brand
+     names get a slug of their own. */
   const brand = f.supplierName.trim();
-  const retailer = retailerForName(brand);
+  const knownBrand = brandForName(brand);
 
   const submit = (e) => {
     e.preventDefault();
@@ -109,10 +108,9 @@ export default function ProductForm({ open, product, onClose, onSave }) {
       art: f.art,
       size: f.size.trim(),
       sizeRaw: f.size.trim(),
-      retailerId: retailer?.id || product?.retailerId || retailerIdForName(brand),
-      supplier: retailer?.slug || (brand ? brand.toLowerCase().replace(/[^a-z0-9]+/g, '-') : 'nasou'),
-      supplierName: brand || 'Nasou',
-      supplierTier: retailer?.tier || product?.supplierTier || 'value',
+      supplier: knownBrand?.slug || brandSlug(brand),
+      supplierName: knownBrand?.name || brand || 'Nasou',
+      supplierTier: knownBrand?.tier || product?.supplierTier || 'value',
       department: product?.department || f.department,
       category,
       subcategoryName: known?.name || subName,

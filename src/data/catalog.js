@@ -9,7 +9,6 @@
 
 import generated from './catalog.generated.json';
 import supplierList from './suppliers.json';
-import { retailerIdForSupplier } from './retailers';
 import { DEPARTMENTS, DEFAULT_DEPARTMENT, departmentMeta } from './departments';
 
 /* Admin edits (add / edit / delist done in /admin/products) are persisted by
@@ -30,12 +29,11 @@ function applyAdminPatch(list) {
   }
 }
 
-/* Every product carries the retailer that supplies it, plus an image list
-   (empty until an admin attaches one — the UI falls back to ProductArt). */
+/* Every product carries its department and an image list (empty until an
+   admin attaches one — the UI falls back to ProductArt). */
 const withOwnership = generated.products.map((p) => ({
   ...p,
   department: p.department ?? DEFAULT_DEPARTMENT,
-  retailerId: retailerIdForSupplier(p.supplier),
   images: p.images ?? [],
 }));
 
@@ -86,6 +84,11 @@ export function syncLiveProduct(id, fields) {
 }
 export const categoryName = (slug) => _catName.get(slug) ?? slug;
 export const supplierName = (slug) => _supplierName.get(slug) ?? slug;
+
+/* Brand record for a typed brand name (admin forms / bulk import), or null. */
+const slugifyBrand = (name) => String(name || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+export const brandSlug = (name) => slugifyBrand(name) || 'nasou';
+export const brandForName = (name) => suppliers.find((s) => s.slug === slugifyBrand(name)) ?? null;
 
 /* Curated rails ----------------------------------------------------------- */
 export const bestsellers = products.filter((p) => p.badges.includes('Bestseller') && p.stock > 0).slice(0, 12);

@@ -60,14 +60,12 @@ export async function api(path, options = {}) {
  * │ Role       │ Email                │ Password    │ Phone         │
  * ├────────────┼──────────────────────┼─────────────┼───────────────┤
  * │ CUSTOMER   │ customer@nasou.test  │ nasou123    │ 9000000001    │
- * │ RETAILER   │ retailer@nasou.test  │ nasou123    │ 9000000002    │
  * │ ADMIN      │ admin@nasou.test     │ nasou123    │ 9000000009    │
  * └────────────┴──────────────────────┴─────────────┴───────────────┘
  * (test@example.com / password123 and 9876543210 also work → CUSTOMER.)
  * ────────────────────────────────────────────────────────────────────────── */
 export const DEMO_ACCOUNTS = [
   { role: 'CUSTOMER', email: 'customer@nasou.test', phone: '9000000001', fullName: 'Aarav Reddy' },
-  { role: 'RETAILER', email: 'retailer@nasou.test', phone: '9000000002', fullName: 'Imran Sheikh' },
   { role: 'ADMIN', email: 'admin@nasou.test', phone: '9000000009', fullName: 'Priya Sharma' },
 ];
 const DEMO_PASSWORD = 'nasou123';
@@ -259,15 +257,6 @@ export const adminApi = {
   deleteCoupon: (id) => api(`/admin/coupons/${id}`, { method: 'DELETE' }),
 };
 
-/* ─── Retailer ─────────────────────────────────────────────── */
-export const retailerApi = {
-  dashboard: () => api('/retailer/dashboard'),
-  products: (params = {}) => api(`/retailer/products?${new URLSearchParams(params)}`),
-  createProduct: (data) => api('/retailer/products', { method: 'POST', body: JSON.stringify(data) }),
-  updateProduct: (id, data) =>
-    api(`/retailer/products/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-  orders: (params = {}) => api(`/retailer/orders?${new URLSearchParams(params)}`),
-};
 
 /* Kept for backwards compat with AdminCatalogImport that used the old shape */
 export const adminCatalogApi = {

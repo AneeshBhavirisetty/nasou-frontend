@@ -10,7 +10,7 @@ import { whatsappLink } from '../../data/site';
 /* ============================================================================
  * ChatWidget — floating support chat, bottom-right.
  *
- *   Customer / retailer : one thread with the Nasou support desk.
+ *   Customer : one thread with the Nasou support desk.
  *   Admin               : an inbox of every customer thread, with replies.
  *
  * UI ONLY. Threads live in localStorage behind the tiny store below so the
@@ -50,7 +50,7 @@ function seedThreads() {
       ],
     },
     {
-      id: 'demo-sana', name: 'Sana Fatima', role: 'RETAILER', unreadAdmin: 0, unreadUser: 0, lastAt: t - 1000 * 60 * 90,
+      id: 'demo-sana', name: 'Sana Fatima', role: 'CUSTOMER', unreadAdmin: 0, unreadUser: 0, lastAt: t - 1000 * 60 * 90,
       messages: [
         { id: 'm1', from: 'user', text: 'Can I get the dealer price list?', at: t - 1000 * 60 * 95 },
         { id: 'm2', from: 'agent', text: 'Sent to your registered email just now.', at: t - 1000 * 60 * 90 },

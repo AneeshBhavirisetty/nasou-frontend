@@ -2,18 +2,20 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { useAuth } from './AuthContext';
 
 /* ============================================================================
- * IamStore — internal users and what each one may do in the admin console
- * (client review 2, admin items 3, 5, 6).
+ * IamStore — admin accounts and what each one may do in the admin console
+ * (client review 2, admin items 5 & 6: split internal users from customers and
+ * apply IAM when adding a new user).
  *
- * Internal users are Admins and Team members (the backend role for a team
- * member is still `RETAILER`; see lib/roles.js). Every internal user carries
- * a permission per module:  'none' | 'view' | 'edit'.
+ * There are only two roles in the product: Admin and Customer. Every internal
+ * user here is an Admin; IAM narrows what an individual admin can do, per
+ * module:  'none' | 'view' | 'edit'
  *   - none  → module hidden from the console nav; direct links show "no access"
  *   - view  → module opens read-only (create / edit / delete controls hidden)
  *   - edit  → full use
- * Admins always have full access (so nobody can lock the console out).
- * A signed-in team member is matched to their record by account id or email;
- * without a record they get TEAM_DEFAULTS. Suspended users get no access.
+ * The owner account always has full access and cannot be restricted,
+ * suspended or removed, so the console can never be locked out. An admin who
+ * signs in without a record here (e.g. created in the backend) gets full access.
+ * Suspended admins get no access.
  *
  * Stored in localStorage until the users/IAM API exists.
  * ==========================================================================*/
@@ -25,35 +27,49 @@ export const MODULES = [
   { key: 'discounts', label: 'Discounts', note: 'Discount codes and bulk pricing' },
   { key: 'billing', label: 'Billing & payments', note: 'Invoices, payments, COD collection' },
   { key: 'reports', label: 'Reports & analytics', note: 'Sales, product and customer reports' },
-  { key: 'users', label: 'Users & access', note: 'Internal users, customers, permissions' },
+  { key: 'users', label: 'Users & access', note: 'Admins, customers and permissions' },
 ];
 export const LEVELS = ['none', 'view', 'edit'];
 
-export const ADMIN_PERMS = Object.fromEntries(MODULES.map((m) => [m.key, 'edit']));
-export const TEAM_DEFAULTS = {
-  dashboard: 'view', products: 'edit', orders: 'edit', discounts: 'view', billing: 'view', reports: 'view', users: 'none',
-};
+export const FULL_ACCESS = Object.fromEntries(MODULES.map((m) => [m.key, 'edit']));
+const NO_ACCESS = Object.fromEntries(MODULES.map((m) => [m.key, 'none']));
 
-const KEY = 'nasou_iam_v1';
+const KEY = 'nasou_iam_v2';
 const Ctx = createContext(null);
 
 const day = (n) => Date.now() - n * 86400000;
 function seed() {
   return [
-    { id: 'iu1', accountId: 'demo_admin', fullName: 'Priya Sharma', email: 'admin@nasou.test', phone: '9000000009', title: 'Owner', role: 'ADMIN', permissions: ADMIN_PERMS, status: 'active', createdAt: day(210) },
-    { id: 'iu2', accountId: 'demo_retailer', fullName: 'Imran Sheikh', email: 'retailer@nasou.test', phone: '9000000002', title: 'Store manager', role: 'RETAILER', permissions: { ...TEAM_DEFAULTS, discounts: 'edit', reports: 'edit' }, status: 'active', createdAt: day(120) },
-    { id: 'iu3', fullName: 'Rahul Kumar', email: 'rahul@nasouhive.com', phone: '9700111111', title: 'Dispatch lead', role: 'RETAILER', permissions: { ...TEAM_DEFAULTS, products: 'view', discounts: 'none', billing: 'none', reports: 'none' }, status: 'active', createdAt: day(64) },
-    { id: 'iu4', fullName: 'Vikram Das', email: 'vikram@nasouhive.com', phone: '9700777777', title: 'Accounts', role: 'RETAILER', permissions: { ...TEAM_DEFAULTS, products: 'view', orders: 'view', billing: 'edit', reports: 'edit' }, status: 'suspended', createdAt: day(31) },
+    { id: 'iu1', accountId: 'demo_admin', owner: true, fullName: 'Priya Sharma', email: 'admin@nasou.test', phone: '9000000009', title: 'Owner', permissions: FULL_ACCESS, status: 'active', createdAt: day(210) },
+    { id: 'iu2', fullName: 'Imran Sheikh', email: 'imran@nasouhive.com', phone: '9000000002', title: 'Store manager', permissions: { ...FULL_ACCESS, users: 'none' }, status: 'active', createdAt: day(120) },
+    { id: 'iu3', fullName: 'Rahul Kumar', email: 'rahul@nasouhive.com', phone: '9700111111', title: 'Dispatch', permissions: { ...NO_ACCESS, dashboard: 'view', products: 'view', orders: 'edit' }, status: 'active', createdAt: day(64) },
+    { id: 'iu4', fullName: 'Vikram Das', email: 'vikram@nasouhive.com', phone: '9700777777', title: 'Accounts', permissions: { ...NO_ACCESS, dashboard: 'view', orders: 'view', billing: 'edit', reports: 'edit' }, status: 'suspended', createdAt: day(31) },
   ];
+}
+
+/* earlier builds stored team-member records under nasou_iam_v1 — carry them
+   over as admins (their permissions are kept, the old role is dropped) */
+function migrateV1() {
+  try {
+    const old = JSON.parse(localStorage.getItem('nasou_iam_v1') || 'null');
+    if (!Array.isArray(old)) return null;
+    return old.map(({ role, accountId, ...u }) => ({
+      ...u,
+      ...(accountId === 'demo_admin' ? { accountId, owner: true, permissions: FULL_ACCESS } : {}),
+      email: u.email === 'retailer@nasou.test' ? 'imran@nasouhive.com' : u.email,
+      permissions: role === 'ADMIN' ? FULL_ACCESS : u.permissions,
+    }));
+  } catch {
+    return null;
+  }
 }
 
 const load = () => {
   try {
     const raw = JSON.parse(localStorage.getItem(KEY) || 'null');
-    return Array.isArray(raw) ? raw : seed();
-  } catch {
-    return seed();
-  }
+    if (Array.isArray(raw)) return raw;
+  } catch { /* fall through */ }
+  return migrateV1() || seed();
 };
 
 export function IamProvider({ children }) {
@@ -61,26 +77,30 @@ export function IamProvider({ children }) {
   const [users, setUsers] = useState(load);
 
   useEffect(() => {
-    try { localStorage.setItem(KEY, JSON.stringify(users)); } catch { /* quota */ }
+    try {
+      localStorage.setItem(KEY, JSON.stringify(users));
+      localStorage.removeItem('nasou_iam_v1');
+    } catch { /* quota */ }
   }, [users]);
 
   const saveUser = useCallback((u) => {
-    setUsers((list) => (list.some((x) => x.id === u.id) ? list.map((x) => (x.id === u.id ? { ...x, ...u } : x)) : [{ ...u }, ...list]));
+    setUsers((list) => (list.some((x) => x.id === u.id)
+      ? list.map((x) => (x.id === u.id ? { ...x, ...u, ...(x.owner ? { owner: true, permissions: FULL_ACCESS, status: 'active' } : {}) } : x))
+      : [{ ...u }, ...list]));
   }, []);
-  const removeUser = useCallback((id) => setUsers((list) => list.filter((x) => x.id !== id)), []);
+  const removeUser = useCallback((id) => setUsers((list) => list.filter((x) => x.id !== id || x.owner)), []);
 
-  /* the signed-in person's record + effective permissions */
+  /* the signed-in admin's record + effective permissions */
   const me = useMemo(() => {
     if (!user) return null;
     return users.find((u) => (u.accountId && u.accountId === user.id) || (user.email && u.email === user.email)) || null;
   }, [users, user]);
 
   const perms = useMemo(() => {
-    if (!user) return {};
-    if (user.role === 'ADMIN') return ADMIN_PERMS;
-    if (user.role !== 'RETAILER') return {};
-    if (me?.status === 'suspended') return Object.fromEntries(MODULES.map((m) => [m.key, 'none']));
-    return { ...TEAM_DEFAULTS, ...(me?.permissions || {}) };
+    if (user?.role !== 'ADMIN') return {};
+    if (!me || me.owner) return FULL_ACCESS;
+    if (me.status === 'suspended') return NO_ACCESS;
+    return { ...NO_ACCESS, ...(me.permissions || {}) };
   }, [user, me]);
 
   const level = useCallback((module) => perms[module] || 'none', [perms]);
@@ -90,7 +110,7 @@ export function IamProvider({ children }) {
   }, [perms]);
 
   const value = useMemo(
-    () => ({ users, saveUser, removeUser, me, perms, level, can, suspended: me?.status === 'suspended' }),
+    () => ({ users, saveUser, removeUser, me, perms, level, can, suspended: me?.status === 'suspended' && !me?.owner }),
     [users, saveUser, removeUser, me, perms, level, can]
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

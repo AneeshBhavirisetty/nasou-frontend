@@ -3,9 +3,8 @@ import Modal from '../Modal';
 import Icon from '../Icon';
 import { Badge, Button } from '../ui';
 import { useToast } from '../../context/ToastContext';
-import { categories } from '../../data/catalog';
+import { brandForName, brandSlug, categories } from '../../data/catalog';
 import { DEPARTMENTS, DEFAULT_DEPARTMENT, slugifyCategory } from '../../data/departments';
-import { retailerForName, retailerIdForName } from '../../data/retailers';
 import { downloadSheet } from '../../lib/exportSheet';
 import { discount as pctOff, cx } from '../../lib/format';
 
@@ -81,7 +80,7 @@ function validate(raw, existingSkus) {
     const category = department === DEFAULT_DEPARTMENT ? rawCategory : slugifyCategory(rawCategory);
     const material = MATERIALS[String(r.material || '').trim().toLowerCase()] || (department === DEFAULT_DEPARTMENT ? '' : 'Other');
     const brand = String(r.brand || '').trim();
-    const retailer = retailerForName(brand);
+    const known = brandForName(brand);
     const price = Math.round(Number(String(r.price || '').replace(/[^\d.]/g, '')) || 0);
     const mrpRaw = Math.round(Number(String(r.mrp || '').replace(/[^\d.]/g, '')) || 0);
     const stock = Math.max(0, Math.round(Number(String(r.stock || '').replace(/\D/g, '')) || 0));
@@ -115,11 +114,9 @@ function validate(raw, existingSkus) {
         art: String(r.art || 'coupling').trim().toLowerCase(),
         size: String(r.size || '').trim(),
         sizeRaw: String(r.size || '').trim(),
-        /* Schema-only: resolved from the brand, never entered by hand. */
-        retailerId: retailer?.id || retailerIdForName(brand),
-        supplier: retailer?.slug || (brand ? brand.toLowerCase().replace(/[^a-z0-9]+/g, '-') : 'nasou'),
-        supplierName: retailer?.name || brand || 'Nasou',
-        supplierTier: retailer?.tier || 'value',
+        supplier: known?.slug || brandSlug(brand),
+        supplierName: known?.name || brand || 'Nasou',
+        supplierTier: known?.tier || 'value',
         department,
         category,
         subcategoryName: department === DEFAULT_DEPARTMENT ? undefined : rawCategory,

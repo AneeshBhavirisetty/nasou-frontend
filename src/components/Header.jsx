@@ -136,7 +136,7 @@ function SearchBox({ onDone }) {
 
 /* ── account menu (demo avatar circle) ─────────────────────────────────── */
 function AccountMenu() {
-  const { isAuthenticated, user, isAdmin, isRetailer, logout } = useAuth();
+  const { isAuthenticated, user, isAdmin, logout } = useAuth();
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   const navigate = useNavigate();
@@ -165,7 +165,7 @@ function AccountMenu() {
     { label: 'Orders', to: '/orders', icon: 'package' },
     { label: 'Wishlist', to: '/wishlist', icon: 'heart' },
     { label: 'Addresses', to: '/checkout', icon: 'pin' },
-    ...(isAdmin || isRetailer ? [{ label: 'Admin console', to: '/admin/dashboard', icon: 'gauge' }] : []),
+    ...(isAdmin ? [{ label: 'Admin console', to: '/admin/dashboard', icon: 'gauge' }] : []),
   ];
 
   return (
