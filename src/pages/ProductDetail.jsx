@@ -197,6 +197,7 @@ export default function ProductDetail() {
               <button
                 onClick={() => wishlist.toggle(product.id)}
                 aria-pressed={saved}
+                aria-label={saved ? 'Remove from wishlist' : 'Save to wishlist'}
                 className={cx('flex h-[52px] items-center justify-center gap-2 rounded-md border px-5 text-[14px] font-semibold transition',
                   saved ? 'border-clay/30 bg-clay-50 text-clay-600' : 'border-line bg-white text-forest hover:border-forest')}
               >

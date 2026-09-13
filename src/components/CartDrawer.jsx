@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import Icon from './Icon';
@@ -8,6 +9,14 @@ import { money } from '../lib/format';
 
 export default function CartDrawer() {
   const { items, totals, open, setOpen, setQty, remove } = useCart();
+
+  /* Escape closes the drawer */
+  useEffect(() => {
+    if (!open) return undefined;
+    const onKey = (e) => { if (e.key === 'Escape') setOpen(false); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [open, setOpen]);
 
   return (
     <AnimatePresence>

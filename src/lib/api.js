@@ -6,6 +6,8 @@ import { getToken } from './auth';
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080/api/v1';
 // Flag to enable mock mode when backend is not available
 const MOCK_MODE = import.meta.env.VITE_API_BASE_URL === undefined || import.meta.env.VITE_MOCK_API === 'true';
+/* true while the app runs on the built-in demo backend (no VITE_API_BASE_URL) */
+export const IS_MOCK = MOCK_MODE;
 
 export async function api(path, options = {}) {
   // Mock auth endpoints for development/testing

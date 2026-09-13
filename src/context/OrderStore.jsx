@@ -1,4 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { useNotifications } from './NotificationStore';
+
+const STATUS_WORDS = { Processing: 'is being packed', Shipped: 'is on its way', Delivered: 'was delivered', Cancelled: 'was cancelled' };
 
 /* ============================================================================
  * OrderStore — orders placed through checkout (client review 2, admin #9).
@@ -43,6 +46,7 @@ export function OrderStoreProvider({ children }) {
   const [placed, setPlaced] = useState(loadPlacedOrders);
   const latest = useRef(placed);
   latest.current = placed;
+  const { push } = useNotifications();
 
   useEffect(() => {
     try { localStorage.setItem(ORDERS_KEY, JSON.stringify(placed)); } catch { /* quota — non-fatal */ }
@@ -67,8 +71,12 @@ export function OrderStoreProvider({ children }) {
   }, []);
 
   const updateOrder = useCallback((id, patch) => {
-    setPlaced((list) => list.map((o) => (o.id === id ? { ...o, ...patch } : o)));
-  }, []);
+    const o = latest.current.find((x) => x.id === id);
+    if (o && patch.status && patch.status !== o.status && STATUS_WORDS[patch.status]) {
+      push({ userId: o.userId, icon: patch.status === 'Delivered' ? 'check' : 'truck', title: `Order ${id} ${STATUS_WORDS[patch.status]}`, body: `${o.items} units · ${o.lines[0]?.name}${o.lines.length > 1 ? ` +${o.lines.length - 1} more` : ''}`, to: '/orders' });
+    }
+    setPlaced((list) => list.map((x) => (x.id === id ? { ...x, ...patch } : x)));
+  }, [push]);
 
   const value = useMemo(() => ({ placed, placeOrder, updateOrder }), [placed, placeOrder, updateOrder]);
   return <OrderStoreContext.Provider value={value}>{children}</OrderStoreContext.Provider>;

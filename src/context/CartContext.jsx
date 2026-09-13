@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useReducer,
 import { findProduct, offersFor } from '../data/catalog';
 import { useAdminStore } from './AdminStore';
 import { applyBulkRules } from '../lib/pricing';
+import { useNotifications } from './NotificationStore';
 
 const CartContext = createContext(null);
 /* Per-line ceiling — high enough for trade / bulk orders (see lib/pricing.js). */
@@ -54,6 +55,7 @@ export function CartProvider({ children }) {
   const [open, setOpen] = useState(false);
   const [toast, setToast] = useState(null);
   const { bulkRules } = useAdminStore();
+  const { push } = useNotifications();
 
   useEffect(() => {
     try {
@@ -71,10 +73,11 @@ export function CartProvider({ children }) {
       price: price ?? offer.price,
     });
     setToast({ name: product.name, qty });
+    push({ icon: 'cart', title: `Added ${qty} × ${product.name}`, body: 'In your cart', to: '/cart' });
     setOpen(true);
     window.clearTimeout(add._t);
     add._t = window.setTimeout(() => setToast(null), 2600);
-  }, []);
+  }, [push]);
 
   /* Lines are stored lean (id + supplier + qty). Everything displayable is
      rehydrated from the catalog so the cart can't hold stale product copy. */

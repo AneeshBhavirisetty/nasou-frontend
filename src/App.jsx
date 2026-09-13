@@ -14,6 +14,7 @@ import Enquiry from './pages/Enquiry';
 import Invoice from './pages/Invoice';
 import Wishlist from './pages/Wishlist';
 import Orders from './pages/Orders';
+import Account from './pages/Account';
 import Info from './pages/Info';
 import NotFound from './pages/NotFound';
 import AdminCatalogImport from './pages/AdminCatalogImport';
@@ -67,6 +68,7 @@ export default function App() {
 
         <Route element={<ProtectedLayout />}>
           <Route path="/orders" element={<Orders />} />
+          <Route path="/account" element={<Account />} />
         </Route>
 
         <Route element={<AuthLayout />}>

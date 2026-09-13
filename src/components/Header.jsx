@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import Icon from './Icon';
 import Logo from './Logo';
 import ProductArt from './ProductArt';
+import NotificationBell from './NotificationBell';
 import { Badge } from './ui';
 import { departments, searchProducts } from '../data/catalog';
 import { announcements } from '../data/site';
@@ -159,6 +160,7 @@ function AccountMenu() {
   const name = user?.fullName || 'Account';
   const initials = name.split(' ').filter(Boolean).slice(0, 2).map((w) => w[0]?.toUpperCase()).join('') || 'A';
   const items = [
+    { label: 'My profile', to: '/account', icon: 'user' },
     { label: 'Orders', to: '/orders', icon: 'package' },
     { label: 'Wishlist', to: '/wishlist', icon: 'heart' },
     { label: 'Addresses', to: '/checkout', icon: 'pin' },
@@ -374,6 +376,7 @@ export default function Header() {
             <Icon name="heart" size={19} />
             <CountBadge n={wishlist.count} />
           </Link>
+          <NotificationBell />
           <button
             onClick={() => setOpen(true)}
             className="relative grid h-11 w-11 place-items-center rounded-full bg-white text-forest transition hover:-translate-y-0.5"
@@ -464,7 +467,7 @@ export default function Header() {
                 <Link to="/deals" className="rounded-[14px] bg-white px-3 py-3 text-center text-[13px] font-bold text-forest shadow-card">Deals</Link>
                 {!isAuthenticated
                   ? <Link to="/login" className="rounded-[14px] bg-white px-3 py-3 text-center text-[13px] font-bold text-forest shadow-card">Sign in</Link>
-                  : <Link to="/orders" className="rounded-[14px] bg-white px-3 py-3 text-center text-[13px] font-bold text-forest shadow-card">Orders</Link>}
+                  : <Link to="/account" className="rounded-[14px] bg-white px-3 py-3 text-center text-[13px] font-bold text-forest shadow-card">My profile</Link>}
                 <Link to="/enquiry" className="col-span-2 rounded-[14px] bg-forest px-3 py-3 text-center text-[13px] font-bold text-white shadow-btn">Enquire now</Link>
               </div>
               <p className="mt-4 px-1 text-[12px] font-semibold text-ink-50">{announcements[0]}</p>

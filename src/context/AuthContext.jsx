@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api } from '../lib/api';
+import { api, profileApi, IS_MOCK } from '../lib/api';
 import {
   clearSession,
   getStoredSession,
@@ -26,6 +26,16 @@ export function AuthProvider({ children }) {
     return stored;
   });
 
+  /* Profile details the customer can edit (client review 2, item 1): kept per
+     user in localStorage until GET/PATCH /users/me is live; PATCH is called
+     when a real backend is configured. */
+  const profileKey = (id) => `nasou_profile_${id || 'guest'}`;
+  const readProfile = (id) => {
+    try { return JSON.parse(localStorage.getItem(profileKey(id)) || 'null') || {}; } catch { return {}; }
+  };
+  const [profile, setProfile] = useState(() => readProfile(session?.userId));
+  useEffect(() => { setProfile(readProfile(session?.userId)); }, [session?.userId]);
+
   /* Derived user shape from session */
   const user = useMemo(() => {
     if (!session?.accessToken) return null;
@@ -34,8 +44,25 @@ export function AuthProvider({ children }) {
       id: session.userId ?? payload?.sub,
       role: session.role ?? payload?.role ?? 'CUSTOMER',
       fullName: session.fullName ?? payload?.fullName ?? '',
+      email: profile.email ?? session.email ?? payload?.email ?? '',
+      phone: profile.phone ?? session.phone ?? '',
       accessToken: session.accessToken,
     };
+  }, [session, profile]);
+
+  const updateProfile = useCallback(async (fields) => {
+    if (!session) throw new Error('Sign in to edit your profile.');
+    if (!IS_MOCK) await profileApi.update(fields);
+    const next = { ...readProfile(session.userId), ...fields };
+    try { localStorage.setItem(profileKey(session.userId), JSON.stringify(next)); } catch { /* quota */ }
+    setProfile(next);
+    if (fields.fullName && fields.fullName !== session.fullName) {
+      const s = { ...session, fullName: fields.fullName };
+      setSession(s);
+      setSessionState(s);
+    }
+    return next;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session]);
 
   /* Persist session + update state */
@@ -137,8 +164,10 @@ export function AuthProvider({ children }) {
       sendOtp,
       verifyOtp,
       devSetRole,
+      profile,
+      updateProfile,
     }),
-    [user, login, logout, register, sendOtp, verifyOtp, devSetRole]
+    [user, login, logout, register, sendOtp, verifyOtp, devSetRole, profile, updateProfile]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

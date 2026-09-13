@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { findProduct } from '../data/catalog';
+import { useNotifications } from './NotificationStore';
 
 const WishlistContext = createContext(null);
 const STORAGE_KEY = 'nasou_wishlist';
@@ -20,15 +21,19 @@ function save(ids) {
 
 export function WishlistProvider({ children }) {
   const [ids, setIds] = useState(load);
+  const { push } = useNotifications();
 
   /* Persist any change */
   useEffect(() => save(ids), [ids]);
 
   const toggle = useCallback((productId) => {
+    const saved = ids.includes(productId);
+    const p = findProduct(productId);
+    push({ icon: 'heart', title: saved ? 'Removed from wishlist' : 'Saved to wishlist', body: p?.name, to: '/wishlist' });
     setIds((prev) =>
       prev.includes(productId) ? prev.filter((x) => x !== productId) : [...prev, productId]
     );
-  }, []);
+  }, [ids, push]);
 
   const has = useCallback((productId) => ids.includes(productId), [ids]);
 

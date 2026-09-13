@@ -8,6 +8,7 @@ import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
 import { useAdminStore, couponDiscount } from '../context/AdminStore';
 import { useOrderStore } from '../context/OrderStore';
+import { useNotifications } from '../context/NotificationStore';
 import { paymentMethods } from '../data/site';
 import { cx, money } from '../lib/format';
 
@@ -62,7 +63,8 @@ export default function Checkout() {
   const { items, totals, clear } = useCart();
   const { coupons, products: stockBook, setStock } = useAdminStore();
   const { placeOrder: saveOrder } = useOrderStore();
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, profile } = useAuth();
+  const { push } = useNotifications();
   const toast = useToast();
   const [step, setStep] = useState(0);
   const [delivery, setDelivery] = useState('standard');
@@ -73,10 +75,10 @@ export default function Checkout() {
   /* delivery address — controlled so it reaches the review step and the order */
   const [addr, setAddr] = useState(() => ({
     name: user?.fullName || '',
-    phone: '',
-    address: '',
-    city: 'Hyderabad',
-    pin: '',
+    phone: profile?.phone || '',
+    address: profile?.address || '',
+    city: profile?.city || 'Hyderabad',
+    pin: profile?.pin || '',
   }));
   const [addrErr, setAddrErr] = useState('');
   const navigate = useNavigate();
@@ -198,6 +200,7 @@ export default function Checkout() {
       if (live) setStock(l.id, Math.max(0, live.stock - l.qty));
     });
 
+    push({ icon: 'package', title: `Order ${order.id} placed`, body: `${totals.count} units · ${money(grand)} · ${pay}`, to: '/orders' });
     setPlaced(true);
     navigate('/order-confirmed', {
       replace: true,
