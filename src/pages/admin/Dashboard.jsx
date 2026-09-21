@@ -3,11 +3,10 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Icon from '../../components/Icon';
 import Counter from '../../components/Counter';
-import { Badge } from '../../components/ui';
 import { ChartCard, LineChart, BarList, Donut, SERIES } from '../../components/charts/Charts';
 import { adminApi } from '../../lib/api';
 import { departments, suppliers } from '../../data/catalog';
-import { allOrders, ORDER_STATUSES, formatOrderDate } from '../../data/orders';
+import { allOrders, ORDER_STATUSES } from '../../data/orders';
 import { useAdminStore } from '../../context/AdminStore';
 import { useOrderStore } from '../../context/OrderStore';
 import { useIam } from '../../context/IamStore';
@@ -18,7 +17,6 @@ import { money, cx } from '../../lib/format';
    Every number reads from the same order book as Orders / Billing / Reports
    (seeded demo orders + orders placed at checkout) via lib/analytics.js. */
 
-const STATUS_TONE = { Pending: 'amber', Processing: 'slate', Shipped: 'slate', Delivered: 'ok', Cancelled: 'clay' };
 const STATUS_BAR = { Pending: 'bg-amber', Processing: 'bg-slate', Shipped: 'bg-slate/60', Delivered: 'bg-emerald', Cancelled: 'bg-clay' };
 
 /* Quick actions — shown only when the signed-in person may use them. */
@@ -79,9 +77,7 @@ export default function AdminDashboard() {
     { label: 'Billed', value: apiStats?.totalRevenue ?? book.reduce((s, o) => s + billedOf(o), 0), icon: 'rupee', money: true, to: '/admin/billing', detail: 'Incl. GST and delivery', module: 'billing' },
   ];
 
-  const recent = book.slice(0, 5);
   const byStatus = ORDER_STATUSES.map((st) => ({ st, n: book.filter((o) => o.status === st).length }));
-  const allBrands = [...suppliers].sort((a, b) => (b.count ?? 0) - (a.count ?? 0));
   const actions = ACTIONS.filter((a) => can(a.module, a.need || 'view')).slice(0, 4);
 
   return (
@@ -212,61 +208,6 @@ export default function AdminDashboard() {
               </li>
             ))}
           </ul>
-        </Panel>
-      </div>
-
-      <div className="grid gap-4 sm:gap-5 xl:grid-cols-3">
-        <Panel className="xl:col-span-1">
-          <PanelHead
-            title="Recent orders"
-            note="Latest in the order book"
-            action={can('orders') && <Link to="/admin/orders" className="shrink-0 rounded-full bg-sunk px-3 py-1.5 text-xs font-bold text-forest">View all</Link>}
-          />
-          <ul className="divide-y divide-line-soft overflow-hidden rounded-[16px] border border-line-soft">
-            {recent.map((o) => (
-              <li key={o.id} className="flex items-center gap-3 bg-white px-3 py-2.5">
-                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-sunk text-[12px] font-bold text-forest">{o.customer[0]}</span>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-[13px] font-semibold text-ink">{o.customer}</p>
-                  <p className="truncate text-[11.5px] text-ink-50"><span className="font-mono">{o.id}</span> · {formatOrderDate(o.createdAt)}</p>
-                </div>
-                <Badge tone={STATUS_TONE[o.status]} className="hidden sm:inline-flex">{o.status}</Badge>
-                <Link to={`/invoice/${o.id}`} title={`Invoice ${o.id}`} className="tnum text-right text-[13px] font-bold text-ink hover:text-forest">{money(o.total)}</Link>
-              </li>
-            ))}
-          </ul>
-        </Panel>
-
-        <Panel>
-          <PanelHead
-            title="Categories"
-            note={`${departments.length} categories · ${departments.reduce((n, d) => n + d.subs.length, 0)} sub-categories`}
-            action={can('products') && <Link to="/admin/products" className="shrink-0 rounded-full bg-sunk px-3 py-1.5 text-xs font-bold text-forest">Manage</Link>}
-          />
-          <ul className="space-y-2">
-            {departments.map((d) => (
-              <li key={d.slug} className="flex items-center gap-3 rounded-[12px] bg-[#f4f7f5] px-3 py-2">
-                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-[10px] bg-white text-forest"><Icon name={d.icon} size={15} /></span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[13px] font-bold text-ink">{d.name}</span>
-                  <span className="block truncate text-[11.5px] text-ink-50">{d.subs.length ? `${d.subs.length} sub-categories` : 'No products yet'}</span>
-                </span>
-                <span className="tnum text-[13px] font-bold text-forest">{d.count.toLocaleString('en-IN')}</span>
-              </li>
-            ))}
-          </ul>
-        </Panel>
-
-        <Panel>
-          <PanelHead title="Brands" note={`${suppliers.length} brands · ${products.length.toLocaleString('en-IN')} SKUs`} />
-          <div className="flex max-h-[330px] flex-wrap gap-2 overflow-y-auto pr-1">
-            {allBrands.map((b) => (
-              <span key={b.slug} className="inline-flex items-center gap-1.5 rounded-full bg-sunk px-3 py-1.5 text-[12.5px] font-semibold text-forest">
-                {b.name}
-                {b.count != null && <span className="tnum rounded-full bg-white px-1.5 text-[11px] font-bold text-forest-800">{b.count}</span>}
-              </span>
-            ))}
-          </div>
         </Panel>
       </div>
     </div>

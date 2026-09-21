@@ -91,7 +91,7 @@ export default function Orders() {
                 <div className="flex justify-between gap-3">
                   <div className="min-w-0">
                     <p className="truncate font-semibold text-ink">
-                      {x.lines[0].name} <span className="tnum font-bold text-forest">× {x.lines[0].qty}</span>
+                      {x.lines[0].name}
                       {x.lines.length > 1 && <span className="font-medium text-ink-50"> +{x.lines.length - 1} more</span>}
                     </p>
                     <p className="mt-1 text-[12px] text-ink-50"><span className="font-mono">{x.id}</span> · Ordered {x.date}</p>
@@ -164,12 +164,11 @@ export default function Orders() {
                       </span>
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-[13.5px] font-semibold text-ink">{l.name}</p>
-                        <p className="tnum text-[12px] text-ink-50">{l.sku} · {l.size || 'standard'} · {money(l.price)} each</p>
+                        <p className="tnum text-[12px] text-ink-50">{l.sku} · {l.size || 'standard'} · Qty {l.qty} · {money(l.price)} each</p>
                         {l.bulk && <p className="text-[11.5px] font-semibold text-emerald-700">Bulk price · − {money(l.bulk.amount)}</p>}
                       </div>
                       <div className="shrink-0 text-right">
-                        <p className="tnum rounded-full bg-forest px-2.5 py-0.5 text-[12px] font-bold text-white">× {l.qty}</p>
-                        <p className="tnum mt-1 text-[12.5px] font-bold text-ink">{money(l.amount)}</p>
+                        <p className="tnum text-[12.5px] font-bold text-ink">{money(l.amount)}</p>
                       </div>
                     </li>
                   );

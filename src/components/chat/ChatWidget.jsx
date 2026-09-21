@@ -140,13 +140,13 @@ function Composer({ onSend, placeholder = 'Type a message…' }) {
     setV('');
   };
   return (
-    <form onSubmit={submit} className="flex items-center gap-2 border-t border-[#e1e8e5] bg-white/80 p-3">
+    <form onSubmit={submit} className="flex items-center gap-2 border-t border-line-soft bg-white/80 p-3">
       <input
         value={v}
         onChange={(e) => setV(e.target.value)}
         placeholder={placeholder}
         aria-label="Message"
-        className="h-10 min-w-0 flex-1 rounded-[12px] border border-[#dce5e1] bg-white px-4 text-[13px] text-ink outline-none transition placeholder:text-ink-35 focus:border-forest/50"
+        className="h-10 min-w-0 flex-1 rounded-[12px] border border-line-soft bg-white px-4 text-[13px] text-ink outline-none transition placeholder:text-ink-35 focus:border-forest/50"
       />
       <button
         type="submit"
@@ -177,7 +177,7 @@ function CustomerChat({ store, threadId, who }) {
 
   return (
     <>
-      <div className="flex-1 space-y-3 overflow-y-auto bg-[#f7f9f8] p-4">
+      <div className="flex-1 space-y-3 overflow-y-auto bg-canvas p-4">
         {msgs.length === 0 && (
           <div className="rounded-[14px] bg-white p-3.5 text-[13px] leading-relaxed text-ink-70 shadow-sm">
             Hi{who?.name ? ` ${who.name.split(' ')[0]}` : ''} — ask us about stock, sizes, bulk pricing or an order.
@@ -187,7 +187,7 @@ function CustomerChat({ store, threadId, who }) {
         <div ref={endRef} />
       </div>
       {msgs.length === 0 && (
-        <div className="no-bar flex gap-2 overflow-x-auto border-t border-[#e1e8e5] bg-[#f7f9f8] px-3 py-2.5">
+        <div className="no-bar flex gap-2 overflow-x-auto border-t border-line-soft bg-canvas px-3 py-2.5">
           {QUICK.map((q) => (
             <button
               key={q}
@@ -215,7 +215,7 @@ function AdminChat({ store }) {
 
   if (!thread) {
     return (
-      <div className="flex-1 overflow-y-auto bg-[#f7f9f8]">
+      <div className="flex-1 overflow-y-auto bg-canvas">
         {store.threads.length === 0 && (
           <p className="p-5 text-center text-[13px] text-ink-50">No conversations yet.</p>
         )}
@@ -223,7 +223,7 @@ function AdminChat({ store }) {
           <button
             key={t.id}
             onClick={() => setOpenId(t.id)}
-            className="flex w-full items-center gap-3 border-b border-[#e1e8e5] bg-white px-3.5 py-3 text-left transition hover:bg-[#f4f7f5]"
+            className="flex w-full items-center gap-3 border-b border-line-soft bg-white px-3.5 py-3 text-left transition hover:bg-sunk"
           >
             <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-emerald-50 text-[12px] font-bold text-emerald-600">
               {t.name[0]}
@@ -255,11 +255,11 @@ function AdminChat({ store }) {
     <>
       <button
         onClick={() => setOpenId(null)}
-        className="flex items-center gap-1.5 border-b border-[#e1e8e5] bg-white px-3.5 py-2.5 text-[12px] font-bold text-forest transition hover:bg-[#f4f7f5]"
+        className="flex items-center gap-1.5 border-b border-line-soft bg-white px-3.5 py-2.5 text-[12px] font-bold text-forest transition hover:bg-sunk"
       >
         <Icon name="arrowLeft" size={13} /> All conversations
       </button>
-      <div className="flex-1 space-y-3 overflow-y-auto bg-[#f7f9f8] p-4">
+      <div className="flex-1 space-y-3 overflow-y-auto bg-canvas p-4">
         {thread.messages.map((m) => <Bubble key={m.id} m={m} mine={m.from === 'agent'} />)}
         <div ref={endRef} />
       </div>
@@ -293,12 +293,12 @@ export default function ChatWidget() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.96 }}
             transition={{ duration: 0.22, ease: EASE }}
-            className="fixed bottom-[calc(var(--tabbar-h,0px)+5rem)] right-4 z-[190] flex h-[min(70dvh,480px)] w-[calc(100vw-2rem)] max-w-[384px] flex-col overflow-hidden rounded-[20px] border border-white/70 bg-[#f7f9f8]/95 shadow-[0_28px_80px_rgba(31,59,52,0.24)] backdrop-blur-2xl sm:bottom-[calc(var(--tabbar-h,0px)+6rem)] sm:right-6"
+            className="fixed bottom-[calc(var(--tabbar-h,0px)+5rem)] right-4 z-[190] flex h-[min(70dvh,480px)] w-[calc(100vw-2rem)] max-w-[384px] flex-col overflow-hidden rounded-[20px] border border-white/70 bg-canvas/95 shadow-[0_28px_80px_rgba(31,59,52,0.24)] backdrop-blur-2xl sm:bottom-[calc(var(--tabbar-h,0px)+6rem)] sm:right-6"
             role="dialog"
             aria-label={isAdmin ? 'Support inbox' : 'Chat with Nasou support'}
           >
-            <header className="flex items-center gap-2.5 bg-ink px-4 py-3.5 text-white">
-              <span className="grid h-9 w-9 place-items-center rounded-full bg-forest">
+            <header className="flex items-center gap-2.5 bg-forest px-4 py-3.5 text-white">
+              <span className="grid h-9 w-9 place-items-center rounded-full bg-white/15">
                 <Icon name={isAdmin ? 'headset' : 'chat'} size={16} />
               </span>
               <span className="min-w-0 flex-1">
@@ -306,7 +306,7 @@ export default function ChatWidget() {
                   {isAdmin ? 'Support inbox' : AGENT.name}
                 </span>
                 <span className="flex min-w-0 items-center gap-1.5 text-[11px] text-white/60">
-                  <span className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-[#8fd3b5]" />
+                  <span className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-emerald-50" />
                   <span className="truncate">{isAdmin ? `${store.threads.length} conversation${store.threads.length === 1 ? '' : 's'}` : AGENT.sub}</span>
                 </span>
               </span>

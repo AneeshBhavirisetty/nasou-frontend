@@ -6,6 +6,7 @@ import ProductArt from '../../components/ProductArt';
 import ExcelExportButton from '../../components/ExcelExportButton';
 import ProductForm from '../../components/admin/ProductForm';
 import BulkImportDialog from '../../components/admin/BulkImportDialog';
+import CategoryDiscountDialog from '../../components/admin/CategoryDiscountDialog';
 import { AdminPageHead, SearchInput, ViewOnlyBanner } from '../../components/admin/AdminUI';
 import { useIam } from '../../context/IamStore';
 import { Badge, Button } from '../../components/ui';
@@ -27,6 +28,7 @@ export default function AdminProducts() {
   const [page, setPage] = useState(1);
   const [editing, setEditing] = useState(undefined); // undefined = closed, null = new, object = edit
   const [bulk, setBulk] = useState(false);
+  const [discount, setDiscount] = useState(false);
   const [params, setParams] = useSearchParams();
   const canEdit = useIam().can('products', 'edit');
 
@@ -87,6 +89,7 @@ export default function AdminProducts() {
             Reset
           </Button>
         )}
+        {canEdit && <Button size="sm" variant="outline" icon="tag" onClick={() => setDiscount(true)}>Apply discount</Button>}
         {canEdit && <Button size="sm" variant="outline" icon="upload" onClick={() => setBulk(true)}>Bulk import</Button>}
         {canEdit && <Button size="sm" icon="plus" onClick={() => setEditing(null)}>Add product</Button>}
         <ExcelExportButton
@@ -169,6 +172,16 @@ export default function AdminProducts() {
         <div className="text-center">
           <Button variant="outline" onClick={() => setPage((p) => p + 1)}>Load more</Button>
         </div>
+      )}
+
+      {discount && (
+        <CategoryDiscountDialog
+          open
+          onClose={() => setDiscount(false)}
+          products={rows}
+          department={dept}
+          category={cat}
+        />
       )}
 
       <BulkImportDialog
