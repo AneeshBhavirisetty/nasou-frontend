@@ -7,8 +7,8 @@ import { brand, faqs, valueProps } from '../data/site';
 
 const CONTENT = {
   about: {
-    title: 'About Nasou Hive',
-    lead: `Nasou Hive is a plumbing-supplies counter built for the people who actually fit the pipe. We started in ${brand.since} with one frustration: finding an exact fitting shouldn't mean calling three shops and driving to a fourth.`,
+    title: 'About Nivora',
+    lead: `Nivora, built by Nasou Hive, is a home-improvement marketplace for the people who actually fit the pipe — many trusted retailers, one cart. We started in ${brand.since} with one frustration: finding an exact fitting shouldn't mean calling three shops and driving to a fourth.`,
   },
   contact: {
     title: 'Contact us',
@@ -50,7 +50,7 @@ export default function Info({ slug = 'about' }) {
     <Container className="pb-12 pt-5">
       <Breadcrumbs className="mb-4" items={[{ label: 'Home', to: '/' }, { label: c.title }]} />
       <div className="rounded-[24px] border border-white/80 bg-white/70 p-6 shadow-card backdrop-blur sm:p-8">
-        <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-ink-50">Nasou Hive</p>
+        <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-ink-50">Nivora · by Nasou Hive</p>
         <h1 className="mt-2 text-[clamp(1.8rem,5vw,2.4rem)] font-semibold text-forest">{c.title}</h1>
         <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-ink-50">{c.lead}</p>
       </div>

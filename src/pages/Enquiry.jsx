@@ -194,7 +194,7 @@ export default function Enquiry() {
                 </p>
               </div>
               <a
-                href={whatsappLink('Hi Nasou Hive, I have a trade enquiry.')}
+                href={whatsappLink('Hi Nivora, I have a trade enquiry.')}
                 target="_blank"
                 rel="noreferrer"
                 className="mt-5 flex w-full items-center justify-center gap-2 rounded-md bg-forest px-4 py-3 text-[14px] font-bold text-white shadow-btn transition hover:-translate-y-0.5 hover:bg-forest-800"
@@ -204,7 +204,7 @@ export default function Enquiry() {
             </div>
 
             <div className="forest-band rounded-[24px] p-5 text-white sm:p-6">
-              <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.18em] text-[#c9d7d2]">Why buy trade from Nasou</p>
+              <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.18em] text-[#c9d7d2]">Why buy trade on Nivora</p>
               <ul className="space-y-2.5 text-[13.5px] text-white/85">
                 {[
                   ['tag', 'Slab pricing above ₹25,000'],

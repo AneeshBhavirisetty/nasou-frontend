@@ -8,7 +8,7 @@ export default function Logo({ size = 30, className = '', variant = 'plain' }) {
         <span className="grid h-11 w-11 shrink-0 place-items-center rounded-[14px] bg-forest text-white shadow-btn">
           <Glyph size={24} />
         </span>
-        <span className="text-[18px] font-extrabold tracking-[-0.03em] text-ink">Nasou Hive</span>
+        <span className="font-hero text-[21px] font-semibold tracking-[-0.04em] text-forest">Nivora</span>
       </span>
     );
   }
@@ -16,7 +16,7 @@ export default function Logo({ size = 30, className = '', variant = 'plain' }) {
     <span className={`inline-flex items-center gap-2.5 ${className}`}>
       <Glyph size={size} />
       <span className="font-display text-[19px] font-extrabold tracking-[-0.035em]">
-        Nasou<span className="text-emerald"> Hive</span>
+        Niv<span className="text-emerald">ora</span>
       </span>
     </span>
   );

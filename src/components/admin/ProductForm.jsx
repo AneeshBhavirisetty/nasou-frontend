@@ -7,6 +7,7 @@ import { Badge, Button, Field } from '../ui';
 import { brandForName, brandSlug, categoryName } from '../../data/catalog';
 import { DEPARTMENTS, DEFAULT_DEPARTMENT, slugifyCategory } from '../../data/departments';
 import { useAdminStore } from '../../context/AdminStore';
+import { useSettings } from '../../store/settings';
 import { MAX_IMAGES_PER_PRODUCT, MIN_IMAGES_PER_PRODUCT } from '../../lib/mediaStore';
 import { discount as pctOff, money, cx } from '../../lib/format';
 
@@ -32,8 +33,12 @@ function Locked() {
 /* Product code (SKU) and category (department) are fixed once a product
    exists (client review 2, admin item 2); the sub-category stays editable
    and a new one can be typed in to create it. */
-export default function ProductForm({ open, product, onClose, onSave }) {
+/* retailerId: fixed seller (seller console). retailers: options for the Super
+   Admin to pick who sells a new product. masterOnly: sellers pick a
+   sub-category from the master catalog instead of inventing one (req. 16). */
+export default function ProductForm({ open, product, onClose, onSave, retailerId: fixedRetailer, retailers = [], masterOnly = false }) {
   const { products: all } = useAdminStore();
+  const masterSubs = useSettings((s) => s.catalog.subs);
   const [f, setF] = useState(() =>
     product
       ? {
@@ -44,7 +49,7 @@ export default function ProductForm({ open, product, onClose, onSave }) {
           images: product.images ?? [],
           supplierName: product.supplierName || '',
         }
-      : blank
+      : { ...blank, retailerId: fixedRetailer || retailers[0]?.id || '' }
   );
   const [err, setErr] = useState('');
   const [picking, setPicking] = useState(false);
@@ -59,8 +64,11 @@ export default function ProductForm({ open, product, onClose, onSave }) {
       const name = p.subcategoryName || categoryName(p.category);
       if (!m.has(name.toLowerCase())) m.set(name.toLowerCase(), { slug: p.category, name });
     });
+    masterSubs.filter((c) => c.department === f.department).forEach((c) => {
+      if (!m.has(c.name.toLowerCase())) m.set(c.name.toLowerCase(), { slug: c.slug, name: c.name });
+    });
     return [...m.values()].sort((a, b) => a.name.localeCompare(b.name));
-  }, [all, f.department]);
+  }, [all, f.department, masterSubs]);
 
   const price = Number(f.price) || 0;
   const mrp = Number(f.mrp) || 0;
@@ -76,6 +84,8 @@ export default function ProductForm({ open, product, onClose, onSave }) {
     if (!f.sku.trim()) return setErr('Enter a product code (SKU).');
     if (isNew && all.some((p) => p.sku === f.sku.trim().toUpperCase())) return setErr('That product code (SKU) is already in the catalogue.');
     if (!f.subName.trim()) return setErr('Choose or type a sub-category.');
+    if (masterOnly && !subs.some((x) => x.name.toLowerCase() === f.subName.trim().toLowerCase())) return setErr('Pick a sub-category from the list — Nivora manages the master catalog.');
+    if (isNew && !fixedRetailer && !f.retailerId) return setErr('Choose which retailer sells this product.');
     if (price <= 0) return setErr('Enter a selling price.');
     if (mrp && mrp < price) return setErr('MRP cannot be lower than the selling price.');
     /* Mandatory on new products; legacy catalogue rows without images stay editable
@@ -122,6 +132,7 @@ export default function ProductForm({ open, product, onClose, onSave }) {
       rating: product?.rating ?? 4.2,
       reviewCount: product?.reviewCount ?? 0,
       badges: product?.badges ?? (isNew ? ['New'] : []),
+      retailerId: product?.retailerId || fixedRetailer || f.retailerId,
     });
     onClose();
   };
@@ -195,6 +206,14 @@ export default function ProductForm({ open, product, onClose, onSave }) {
 
           {/* fields */}
           <div className="grid gap-3 sm:grid-cols-2">
+            {isNew && !fixedRetailer && retailers.length > 0 && (
+              <label className="block sm:col-span-2">
+                <span className={LABEL}>Sold by (retailer)</span>
+                <select value={f.retailerId} onChange={(e) => set('retailerId')(e.target.value)} className={SELECT}>
+                  {retailers.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
+                </select>
+              </label>
+            )}
             <Field label="Product name" value={f.name} onChange={(e) => set('name')(e.target.value)} placeholder="e.g. cPVC Elbow" required />
             <div>
               <Field
@@ -227,7 +246,7 @@ export default function ProductForm({ open, product, onClose, onSave }) {
                 list="subcategory-options"
                 value={f.subName}
                 onChange={(e) => set('subName')(e.target.value)}
-                placeholder={subs.length ? 'Pick one or type a new name' : 'Type a new sub-category'}
+                placeholder={masterOnly ? 'Pick from the master catalog' : subs.length ? 'Pick one or type a new name' : 'Type a new sub-category'}
                 className={SELECT}
               />
               <datalist id="subcategory-options">
@@ -235,7 +254,7 @@ export default function ProductForm({ open, product, onClose, onSave }) {
               </datalist>
               <span className="mt-1.5 block text-[11.5px] text-ink-35">
                 {f.subName.trim() && !subs.some((s) => s.name.toLowerCase() === f.subName.trim().toLowerCase())
-                  ? `“${f.subName.trim()}” will be added as a new sub-category.`
+                  ? (masterOnly ? 'Not in the master catalog — ask Nivora to add it.' : `“${f.subName.trim()}” will be added as a new sub-category.`)
                   : `${subs.length} existing in this category`}
               </span>
             </label>

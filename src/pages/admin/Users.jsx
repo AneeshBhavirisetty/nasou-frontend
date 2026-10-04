@@ -1,316 +1,274 @@
 import { useMemo, useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import Icon from '../../components/Icon';
 import Modal from '../../components/Modal';
-import ExcelExportButton from '../../components/ExcelExportButton';
-import { AdminPageHead, FilterTabs, SearchInput, ViewOnlyBanner } from '../../components/admin/AdminUI';
-import { Badge, Button, Field } from '../../components/ui';
-import { useToast } from '../../context/ToastContext';
+import DataTable from '../../components/admin/DataTable';
+import { AdminPageHead, Avatar, StatusPill, Tabs, ViewOnlyBanner, SELECT_CLS, LABEL_CLS } from '../../components/admin/AdminUI';
+import { Button, Field } from '../../components/ui';
 import { useAuth } from '../../context/AuthContext';
-import { useIam, MODULES, FULL_ACCESS } from '../../context/IamStore';
-import { useOrderStore } from '../../context/OrderStore';
-import { allOrders, formatOrderDate } from '../../data/orders';
+import { useIam } from '../../context/IamStore';
+import { useToast } from '../../context/ToastContext';
+import { createAccount, updateAccount, useAccounts } from '../../store/accounts';
+import { saveSetting } from '../../store/settings';
+import { notify } from '../../store/notifications';
+import { useOrders } from '../../store/orders';
+import { ADMIN_MODULES, LEVEL_LABEL, TEAM_ROLES, levelOptions, teamRoleLabel } from '../../lib/access';
+import { formatOrderDate } from '../../data/orders';
 import { money, cx, isMobile10 } from '../../lib/format';
 
-/* Users & access (client review 2, admin items 5 & 6). Two roles only:
-   - Admins: people who use this console. Each admin's access can be narrowed
-     per module (IAM); the owner always keeps full access.
-   - Customers: everyone who shops, with their order count and spend. */
+/* Team & customers (customer review admin item 1; requirements 3 and 7).
+   Internal users: the Nasou Hive team. Exactly one Owner (the IAM admin);
+   everyone else is a team member with a role preset — Operations, Support,
+   Finance or Management. Customers: everyone who buys. Roles: the access
+   matrix, editable by the Owner without code. */
 
-const LEVEL_LABEL = { none: 'No access', view: 'View', edit: 'Edit' };
-const LEVEL_TONE = { view: 'slate', edit: 'ok' };
-
-function initials(name = '') {
-  return name.split(' ').filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join('') || '?';
+/* customers: accounts + people in the order book without an account */
+export function useCustomers() {
+  const accounts = useAccounts();
+  const orders = useOrders();
+  return useMemo(() => {
+    const m = new Map();
+    for (const a of accounts) {
+      if (a.role !== 'CUSTOMER') continue;
+      m.set(a.id, { id: a.id, account: a, fullName: a.fullName, email: a.email, phone: a.phone, city: a.city || '', status: a.status, joined: a.createdAt, orders: 0, spent: 0, last: 0 });
+    }
+    const byEmail = new Map([...m.values()].filter((c) => c.email).map((c) => [c.email, c]));
+    for (const o of orders) {
+      const c = (o.userId && m.get(o.userId)) || byEmail.get(o.email) || (() => {
+        const id = `e:${o.email || o.phone}`;
+        if (!m.has(id)) m.set(id, { id, account: null, fullName: o.customer, email: o.email, phone: o.phone, city: o.city, status: 'guest', joined: o.createdAt, orders: 0, spent: 0, last: 0 });
+        return m.get(id);
+      })();
+      c.orders += 1;
+      if (o.status !== 'Cancelled') c.spent += o.total;
+      c.last = Math.max(c.last, o.createdAt);
+      if (!c.city) c.city = o.city;
+    }
+    return [...m.values()].filter((c) => c.status !== 'deleted');
+  }, [accounts, orders]);
 }
 
-/* ── add / edit an admin ────────────────────────────────────────────────── */
-function InternalUserForm({ user, users, onClose, onSave }) {
-  const isNew = !user;
-  const [f, setF] = useState(() => ({
-    fullName: '', email: '', phone: '', title: '', status: 'active', permissions: FULL_ACCESS,
-    ...(user || {}),
-  }));
+function MemberForm({ member, team, onClose }) {
+  const toast = useToast();
+  const { user } = useAuth();
+  const isNew = !member;
+  const [f, setF] = useState(() => ({ fullName: '', email: '', phone: '', title: '', teamRole: 'operations', ...(member || {}) }));
   const [err, setErr] = useState('');
-  const set = (k, v) => setF((s) => ({ ...s, [k]: v }));
-  const locked = Boolean(user?.owner); // the owner always keeps full access
-  const perms = locked ? FULL_ACCESS : f.permissions;
+  const set = (k) => (e) => setF((s) => ({ ...s, [k]: e.target.value }));
+  const owner = member?.teamRole === 'owner';
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
     setErr('');
     if (!f.fullName.trim()) return setErr('Enter the person’s name.');
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email)) return setErr('Enter a valid work email.');
-    if (users.some((u) => u.email.toLowerCase() === f.email.trim().toLowerCase() && u.id !== user?.id)) return setErr('Someone already uses that email.');
-    if (f.phone && !isMobile10(f.phone)) return setErr('Mobile must be 10 digits.');
-    onSave({
-      ...f,
-      id: user?.id || `iu_${Date.now().toString(36)}`,
-      fullName: f.fullName.trim(),
-      email: f.email.trim().toLowerCase(),
-      title: f.title.trim(),
-      permissions: locked ? FULL_ACCESS : f.permissions,
-      createdAt: user?.createdAt || Date.now(),
-    });
-    onClose();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email)) return setErr('Enter a valid work email — one account per person, no shared logins.');
+    if (f.phone && !isMobile10(f.phone)) return setErr('Mobile must be 10 digits (used for the two-factor code).');
+    if (team.some((u) => u.email === f.email.trim().toLowerCase() && u.id !== member?.id)) return setErr('Someone on the team already uses that email.');
+    try {
+      if (isNew) {
+        const a = await createAccount({ fullName: f.fullName.trim(), email: f.email, phone: f.phone, title: f.title.trim(), role: 'ADMIN', teamRole: f.teamRole }, { by: user?.fullName });
+        notify({ userId: a.id, icon: 'users', title: 'Welcome to the Nivora team', body: `You joined as ${teamRoleLabel(f.teamRole)}. Two-factor sign-in is on for your account.`, to: '/admin/dashboard' });
+        toast.success(`${a.fullName} added as ${teamRoleLabel(f.teamRole)} — invite sent to ${a.email}`);
+      } else {
+        updateAccount(member.id, { fullName: f.fullName.trim(), phone: f.phone, title: f.title.trim(), ...(owner ? {} : { teamRole: f.teamRole }) }, 'Team member updated');
+        toast.success('Saved');
+      }
+      onClose();
+    } catch (x) {
+      setErr(x.message);
+    }
   };
 
   return (
-    <Modal open onClose={onClose} title={isNew ? 'Add admin' : `Access · ${user.fullName}`} size="lg">
+    <Modal open onClose={onClose} title={isNew ? 'Add an internal user' : `Edit · ${member.fullName}`} size="lg">
       <form onSubmit={submit} className="space-y-5">
         <div className="grid gap-3 sm:grid-cols-2">
-          <Field label="Full name" value={f.fullName} onChange={(e) => set('fullName', e.target.value)} placeholder="e.g. Anita Rao" />
-          <Field label="Work email" type="email" value={f.email} onChange={(e) => set('email', e.target.value)} placeholder="name@nasouhive.com" hint={isNew ? 'They get an invite to set a password' : undefined} />
-          <Field label="Mobile" inputMode="numeric" value={f.phone} onChange={(e) => set('phone', e.target.value.replace(/\D/g, '').slice(0, 10))} placeholder="10 digits" />
-          <Field label="Job title" value={f.title} onChange={(e) => set('title', e.target.value)} placeholder="e.g. Dispatch lead" />
+          <Field label="Full name" value={f.fullName} onChange={set('fullName')} placeholder="e.g. Anita Rao" />
+          <Field label="Work email" type="email" value={f.email} onChange={set('email')} disabled={!isNew} placeholder="name@nasouhive.com" hint={isNew ? 'One account per person — no shared logins' : 'Email is the login and cannot change'} />
+          <Field label="Mobile (for 2FA)" inputMode="numeric" value={f.phone} onChange={(e) => setF((s) => ({ ...s, phone: e.target.value.replace(/\D/g, '').slice(0, 10) }))} placeholder="10 digits" />
+          <Field label="Job title" value={f.title} onChange={set('title')} placeholder="e.g. Settlements lead" />
         </div>
-
-        {/* IAM permission matrix */}
         <div>
-          <div className="mb-2 flex flex-wrap items-end justify-between gap-2">
-            <p className="text-[11.5px] font-semibold uppercase tracking-[0.16em] text-forest-800">Permissions</p>
-            {!locked && (
-              <button type="button" onClick={() => set('permissions', FULL_ACCESS)} className="text-[12px] font-bold text-forest hover:underline">
-                Give full access
-              </button>
-            )}
-          </div>
-          {locked
-            ? <p className="mb-2 rounded-[12px] bg-sunk px-3 py-2 text-[12px] font-semibold text-forest">The owner always has full access to every module.</p>
-            : <p className="mb-2 text-[12px] text-ink-50">New admins start with full access — narrow any module to View or None.</p>}
-          <div className="divide-y divide-line-soft overflow-hidden rounded-[16px] border border-line-soft">
-            {MODULES.map((m) => (
-              <div key={m.key} className="flex flex-wrap items-center justify-between gap-2 bg-white px-3 py-2.5 sm:px-4">
-                <div className="min-w-0">
-                  <p className="text-[13.5px] font-bold text-ink">{m.label}</p>
-                  <p className="text-[11.5px] text-ink-50">{m.note}</p>
-                </div>
-                <div role="radiogroup" aria-label={`${m.label} access`} className="flex rounded-[12px] bg-[#f0f4f2] p-1">
-                  {['none', 'view', 'edit'].map((l) => (
-                    <button
-                      key={l}
-                      type="button"
-                      role="radio"
-                      aria-checked={perms[m.key] === l}
-                      disabled={locked}
-                      onClick={() => set('permissions', { ...f.permissions, [m.key]: l })}
-                      className={cx(
-                        'rounded-[9px] px-3 py-1.5 text-[12px] font-bold transition disabled:cursor-not-allowed',
-                        perms[m.key] === l ? (l === 'none' ? 'bg-white text-clay-600 shadow-sm' : 'bg-forest text-white shadow-sm') : 'text-ink-50 hover:text-forest'
-                      )}
-                    >
-                      {l === 'none' ? 'None' : LEVEL_LABEL[l]}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
+          <span className={LABEL_CLS}>Role</span>
+          {owner ? (
+            <p className="rounded-[12px] bg-sunk px-3 py-2.5 text-[13px] font-semibold text-forest">Owner — the one IAM admin. Always full access; cannot be changed or suspended.</p>
+          ) : (
+            <div className="grid gap-2 sm:grid-cols-2">
+              {TEAM_ROLES.filter((r) => r.key !== 'owner').map((r) => (
+                <label key={r.key} className={cx('flex cursor-pointer items-start gap-3 rounded-[14px] border p-3 transition', f.teamRole === r.key ? 'border-forest bg-emerald-50/50' : 'border-line hover:border-forest/40')}>
+                  <input type="radio" name="teamRole" checked={f.teamRole === r.key} onChange={() => setF((s) => ({ ...s, teamRole: r.key }))} className="mt-1 accent-[#1f5c4a]" />
+                  <span><span className="block text-[14px] font-bold text-ink">{r.label}</span><span className="block text-[12px] text-ink-50">{r.blurb}</span></span>
+                </label>
+              ))}
+            </div>
+          )}
+          <p className="mt-2 text-[12px] text-ink-50">What each role can do is set in the Roles tab. There is only ever one Owner.</p>
         </div>
-
         {err && <p role="alert" className="rounded-md bg-clay-50 px-3 py-2.5 text-[13px] text-clay-600">{err}</p>}
         <div className="flex justify-end gap-3 border-t border-line pt-4">
-          <button type="button" onClick={onClose} className="h-10 rounded-md border border-line px-5 text-[13.5px] font-semibold text-ink-70 transition hover:border-ink-35">Cancel</button>
-          <Button type="submit" icon={isNew ? 'userPlus' : 'check'}>{isNew ? 'Add admin & send invite' : 'Save access'}</Button>
+          <button type="button" onClick={onClose} className="h-10 rounded-md border border-line px-5 text-[13.5px] font-semibold text-ink-70">Cancel</button>
+          <Button type="submit" icon={isNew ? 'userPlus' : 'check'}>{isNew ? 'Add & send invite' : 'Save'}</Button>
         </div>
       </form>
     </Modal>
   );
 }
 
-/* ── page ────────────────────────────────────────────────────────────────── */
-export default function AdminUsers() {
+function RolesMatrix({ presets, canEdit }) {
   const toast = useToast();
-  const { user: signedIn } = useAuth();
-  const { users, saveUser, removeUser, me, can } = useIam();
-  const { placed } = useOrderStore();
-  const canEdit = can('users', 'edit');
-  const [tab, setTab] = useState('admins');
-  const [q, setQ] = useState('');
-  const [editing, setEditing] = useState(undefined); // undefined closed · null new · object edit
+  const [draft, setDraft] = useState(presets);
+  const dirty = JSON.stringify(draft) !== JSON.stringify(presets);
+  return (
+    <section className="overflow-hidden rounded-[22px] border border-line bg-white shadow-card">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line-soft p-4">
+        <p className="text-[13px] text-ink-50">V = view · E = view and act · Request / Start / Approve are the special steps from the brief. Owner is always full access.</p>
+        {canEdit && <Button size="sm" icon="check" disabled={!dirty} onClick={() => { saveSetting('presets', draft, 'Changed team role permissions'); toast.success('Role permissions saved — they apply on the next click'); }}>Save roles</Button>}
+      </div>
+      <div className="thin-bar overflow-x-auto">
+        <table className="w-full min-w-[820px] text-[13px]">
+          <thead className="bg-[#f6f3ed]">
+            <tr>
+              <th className="px-4 py-3 text-left text-[11px] font-extrabold uppercase tracking-[0.1em] text-forest-800">Module</th>
+              {TEAM_ROLES.map((r) => <th key={r.key} className="px-2 py-3 text-center text-[11px] font-extrabold uppercase tracking-[0.1em] text-forest-800">{r.label}</th>)}
+            </tr>
+          </thead>
+          <tbody>
+            {ADMIN_MODULES.map((m) => (
+              <tr key={m.key} className="border-t border-line-soft">
+                <td className="px-4 py-2.5"><p className="font-bold text-ink">{m.label}</p><p className="text-[11.5px] text-ink-50">{m.note}</p></td>
+                {TEAM_ROLES.map((r) => {
+                  const v = r.key === 'owner' ? 'edit' : draft[r.key]?.[m.key] || 'none';
+                  return (
+                    <td key={r.key} className="px-2 py-2.5 text-center">
+                      <select
+                        value={v}
+                        disabled={!canEdit || r.key === 'owner'}
+                        onChange={(e) => setDraft((d) => ({ ...d, [r.key]: { ...d[r.key], [m.key]: e.target.value } }))}
+                        className={cx('h-9 rounded-full border px-2 text-[12px] font-bold outline-none disabled:cursor-not-allowed', v === 'none' ? 'border-line bg-white text-ink-35' : v === 'view' ? 'border-slate/20 bg-slate-50 text-slate' : 'border-emerald/30 bg-emerald-50 text-emerald-700')}
+                        aria-label={`${r.label} — ${m.label}`}
+                      >
+                        {levelOptions(m.key).map((l) => <option key={l} value={l}>{LEVEL_LABEL[l]}</option>)}
+                      </select>
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
 
-  /* customers = everyone in the order book (seeded + placed), with totals */
-  const customers = useMemo(() => {
-    const m = new Map();
-    for (const o of allOrders(placed)) {
-      const key = (o.email || o.customer).toLowerCase();
-      const c = m.get(key) || { id: key, fullName: o.customer, email: o.email || '—', phone: o.phone, city: o.city, orders: 0, spent: 0, last: 0 };
-      c.orders += 1;
-      c.spent += o.status === 'Cancelled' ? 0 : o.total;
-      c.last = Math.max(c.last, o.createdAt || 0);
-      m.set(key, c);
-    }
-    return [...m.values()].sort((a, b) => b.last - a.last);
-  }, [placed]);
+export default function AdminUsers() {
+  const navigate = useNavigate();
+  const toast = useToast();
+  const [params, setParams] = useSearchParams();
+  const { user } = useAuth();
+  const { users, can, presets } = useIam();
+  const customers = useCustomers();
+  const [editing, setEditing] = useState(undefined);
+  const canTeam = can('team');
+  const canTeamEdit = can('team', 'edit');
+  const tab = params.get('tab') || (canTeam ? 'team' : 'customers');
 
-  const needle = q.trim().toLowerCase();
-  const admins = users.filter((u) => !needle || `${u.fullName} ${u.email} ${u.title}`.toLowerCase().includes(needle));
-  const shoppers = customers.filter((c) => !needle || `${c.fullName} ${c.email} ${c.city}`.toLowerCase().includes(needle));
+  const tabs = [
+    canTeam && { value: 'team', label: 'Internal users', count: users.length, icon: 'shieldCheck' },
+    can('customers') && { value: 'customers', label: 'Customers', count: customers.length, icon: 'user' },
+    canTeam && { value: 'roles', label: 'Roles & permissions', icon: 'key' },
+  ].filter(Boolean);
 
-  const isMe = (u) => me?.id === u.id;
-  const protectedUser = (u) => u.owner || isMe(u); // owner and yourself can't be suspended or removed
-
-  const toggleStatus = (u) => {
-    const next = u.status === 'active' ? 'suspended' : 'active';
-    saveUser({ ...u, status: next });
+  const toggle = (u) => {
+    const next = u.status === 'suspended' ? 'active' : 'suspended';
+    updateAccount(u.id, { status: next }, next === 'active' ? 'Team member re-activated' : 'Team member suspended');
     toast.success(`${u.fullName} ${next === 'active' ? 're-activated' : 'suspended'}`);
   };
 
   return (
     <div className="space-y-5">
-      <AdminPageHead
-        title="Users & access"
-        note={tab === 'admins'
-          ? `${users.length} admins · ${users.filter((u) => u.status === 'active').length} active`
-          : `${customers.length} customers from the order book`}
-      >
-        {tab === 'admins' && canEdit && <Button size="sm" icon="userPlus" onClick={() => setEditing(null)}>Add admin</Button>}
-        {tab === 'admins' ? (
-          <ExcelExportButton
-            filename="nasou-admins"
-            label="Export"
-            headers={['Name', 'Email', 'Phone', 'Title', 'Status', ...MODULES.map((m) => m.label)]}
-            rows={admins.map((u) => [u.fullName, u.email, u.phone, u.title, u.status, ...MODULES.map((m) => LEVEL_LABEL[(u.owner ? FULL_ACCESS : u.permissions)[m.key] || 'none'])])}
-          />
-        ) : (
-          <ExcelExportButton
-            filename="nasou-customers"
-            label="Export"
-            headers={['Name', 'Email', 'Phone', 'City', 'Orders', 'Total spent', 'Last order']}
-            rows={shoppers.map((c) => [c.fullName, c.email, c.phone, c.city, c.orders, c.spent, c.last ? formatOrderDate(c.last) : ''])}
-          />
-        )}
+      <AdminPageHead title="Team & customers" note="Internal users get access through their role; customers are everyone who buys on Nivora.">
+        {tab === 'team' && canTeamEdit && <Button size="sm" icon="userPlus" onClick={() => setEditing(null)}>Add internal user</Button>}
       </AdminPageHead>
 
-      {!canEdit && <ViewOnlyBanner what="users" />}
+      <Tabs value={tab} onChange={(v) => setParams({ tab: v }, { replace: true })} options={tabs} />
 
-      <FilterTabs
-        label="User type"
-        value={tab}
-        onChange={setTab}
-        options={[
-          { value: 'admins', label: 'Admins', count: users.length },
-          { value: 'customers', label: 'Customers', count: customers.length },
-        ]}
-      />
-
-      <div className="space-y-3 rounded-[20px] border border-line bg-white/86 p-3 shadow-card">
-        <SearchInput placeholder={tab === 'admins' ? 'Search name, email or title' : 'Search name, email or city'} value={q} onChange={(e) => setQ(e.target.value)} />
-
-      </div>
-
-      {tab === 'admins' ? (
-        <div className="grid gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-3">
-          <AnimatePresence initial={false}>
-            {admins.map((u) => {
-              const p = u.owner ? FULL_ACCESS : u.permissions;
-              const granted = MODULES.filter((m) => (p[m.key] || 'none') !== 'none');
-              return (
-                <motion.article
-                  key={u.id}
-                  layout
-                  initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.97 }}
-                  className={cx('flex flex-col rounded-[18px] border border-line bg-white p-4 shadow-card', u.status === 'suspended' && 'opacity-70')}
-                >
-                  <div className="flex items-start gap-3">
-                    <span className={cx('grid h-11 w-11 shrink-0 place-items-center rounded-full text-[13px] font-black', u.owner ? 'bg-forest text-white' : 'bg-sunk text-forest')}>
-                      {initials(u.fullName)}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="flex items-center gap-1.5 truncate text-[14.5px] font-bold text-ink">
-                        {u.fullName}{isMe(u) && <span className="rounded-full bg-emerald-50 px-1.5 text-[10px] font-bold text-emerald-700">You</span>}
-                      </p>
-                      <p className="truncate text-[12px] text-ink-50">{u.title || 'Admin'}</p>
-                    </div>
-                    <Badge tone={u.owner ? 'dark' : 'neutral'} className="shrink-0">{u.owner ? 'Owner' : 'Admin'}</Badge>
-                  </div>
-
-                  <div className="mt-3 space-y-1 text-[12.5px] text-ink-70">
-                    <p className="flex items-center gap-2 truncate"><Icon name="mail" size={13} className="shrink-0 text-ink-35" /> {u.email}</p>
-                    {u.phone && <p className="tnum flex items-center gap-2"><Icon name="phone" size={13} className="shrink-0 text-ink-35" /> +91 {u.phone}</p>}
-                  </div>
-
-                  <div className="mt-3 flex flex-wrap gap-1.5">
-                    {granted.length === 0 && <span className="text-[12px] text-ink-35">No modules granted</span>}
-                    {granted.length === MODULES.length && MODULES.every((m) => p[m.key] === 'edit')
-                      ? <Badge tone="ok" className="!py-0.5">Full access</Badge>
-                      : granted.map((m) => (
-                      <Badge key={m.key} tone={LEVEL_TONE[p[m.key]]} className="!py-0.5">{m.label.split(' ')[0]} · {LEVEL_LABEL[p[m.key]]}</Badge>
-                      ))}
-                  </div>
-
-                  <div className="mt-auto flex items-center justify-between gap-2 border-t border-line-soft pt-3">
-                    <span className={cx('flex items-center gap-1.5 text-[12px] font-bold', u.status === 'active' ? 'text-emerald-700' : 'text-amber')}>
-                      <span className={cx('h-2 w-2 rounded-full', u.status === 'active' ? 'bg-emerald' : 'bg-amber')} />
-                      {u.status === 'active' ? 'Active' : 'Suspended'}
-                    </span>
-                    {canEdit && (
-                      <div className="flex gap-1.5">
-                        <button onClick={() => setEditing(u)} className="flex h-8 items-center gap-1 rounded-md border border-line px-2.5 text-[12px] font-bold text-forest transition hover:border-forest" aria-label={`Edit access for ${u.fullName}`}>
-                          <Icon name="key" size={13} /> Access
-                        </button>
-                        {!protectedUser(u) && (
-                          <>
-                            <button onClick={() => toggleStatus(u)} className="grid h-8 w-8 place-items-center rounded-md border border-line text-ink-50 transition hover:text-ink" aria-label={u.status === 'active' ? `Suspend ${u.fullName}` : `Activate ${u.fullName}`} title={u.status === 'active' ? 'Suspend' : 'Activate'}>
-                              <Icon name={u.status === 'active' ? 'lock' : 'check'} size={14} />
-                            </button>
-                            <button onClick={() => { if (window.confirm(`Remove ${u.fullName} from the console?`)) { removeUser(u.id); toast.success(`${u.fullName} removed`); } }} className="grid h-8 w-8 place-items-center rounded-md border border-line text-ink-50 transition hover:border-clay/40 hover:text-clay" aria-label={`Remove ${u.fullName}`}>
-                              <Icon name="trash" size={14} />
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </motion.article>
-              );
-            })}
-          </AnimatePresence>
-          {admins.length === 0 && <p className="rounded-[18px] border border-dashed border-line bg-white/60 px-4 py-12 text-center text-[13px] text-ink-50 md:col-span-2 xl:col-span-3">No admins match.</p>}
-        </div>
-      ) : (
-        <div className="grid gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {shoppers.map((c) => (
-            <article key={c.id} className="flex flex-col rounded-[18px] border border-line bg-white p-4 shadow-card">
-              <div className="flex items-start gap-3">
-                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-emerald-50 text-[13px] font-black text-emerald-700">{initials(c.fullName)}</span>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-[14.5px] font-bold text-ink">{c.fullName}</p>
-                  <p className="truncate text-[12px] text-ink-50">{c.city}{c.last ? ` · last order ${formatOrderDate(c.last)}` : ''}</p>
-                </div>
-                <Badge tone="neutral" className="shrink-0">Customer</Badge>
-              </div>
-              <div className="mt-3 space-y-1 text-[12.5px] text-ink-70">
-                <p className="flex items-center gap-2 truncate"><Icon name="mail" size={13} className="shrink-0 text-ink-35" /> {c.email}</p>
-                {c.phone && <p className="tnum flex items-center gap-2"><Icon name="phone" size={13} className="shrink-0 text-ink-35" /> +91 {c.phone}</p>}
-              </div>
-              <div className="mt-3 grid grid-cols-2 gap-2 border-t border-line-soft pt-3">
-                <div><p className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-ink-35">Orders</p><p className="tnum text-[16px] font-bold text-forest">{c.orders}</p></div>
-                <div><p className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-ink-35">Spent</p><p className="tnum text-[16px] font-bold text-forest">{money(c.spent)}</p></div>
-              </div>
-            </article>
-          ))}
-          {shoppers.length === 0 && <p className="rounded-[18px] border border-dashed border-line bg-white/60 px-4 py-12 text-center text-[13px] text-ink-50 md:col-span-2 xl:col-span-3">No customers match.</p>}
-        </div>
+      {tab === 'team' && (
+        <>
+          {!canTeamEdit && <ViewOnlyBanner what="the team" />}
+          <DataTable
+            id="team"
+            rows={users}
+            columns={[
+              { key: 'fullName', label: 'Person', always: true, render: (u) => (
+                <span className="flex min-w-[220px] items-center gap-3">
+                  <Avatar name={u.fullName} size="sm" tone={u.teamRole === 'owner' ? 'dark' : 'sunk'} />
+                  <span className="min-w-0"><span className="flex items-center gap-1.5 font-bold text-ink">{u.fullName}{u.id === user?.id && <span className="rounded-full bg-emerald-50 px-1.5 text-[10px] text-emerald-700">You</span>}</span><span className="block truncate text-[11.5px] text-ink-50">{u.email}</span></span>
+                </span>
+              ) },
+              { key: 'teamRole', label: 'Role', value: (u) => teamRoleLabel(u.teamRole), render: (u) => <span className={cx('rounded-full px-2.5 py-1 text-[11.5px] font-bold', u.teamRole === 'owner' ? 'bg-forest text-white' : 'bg-sunk text-forest')}>{u.teamRole === 'owner' ? 'Owner · IAM admin' : teamRoleLabel(u.teamRole)}</span> },
+              { key: 'title', label: 'Title' },
+              { key: 'phone', label: 'Mobile', render: (u) => (u.phone ? `+91 ${u.phone}` : '—') },
+              { key: 'twofa', label: '2FA', sortable: false, value: () => 'On', render: () => <span className="flex items-center gap-1 text-[12px] font-bold text-emerald-700"><Icon name="shieldCheck" size={13} /> On</span> },
+              { key: 'status', label: 'Status', render: (u) => <StatusPill status={u.status} /> },
+              { key: 'lastLoginAt', label: 'Last sign-in', render: (u) => (u.lastLoginAt ? formatOrderDate(u.lastLoginAt) : '—') },
+              ...(canTeamEdit ? [{ key: 'act', label: '', sortable: false, csv: false, always: true, render: (u) => (
+                <span className="flex justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
+                  {u.teamRole !== 'owner' && u.id !== user?.id && (
+                    <>
+                      <button onClick={() => toggle(u)} className="h-8 rounded-full border border-line px-3 text-[12px] font-bold text-ink-70 hover:border-forest">{u.status === 'suspended' ? 'Re-activate' : 'Suspend'}</button>
+                      <button onClick={() => { if (window.confirm(`Remove ${u.fullName} from the team? Their audit history stays.`)) { updateAccount(u.id, { status: 'deleted' }, 'Team member removed'); toast.success('Removed'); } }} className="grid h-8 w-8 place-items-center rounded-full border border-line text-ink-50 hover:text-clay" aria-label={`Remove ${u.fullName}`}><Icon name="trash" size={13} /></button>
+                    </>
+                  )}
+                </span>
+              ) }] : []),
+            ]}
+            searchText={(u) => `${u.fullName} ${u.email} ${u.title} ${teamRoleLabel(u.teamRole)}`}
+            searchPlaceholder="Search name, email, role"
+            filters={[
+              { key: 'role', label: 'Role', options: TEAM_ROLES.map((r) => ({ value: r.key, label: r.label })), test: (u, v) => u.teamRole === v },
+              { key: 'status', label: 'Status', options: [{ value: 'active', label: 'Active' }, { value: 'suspended', label: 'Suspended' }], test: (u, v) => u.status === v },
+            ]}
+            onRowClick={canTeamEdit ? (u) => setEditing(u) : undefined}
+            exportName="team"
+          />
+        </>
       )}
 
-      {editing !== undefined && (
-        <InternalUserForm
-          key={editing?.id ?? 'new'}
-          user={editing}
-          users={users}
-          onClose={() => setEditing(undefined)}
-          onSave={(u) => {
-            saveUser(u);
-            toast.success(editing ? `Access updated for ${u.fullName}` : `${u.fullName} added — invite sent to ${u.email}`);
-          }}
+      {tab === 'customers' && (
+        <DataTable
+          id="customers"
+          rows={customers}
+          columns={[
+            { key: 'fullName', label: 'Customer', always: true, render: (c) => (
+              <span className="flex min-w-[200px] items-center gap-3"><Avatar name={c.fullName} size="sm" /><span className="min-w-0"><span className="block font-bold text-ink">{c.fullName}</span><span className="block truncate text-[11.5px] text-ink-50">{c.email || '—'}</span></span></span>
+            ) },
+            { key: 'phone', label: 'Mobile', render: (c) => (c.phone ? `+91 ${c.phone}` : '—') },
+            { key: 'city', label: 'City' },
+            { key: 'orders', label: 'Orders', align: 'right' },
+            { key: 'spent', label: 'Spent', align: 'right', render: (c) => money(c.spent) },
+            { key: 'last', label: 'Last order', render: (c) => (c.last ? formatOrderDate(c.last) : '—') },
+            { key: 'status', label: 'Account', render: (c) => (c.status === 'guest' ? <StatusPill status="guest" label="No account" tone="neutral" /> : <StatusPill status={c.status} />) },
+            { key: 'joined', label: 'Since', hidden: true, render: (c) => formatOrderDate(c.joined) },
+          ]}
+          searchText={(c) => `${c.fullName} ${c.email} ${c.phone} ${c.city}`}
+          searchPlaceholder="Search name, email, mobile, city"
+          filters={[
+            { key: 'status', label: 'Account', options: [['active', 'Active'], ['blocked', 'Blocked'], ['deactivated', 'Deactivated'], ['guest', 'No account']].map(([value, label]) => ({ value, label })), test: (c, v) => c.status === v },
+            { key: 'city', label: 'City', options: [...new Set(customers.map((c) => c.city).filter(Boolean))].sort().map((v) => ({ value: v, label: v })), test: (c, v) => c.city === v },
+            { key: 'buyer', label: 'Buyer', options: [{ value: 'repeat', label: 'Returning (2+ orders)' }, { value: 'new', label: 'One order' }, { value: 'none', label: 'No orders yet' }], test: (c, v) => (v === 'repeat' ? c.orders > 1 : v === 'new' ? c.orders === 1 : c.orders === 0) },
+          ]}
+          date={(c) => c.last || c.joined}
+          initialSort={{ key: 'last', dir: 'desc' }}
+          onRowClick={(c) => navigate(`/admin/customers/${encodeURIComponent(c.id)}`)}
+          exportName="customers"
+          canExport={can('customers')}
         />
       )}
 
-      <p className="flex items-start gap-2 text-[12px] text-ink-35">
-        <Icon name="shieldCheck" size={13} className="mt-0.5 shrink-0" />
-        Each admin only sees the modules you allow; “View” opens a module read-only. The owner always has full access. Signed in as {signedIn?.fullName}.
-      </p>
+      {tab === 'roles' && <RolesMatrix key={JSON.stringify(presets)} presets={presets} canEdit={canTeamEdit} />}
+
+      {editing !== undefined && <MemberForm key={editing?.id || 'new'} member={editing} team={users} onClose={() => setEditing(undefined)} />}
     </div>
   );
 }

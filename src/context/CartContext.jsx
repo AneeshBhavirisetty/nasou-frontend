@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useState } from 'react';
-import { findProduct, offersFor } from '../data/catalog';
+import { findProduct, isListed, offersFor, sellerName } from '../data/catalog';
 import { useAdminStore } from './AdminStore';
 import { applyBulkRules } from '../lib/pricing';
 import { useNotifications } from './NotificationStore';
@@ -85,7 +85,7 @@ export function CartProvider({ children }) {
     const rows = lines.map((line, index) => {
       const product = findProduct(line.id);
       const supplier = offersFor(product).find((o) => o.id === line.supplierId);
-      return { ...line, index, product, supplier };
+      return { ...line, index, product, supplier, retailerId: product?.retailerId, seller: sellerName(product), listed: isListed(product) };
     });
     /* bulk pricing: each line may carry { amount, rule } */
     const { perLine } = applyBulkRules(rows, bulkRules);
@@ -113,9 +113,24 @@ export function CartProvider({ children }) {
     };
   }, [items]);
 
+  /* Marketplace (requirement 15): the cart is grouped by retailer — each
+     group becomes its own sub-order at checkout. */
+  const groups = useMemo(() => {
+    const m = new Map();
+    for (const it of items) {
+      const g = m.get(it.retailerId) || { retailerId: it.retailerId, name: it.seller || 'Nivora seller', items: [], subtotal: 0, listed: true };
+      g.items.push(it);
+      g.subtotal += it.price * it.qty - (it.bulk?.amount || 0);
+      g.listed = g.listed && it.listed;
+      m.set(it.retailerId, g);
+    }
+    return [...m.values()];
+  }, [items]);
+
   const value = useMemo(
     () => ({
       items,
+      groups,
       totals,
       open,
       toast,
@@ -125,7 +140,7 @@ export function CartProvider({ children }) {
       remove: (index) => dispatch({ type: 'remove', index }),
       clear: () => dispatch({ type: 'clear' }),
     }),
-    [items, totals, open, toast, add]
+    [items, groups, totals, open, toast, add]
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

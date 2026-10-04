@@ -6,12 +6,19 @@ import { cx } from '../../lib/format';
 import { EASE } from '../../lib/motion';
 import { ROLE_LABEL } from '../../lib/roles';
 import { whatsappLink } from '../../data/site';
+import { getOrders } from '../../store/orders';
+import { adminStore } from '../../context/AdminStore';
+import { describeBulk } from '../../lib/pricing';
 
 /* ============================================================================
  * ChatWidget — floating support chat, bottom-right.
  *
- *   Customer : one thread with the Nasou support desk.
+ *   Customer : one thread with the Nivora support desk.
  *   Admin               : an inbox of every customer thread, with replies.
+ *
+ * Review 5: restyled to the reference (cream thread, forest header, sand
+ * chips) and the quick questions answer from live data — your latest order's
+ * parts, active bulk offers, invoices — before a person picks the thread up.
  *
  * UI ONLY. Threads live in localStorage behind the tiny store below so the
  * widget is demoable end-to-end in one browser. Swap `useChatStore` for the
@@ -19,8 +26,29 @@ import { whatsappLink } from '../../data/site';
  * ==========================================================================*/
 
 const KEY = 'nasou_chat_v1';
-const AGENT = { name: 'Nasou support', sub: 'Replies in a few minutes' };
-const QUICK = ['Is this size in stock?', 'Bulk price for 500 pcs?', 'Where is my order?', 'GST invoice copy'];
+const AGENT = { name: 'Nivora support', sub: 'Replies in a few minutes' };
+const QUICK = ['Where is my order?', 'Bulk price for 500 pcs?', 'GST invoice copy', 'Is this size in stock?'];
+const SHOW = { Pending: 'placed', Processing: 'being packed', Shipped: 'on the way', Delivered: 'delivered', Cancelled: 'cancelled' };
+
+/* Instant answers for the quick questions; anything else gets an
+   acknowledgement until an agent replies. */
+function autoReply(text, userId) {
+  const t = text.toLowerCase();
+  if (t.includes('where is my order') || t.includes('track')) {
+    const o = getOrders().filter((x) => x.userId === userId).sort((a, b) => b.createdAt - a.createdAt)[0];
+    if (!o) return 'I could not find an order on this account yet. Once you order, every seller’s part shows up under Orders.';
+    const parts = o.parts.map((p) => `${p.retailerName}: ${SHOW[p.status]}`).join(' · ');
+    return `Your latest order ${o.id} — ${parts}. Full tracking is under Orders.`;
+  }
+  if (t.includes('bulk')) {
+    const rules = (adminStore.get().bulkRules || []).filter((r) => r.active).slice(0, 3);
+    return rules.length
+      ? `Bulk prices apply by themselves in the cart: ${rules.map((r) => `${r.name} — ${describeBulk(r)} from ${r.minQty} units`).join('; ')}. For 500+ pieces, send an enquiry and we will quote.`
+      : 'Bulk prices apply by themselves in the cart once you reach the quantity. For 500+ pieces, send an enquiry and we will quote.';
+  }
+  if (t.includes('invoice') || t.includes('gst')) return 'Every order has a GST invoice — open Orders, pick the order and tap Invoice. Trade customers can ask us to add their GSTIN.';
+  return 'Thanks! A Nivora agent is on this and will reply here shortly.';
+}
 
 const now = () => Date.now();
 const readAll = () => {
@@ -120,7 +148,7 @@ function Bubble({ m, mine }) {
       <div
         className={cx(
           'max-w-[78%] rounded-[14px] px-3.5 py-2.5 text-[13px] leading-snug',
-          mine ? 'rounded-br-[4px] bg-forest text-white' : 'rounded-bl-[4px] bg-white text-ink shadow-sm'
+          mine ? 'rounded-br-[4px] bg-forest text-white shadow-[0_8px_20px_rgba(31,92,74,0.22)]' : 'rounded-bl-[4px] border border-white/80 bg-white text-ink shadow-[0_6px_16px_rgba(37,88,73,0.08)]'
         )}
       >
         {m.text}
@@ -140,21 +168,21 @@ function Composer({ onSend, placeholder = 'Type a message…' }) {
     setV('');
   };
   return (
-    <form onSubmit={submit} className="flex items-center gap-2 border-t border-line-soft bg-white/80 p-3">
+    <form onSubmit={submit} className="flex items-center gap-2 border-t border-white/70 bg-white p-3">
       <input
         value={v}
         onChange={(e) => setV(e.target.value)}
         placeholder={placeholder}
         aria-label="Message"
-        className="h-10 min-w-0 flex-1 rounded-[12px] border border-line-soft bg-white px-4 text-[13px] text-ink outline-none transition placeholder:text-ink-35 focus:border-forest/50"
+        className="h-11 min-w-0 flex-1 rounded-full border border-line bg-[#fbfaf7] px-4 text-[13px] text-ink outline-none transition placeholder:text-ink-35 focus:border-forest/50 focus:bg-white"
       />
       <button
         type="submit"
         disabled={!v.trim()}
         aria-label="Send message"
-        className="flex h-10 shrink-0 items-center gap-1.5 rounded-[12px] bg-forest px-4 text-[13px] font-bold text-white transition hover:bg-forest-800 disabled:opacity-40"
+        className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-forest text-white shadow-btn transition hover:bg-forest-800 disabled:opacity-40"
       >
-        <Icon name="send" size={14} /> Send
+        <Icon name="send" size={16} />
       </button>
     </form>
   );
@@ -171,28 +199,29 @@ function CustomerChat({ store, threadId, who }) {
 
   const send = (text) => {
     store.send(threadId, 'user', text, who);
-    /* Placeholder auto-ack so the demo feels alive — the real backend replaces this. */
-    setTimeout(() => store.send(threadId, 'agent', 'Thanks! A Nasou agent is on this and will reply here shortly.', who), 1100);
+    /* instant answer from live data; the real chat backend takes over from here */
+    setTimeout(() => store.send(threadId, 'agent', autoReply(text, who?.id), who), 900);
   };
 
   return (
     <>
-      <div className="flex-1 space-y-3 overflow-y-auto bg-canvas p-4">
+      <div className="thin-bar flex-1 space-y-3 overflow-y-auto bg-[#f4ede2] p-4">
         {msgs.length === 0 && (
-          <div className="rounded-[14px] bg-white p-3.5 text-[13px] leading-relaxed text-ink-70 shadow-sm">
-            Hi{who?.name ? ` ${who.name.split(' ')[0]}` : ''} — ask us about stock, sizes, bulk pricing or an order.
+          <div className="rounded-[18px] border border-white/80 bg-white p-4 text-[13px] leading-relaxed text-ink-70 shadow-[0_6px_16px_rgba(37,88,73,0.08)]">
+            <p className="font-hero text-[16px] font-semibold text-forest">Hi{who?.name && who.name !== 'Guest' ? ` ${who.name.split(' ')[0]}` : ''} 👋</p>
+            <p className="mt-1">Ask about stock, sizes, bulk pricing or an order — the quick questions below answer instantly.</p>
           </div>
         )}
         {msgs.map((m) => <Bubble key={m.id} m={m} mine={m.from === 'user'} />)}
         <div ref={endRef} />
       </div>
       {msgs.length === 0 && (
-        <div className="no-bar flex gap-2 overflow-x-auto border-t border-line-soft bg-canvas px-3 py-2.5">
+        <div className="no-bar flex gap-2 overflow-x-auto border-t border-white/70 bg-[#f4ede2] px-3 py-2.5">
           {QUICK.map((q) => (
             <button
               key={q}
               onClick={() => send(q)}
-              className="shrink-0 rounded-full bg-sunk px-3 py-1.5 text-[11px] font-bold text-forest transition hover:bg-forest hover:text-white"
+              className="pill-sand shrink-0 px-3 py-1.5 text-[11.5px]"
             >
               {q}
             </button>
@@ -278,7 +307,7 @@ export default function ChatWidget() {
     () => (isAuthenticated ? `u-${user?.id ?? 'me'}` : 'guest'),
     [isAuthenticated, user?.id]
   );
-  const who = { name: user?.fullName || 'Guest', role: user?.role || 'CUSTOMER' };
+  const who = { id: user?.id, name: user?.fullName || 'Guest', role: user?.role || 'CUSTOMER' };
 
   const unread = isAdmin
     ? store.threads.reduce((n, t) => n + (t.unreadAdmin || 0), 0)
@@ -293,16 +322,17 @@ export default function ChatWidget() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.96 }}
             transition={{ duration: 0.22, ease: EASE }}
-            className="fixed bottom-[calc(var(--tabbar-h,0px)+5rem)] right-4 z-[190] flex h-[min(70dvh,480px)] w-[calc(100vw-2rem)] max-w-[384px] flex-col overflow-hidden rounded-[20px] border border-white/70 bg-canvas/95 shadow-[0_28px_80px_rgba(31,59,52,0.24)] backdrop-blur-2xl sm:bottom-[calc(var(--tabbar-h,0px)+6rem)] sm:right-6"
+            className="fixed bottom-[calc(var(--tabbar-h,0px)+5rem)] right-4 z-[190] flex h-[min(72dvh,520px)] w-[calc(100vw-2rem)] max-w-[392px] flex-col overflow-hidden rounded-[26px] border border-white/80 bg-[#f4ede2] shadow-[0_30px_90px_rgba(31,59,52,0.28)] sm:bottom-[calc(var(--tabbar-h,0px)+6rem)] sm:right-6"
             role="dialog"
-            aria-label={isAdmin ? 'Support inbox' : 'Chat with Nasou support'}
+            aria-label={isAdmin ? 'Support inbox' : 'Chat with Nivora support'}
           >
-            <header className="flex items-center gap-2.5 bg-forest px-4 py-3.5 text-white">
-              <span className="grid h-9 w-9 place-items-center rounded-full bg-white/15">
+            <header className="mesh-forest relative flex items-center gap-2.5 overflow-hidden px-4 py-4 text-white">
+              <span className="field-dots-dark pointer-events-none absolute inset-0 opacity-30" />
+              <span className="relative grid h-10 w-10 place-items-center rounded-full bg-white text-forest">
                 <Icon name={isAdmin ? 'headset' : 'chat'} size={16} />
               </span>
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-[13.5px] font-bold">
+              <span className="relative min-w-0 flex-1">
+                <span className="block truncate text-[14px] font-bold">
                   {isAdmin ? 'Support inbox' : AGENT.name}
                 </span>
                 <span className="flex min-w-0 items-center gap-1.5 text-[11px] text-white/60">

@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "build:catalog": "node scripts/build-catalog.mjs"
+    "build:catalog": "node scripts/build-catalog.mjs",
+    "test": "node --test scripts/scope.test.mjs scripts/marketplace.test.mjs"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.8",

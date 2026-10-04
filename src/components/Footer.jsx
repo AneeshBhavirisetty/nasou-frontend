@@ -46,7 +46,7 @@ export default function Footer() {
               <div>
                 <Link to="/" className="inline-flex items-center gap-3 text-white">
                   <span className="grid h-11 w-11 place-items-center rounded-[14px] bg-white text-forest"><Logo size={24} className="[&>span]:hidden" /></span>
-                  <span className="text-[18px] font-extrabold tracking-[-0.03em]">Nasou Hive</span>
+                  <span className="font-hero text-[22px] font-semibold tracking-[-0.03em]">Nivora</span>
                 </Link>
                 <p className="mt-4 max-w-xs text-[13.5px] leading-relaxed text-[#c9d7d2]">{brand.promise}</p>
                 <div className="mt-5 flex flex-col gap-1.5 text-[13px] text-white/70">
@@ -89,7 +89,7 @@ export default function Footer() {
 
             <div className="mt-12 flex flex-col gap-5 border-t border-white/12 pt-6 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[12px] text-white/45">
-                <span>© {new Date().getFullYear()} {brand.name}</span>
+                <span>© {new Date().getFullYear()} {brand.name} · a {brand.company} product</span>
                 <span className="hidden sm:inline">·</span>
                 <span>GSTIN {brand.gst}</span>
                 <Link to="/returns" className="transition hover:text-white/80">Returns</Link>

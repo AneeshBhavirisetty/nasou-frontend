@@ -1,8 +1,12 @@
-# Nasou Hive — customer storefront
+# Nivora — home-improvement marketplace (by Nasou Hive)
 
-Customer-facing storefront for a plumbing / PVC-uPVC-cPVC fittings supplier.
-Browse ~1,400 SKUs by size, material, brand and code; add to cart; check out.
-Front end only — auth runs against an in-browser mock (`VITE_MOCK_API=true`).
+Multi-retailer marketplace: customer storefront, a seller console for each
+retailer (`/seller`) and the Nasou Hive Super Admin console (`/admin`).
+Front end only — it runs against an in-browser demo backend
+(`VITE_MOCK_API=true`) so every flow works without a server.
+
+**Start with [docs/MARKETPLACE.md](docs/MARKETPLACE.md)** — demo accounts for
+every role, and where each requirement lives.
 
 ## Run it
 
@@ -11,6 +15,7 @@ npm install
 npm run dev            # http://localhost:5174
 npm run build          # production build (three.js is a lazy chunk)
 npm run build:catalog  # regenerate the catalog from shop data 1.xlsx
+npm test               # retailer scoping (cross-retailer access must fail) + marketplace maths
 ```
 
 ## Catalog
@@ -22,9 +27,10 @@ swap the generator for a real price feed when one exists.
 
 ## Demo auth
 
-- Password login: `test@example.com` / `password123`
-- OTP login: any 10-digit number, code `123456`
-- `DEMO` pill (bottom-left) switches the previewed role (CUSTOMER / ADMIN).
+- Every demo account: password `nivora123`; team accounts then ask for the 2FA code `123456`.
+  Full list in [docs/MARKETPLACE.md](docs/MARKETPLACE.md).
+- `DEMO` pill (bottom-left) signs in as any demo account in one click.
+- OTP login: a demo account's mobile number, any 6 digits.
 
 ## 3D hero
 

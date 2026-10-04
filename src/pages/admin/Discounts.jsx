@@ -10,10 +10,14 @@ import { Badge, Button, Field } from '../../components/ui';
 import { useToast } from '../../context/ToastContext';
 import { useAdminStore, couponDiscount } from '../../context/AdminStore';
 import { categories } from '../../data/catalog';
+import { DEPARTMENTS, departmentMeta } from '../../data/departments';
 import { money, cx } from '../../lib/format';
 import { EASE } from '../../lib/motion';
 
-const blank = { code: '', kind: 'percent', value: 10, minOrder: 0, maxDiscount: 0, scope: '', expiry: '', active: true };
+const blank = { code: '', kind: 'percent', value: 10, minOrder: 0, maxDiscount: 0, scope: '', expiry: '', active: true, autoApply: false };
+
+/* '' whole cart · '<sub-category slug>' · 'dept:<category slug>' */
+export const scopeName = (scope) => (!scope ? 'Whole cart' : scope.startsWith('dept:') ? departmentMeta(scope.slice(5)).name : categories.find((c) => c.slug === scope)?.name || scope);
 
 function CouponForm({ open, coupon, onClose, onSave }) {
   const [c, setC] = useState(() => ({ ...blank, ...(coupon || {}) }));
@@ -38,6 +42,7 @@ function CouponForm({ open, coupon, onClose, onSave }) {
       scope: c.scope,
       expiry: c.expiry,
       active: !!c.active,
+      autoApply: !!c.autoApply && !!c.scope,
     });
     onClose();
   };
@@ -63,7 +68,12 @@ function CouponForm({ open, coupon, onClose, onSave }) {
             <span className="mb-1.5 block text-[11.5px] font-semibold uppercase tracking-[0.16em] text-forest-800">Applies to</span>
             <select value={c.scope} onChange={(e) => set('scope', e.target.value)} className="h-12 w-full rounded-md border border-line bg-white/80 px-4 text-[14px] text-ink outline-none transition focus:border-forest focus:shadow-[0_0_0_2px_rgba(31,92,74,0.18)]">
               <option value="">Whole cart</option>
-              {categories.map((cat) => <option key={cat.slug} value={cat.slug}>{cat.name} only</option>)}
+              <optgroup label="A whole category">
+                {DEPARTMENTS.map((d) => <option key={d.slug} value={`dept:${d.slug}`}>{d.name} only</option>)}
+              </optgroup>
+              <optgroup label="One sub-category">
+                {categories.map((cat) => <option key={cat.slug} value={cat.slug}>{cat.name} only</option>)}
+              </optgroup>
             </select>
           </label>
           <label className="block">
@@ -78,6 +88,10 @@ function CouponForm({ open, coupon, onClose, onSave }) {
             <span className={cx('h-4 w-4 rounded-full bg-white transition-transform', c.active && 'translate-x-4')} />
           </span>
           <span className="text-[13px] font-semibold">{c.active ? 'Active — customers can use it' : 'Inactive'}</span>
+        </label>
+        <label className={cx('flex items-start gap-2.5', c.scope ? 'cursor-pointer' : 'opacity-50')}>
+          <input type="checkbox" disabled={!c.scope} checked={!!c.autoApply && !!c.scope} onChange={(e) => set('autoApply', e.target.checked)} className="mt-0.5 accent-[#1f5c4a]" />
+          <span className="text-[13px]"><span className="font-semibold">Apply automatically</span><span className="block text-[12px] text-ink-50">{c.scope ? `Checkout applies this code by itself when the cart has ${scopeName(c.scope)} items — shoppers can still type it.` : 'Pick a category above to auto-apply the code there.'}</span></span>
         </label>
 
         {err && <p role="alert" className="rounded-md bg-clay-50 px-3 py-2.5 text-[13px] text-clay-600">{err}</p>}
@@ -107,7 +121,7 @@ export default function AdminDiscounts() {
     []
   );
 
-  const scopeLabel = (slug) => categories.find((c) => c.slug === slug)?.name || 'Whole cart';
+  const scopeLabel = scopeName;
 
   return (
     <div className="space-y-5">
@@ -198,6 +212,7 @@ export default function AdminDiscounts() {
 
                     <p className="mt-2.5 text-[13px]">
                       <span className="font-semibold">{scopeLabel(c.scope)}</span>
+                      {c.autoApply && c.scope && <span className="ml-1.5 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700">Auto-applies</span>}
                       {c.kind === 'percent' && c.maxDiscount > 0 && <span className="text-ink-35"> · max {money(c.maxDiscount)}</span>}
                     </p>
                     <p className="mt-0.5 text-[12px] text-ink-50">

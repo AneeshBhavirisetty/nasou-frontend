@@ -65,11 +65,14 @@ export function parseJwt(token) {
 }
 
 /* Where to land after signing in: an explicit ?redirect wins; otherwise
-   admins start on their dashboard and everyone else on the shop home. */
+   the team starts on the Super Admin dashboard, retailers on their seller
+   console and customers on the shop home. */
 export function landingFor(session, explicit) {
   if (explicit) return explicit;
   const role = session?.role ?? parseJwt(session?.accessToken)?.role;
-  return role === 'ADMIN' ? '/admin/dashboard' : '/';
+  if (role === 'ADMIN') return '/admin/dashboard';
+  if (role === 'RETAILER') return '/seller';
+  return '/';
 }
 
 export function isTokenExpired(token) {

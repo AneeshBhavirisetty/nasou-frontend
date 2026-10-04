@@ -29,7 +29,7 @@ function FreeDeliveryBar({ subtotal, toFree }) {
 }
 
 export default function Cart() {
-  const { items, totals, setQty, remove } = useCart();
+  const { items, groups, totals, setQty, remove } = useCart();
 
   if (items.length === 0) {
     return (
@@ -37,7 +37,7 @@ export default function Cart() {
         <div className="mx-auto max-w-md rounded-[24px] border border-white/80 bg-white p-10 text-center shadow-card sm:p-12">
           <span className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-sunk text-forest"><Icon name="cart" size={28} /></span>
           <h1 className="mt-6 text-[24px] font-semibold text-forest">Your cart is empty</h1>
-          <p className="mt-2.5 text-[14px] leading-relaxed text-ink-50">1,400+ fittings with real prices are one search away.</p>
+          <p className="mt-2.5 text-[14px] leading-relaxed text-ink-50">Thousands of products from verified retailers are one search away.</p>
           <div className="mt-7"><Button to="/shop" size="lg" iconRight="arrowRight">Start shopping</Button></div>
         </div>
       </Container>
@@ -55,9 +55,17 @@ export default function Cart() {
       <div className="mt-5 grid gap-5 lg:grid-cols-[1fr_380px]">
         <div>
           <div className="mb-4"><FreeDeliveryBar subtotal={totals.net} toFree={totals.toFreeDelivery} /></div>
+          <div className="space-y-6">
+          {groups.map((g) => (
+          <section key={g.retailerId}>
+            <header className="mb-2.5 flex flex-wrap items-center justify-between gap-2 px-1">
+              <p className="flex items-center gap-2 text-[14px] font-bold text-forest"><span className="grid h-8 w-8 place-items-center rounded-[10px] bg-forest text-white"><Icon name="store" size={15} /></span> Sold by {g.name}</p>
+              <p className="text-[12px] font-semibold text-ink-50">{g.items.length} item{g.items.length > 1 ? 's' : ''} · {money(g.subtotal)} · ships as its own part</p>
+            </header>
+            {!g.listed && <p className="mb-2.5 rounded-[14px] bg-clay-50 px-3 py-2 text-[12.5px] font-semibold text-clay-600">This seller is not taking orders right now — remove these items to check out.</p>}
           <ul className="space-y-3">
             <AnimatePresence initial={false}>
-              {items.map((line) => (
+              {g.items.map((line) => (
                 <motion.li
                   key={`${line.id}-${line.supplierId}`}
                   layout
@@ -87,7 +95,7 @@ export default function Cart() {
                     </div>
 
                     <div className="mt-2 flex flex-wrap gap-1.5">
-                      <Badge tone="slate" icon="truck">{line.supplier?.name} · {line.supplier?.eta}</Badge>
+                      <Badge tone="slate" icon="truck">{line.product.supplierName} · {line.supplier?.eta}</Badge>
                       {line.bulk && <Badge tone="ok" icon="percent">Bulk price · {line.bulk.rule.name}</Badge>}
                     </div>
 
@@ -112,6 +120,9 @@ export default function Cart() {
               ))}
             </AnimatePresence>
           </ul>
+          </section>
+          ))}
+          </div>
         </div>
 
         <aside>
@@ -126,9 +137,10 @@ export default function Cart() {
               <span className="text-lg font-semibold text-ink">Total</span>
               <span className="tnum text-[24px] font-semibold text-ink">{money(totals.total)}</span>
             </div>
-            <p className="mt-1 text-[11.5px] text-ink-35">Exclusive of 18% GST · added at checkout</p>
+            <p className="mt-1 text-[11.5px] text-ink-35">Exclusive of GST · delivery is worked out per seller at checkout</p>
+            {groups.length > 1 && <p className="mt-2 rounded-[12px] bg-[#f6f3ed] px-3 py-2 text-[12px] text-ink-70"><b>{groups.length} sellers</b> — you pay once; each seller ships their own part.</p>}
             {totals.savings > 0 && <p className="mt-3"><Badge tone="ok" icon="check">You save {money(totals.savings + totals.bulk)} vs MRP</Badge></p>}
-            <div className="mt-5"><Button to="/checkout" size="lg" full iconRight="arrowRight">Checkout</Button></div>
+            <div className="mt-5"><Button to="/checkout" size="lg" full iconRight="arrowRight" disabled={groups.some((g) => !g.listed)}>Checkout</Button></div>
             <Link to="/shop" className="mt-3 block text-center text-[13px] font-bold text-forest transition hover:underline">Continue shopping</Link>
             <p className="mt-5 flex items-start gap-2 rounded-[14px] bg-[#f4f7f5] p-3 text-[11.5px] leading-relaxed text-ink-50">
               <Icon name="shieldCheck" size={14} className="mt-px shrink-0" />

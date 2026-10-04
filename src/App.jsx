@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom';
 import CartDrawer from './components/CartDrawer';
-import RoleSwitch from './components/admin/RoleSwitch';
+import DemoSwitch from './components/admin/RoleSwitch';
 import ChatWidget from './components/chat/ChatWidget';
 import Home from './pages/Home';
 import Shop from './pages/Shop';
@@ -18,6 +18,28 @@ import Account from './pages/Account';
 import Info from './pages/Info';
 import NotFound from './pages/NotFound';
 import AdminCatalogImport from './pages/AdminCatalogImport';
+import Sell from './pages/Sell';
+import InviteAccept from './pages/InviteAccept';
+import SellerRegister from './pages/seller/Register';
+import SellerLayout from './layouts/SellerLayout';
+import SellerDashboard from './pages/seller/Dashboard';
+import SellerOrders, { SellerOrderDetail } from './pages/seller/Orders';
+import SellerProducts from './pages/seller/Products';
+import SellerPayouts from './pages/seller/Payouts';
+import SellerProfile from './pages/seller/Profile';
+import SellerTeam from './pages/seller/Team';
+import AdminRetailers from './pages/admin/Retailers';
+import AdminRetailerDetail from './pages/admin/RetailerDetail';
+import AdminApprovals from './pages/admin/Approvals';
+import AdminCommission from './pages/admin/Commission';
+import AdminOrderDetail from './pages/admin/OrderDetail';
+import AdminRefunds from './pages/admin/Refunds';
+import AdminPayouts from './pages/admin/Payouts';
+import AdminReconciliation from './pages/admin/Reconciliation';
+import AdminAudit from './pages/admin/Audit';
+import AdminSettings from './pages/admin/Settings';
+import AdminMasterCatalog from './pages/admin/MasterCatalog';
+import AdminCustomerDetail from './pages/admin/CustomerDetail';
 import Login from './pages/auth/Login';
 import OtpLogin from './pages/auth/OtpLogin';
 import ForgotPassword from './pages/auth/ForgotPassword';
@@ -64,6 +86,8 @@ export default function App() {
           <Route path="/enquiry" element={<Enquiry />} />
           <Route path="/invoice/:id" element={<Invoice />} />
           <Route path="/returns" element={<Info slug="returns" />} />
+          <Route path="/sell" element={<Sell />} />
+          <Route path="/sell/register" element={<SellerRegister />} />
           <Route path="/unauthorized" element={<Unauthorized />} />
           <Route path="*" element={<NotFound />} />
         </Route>
@@ -80,6 +104,17 @@ export default function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password/:token" element={<ResetPassword />} />
           <Route path="/forgot-email" element={<ForgotEmail />} />
+          <Route path="/invite/:token" element={<InviteAccept />} />
+        </Route>
+
+        <Route element={<SellerLayout />}>
+          <Route path="/seller" element={<SellerDashboard />} />
+          <Route path="/seller/orders" element={<SellerOrders />} />
+          <Route path="/seller/orders/:id" element={<SellerOrderDetail />} />
+          <Route path="/seller/products" element={<SellerProducts />} />
+          <Route path="/seller/payouts" element={<SellerPayouts />} />
+          <Route path="/seller/profile" element={<SellerProfile />} />
+          <Route path="/seller/team" element={<SellerTeam />} />
         </Route>
 
         <Route element={<AdminLayout />}>
@@ -89,6 +124,18 @@ export default function App() {
           <Route path="/admin/discounts" element={<AdminDiscounts />} />
           <Route path="/admin/users" element={<AdminUsers />} />
           <Route path="/admin/orders" element={<AdminOrders />} />
+          <Route path="/admin/orders/:id" element={<AdminOrderDetail />} />
+          <Route path="/admin/retailers" element={<AdminRetailers />} />
+          <Route path="/admin/retailers/:id" element={<AdminRetailerDetail />} />
+          <Route path="/admin/approvals" element={<AdminApprovals />} />
+          <Route path="/admin/commission" element={<AdminCommission />} />
+          <Route path="/admin/refunds" element={<AdminRefunds />} />
+          <Route path="/admin/payouts" element={<AdminPayouts />} />
+          <Route path="/admin/reconciliation" element={<AdminReconciliation />} />
+          <Route path="/admin/audit" element={<AdminAudit />} />
+          <Route path="/admin/settings" element={<AdminSettings />} />
+          <Route path="/admin/catalog" element={<AdminMasterCatalog />} />
+          <Route path="/admin/customers/:id" element={<AdminCustomerDetail />} />
           <Route path="/admin/billing" element={<AdminBilling />} />
           <Route path="/admin/reports" element={<AdminReports />} />
           <Route path="/admin/catalog/import" element={<AdminCatalogImport />} />
@@ -96,7 +143,7 @@ export default function App() {
       </Routes>
       <CartDrawer />
       <ChatWidget />
-      <RoleSwitch />
+      <DemoSwitch />
     </>
   );
 }

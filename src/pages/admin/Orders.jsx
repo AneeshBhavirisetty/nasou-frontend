@@ -1,217 +1,98 @@
-import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Icon from '../../components/Icon';
-import ExportDialog from '../../components/admin/ExportDialog';
-import { AdminPageHead, FilterTabs, SearchInput } from '../../components/admin/AdminUI';
-import { Badge, Button } from '../../components/ui';
-import { useToast } from '../../context/ToastContext';
-import { useOrderStore } from '../../context/OrderStore';
+import DataTable from '../../components/admin/DataTable';
+import { AdminPageHead, Kpi, StatusPill, ViewOnlyBanner } from '../../components/admin/AdminUI';
+import { useAuth } from '../../context/AuthContext';
 import { useIam } from '../../context/IamStore';
-import { ViewOnlyBanner } from '../../components/admin/AdminUI';
-import { orders as SEED, ORDER_FLOW, ORDER_STATUSES, formatOrderDate } from '../../data/orders';
-import { downloadSheet, hyperlink, invoiceUrl, isoDate } from '../../lib/exportSheet';
-import { money, cx } from '../../lib/format';
+import { useToast } from '../../context/ToastContext';
+import { useRetailers } from '../../store/retailers';
+import { updatePart } from '../../store/orders';
+import { useScopedOrders } from '../../lib/useScoped';
+import { ORDER_STATUSES, formatOrderDate } from '../../data/orders';
+import { invoiceUrl } from '../../lib/exportSheet';
+import { rupeesCompact } from '../../lib/analytics';
+import { money } from '../../lib/format';
 
-const TONE = { Pending: 'amber', Processing: 'slate', Shipped: 'slate', Delivered: 'ok', Cancelled: 'clay' };
-const DOT = { Pending: 'bg-amber', Processing: 'bg-slate', Shipped: 'bg-slate', Delivered: 'bg-emerald', Cancelled: 'bg-clay' };
-
+/* Orders — global list view (requirement 7). One row per customer order;
+   each order has one sub-order per retailer, tracked separately. Opening a
+   row shows the order page with support controls (requirement 12). */
 export default function AdminOrders() {
+  const navigate = useNavigate();
   const toast = useToast();
-  /* placed orders (checkout → OrderStore) on top of the seeded demo book */
-  const { placed, updateOrder } = useOrderStore();
-  const canEdit = useIam().can('orders', 'edit');
-  const [seedRows, setSeedRows] = useState(SEED);
-  const rows = useMemo(() => [...placed, ...seedRows], [placed, seedRows]);
-  const [q, setQ] = useState('');
-  const [status, setStatus] = useState('');
-  const [exporting, setExporting] = useState(false);
+  const { user } = useAuth();
+  const { can } = useIam();
+  const orders = useScopedOrders();
+  const retailers = useRetailers();
+  const canEdit = can('orders', 'edit');
 
-  const filtered = useMemo(
-    () => rows.filter((o) =>
-      (!status || o.status === status) &&
-      (!q || `${o.id} ${o.customer} ${o.email}`.toLowerCase().includes(q.toLowerCase()))
-    ),
-    [rows, q, status]
-  );
+  const rows = useMemo(() => orders.map((o) => ({
+    ...o,
+    sellers: o.parts.map((p) => p.retailerName).join(', '),
+    sellerIds: o.parts.map((p) => p.retailerId),
+    partCount: o.parts.length,
+  })), [orders]);
 
-  const counts = useMemo(() => {
-    const n = q.toLowerCase();
-    const hit = rows.filter((o) => !n || `${o.id} ${o.customer} ${o.email}`.toLowerCase().includes(n));
-    const by = Object.fromEntries(ORDER_STATUSES.map((st) => [st, 0]));
-    hit.forEach((o) => { by[o.status] += 1; });
-    return { all: hit.length, by };
-  }, [rows, q]);
+  const open = rows.filter((o) => o.status !== 'Delivered' && o.status !== 'Cancelled');
+  const flagged = rows.filter((o) => o.flagged).length;
 
-  const inView = filtered.reduce((sum, o) => sum + (o.status === 'Cancelled' ? 0 : o.total), 0);
-
-  /* Pending → Processing → Shipped → Delivered. Delivering a cash-on-delivery
-     order marks its payment collected. */
-  const advance = (id) => {
-    const o = rows.find((x) => x.id === id);
-    if (!o) return;
-    const next = ORDER_FLOW[Math.min(ORDER_FLOW.length - 1, ORDER_FLOW.indexOf(o.status) + 1)];
-    const patch = { status: next, ...(next === 'Delivered' && o.paymentStatus === 'Due on delivery' ? { paymentStatus: 'Collected' } : {}) };
-    if (placed.some((x) => x.id === id)) updateOrder(id, patch);
-    else setSeedRows((r) => r.map((x) => (x.id === id ? { ...x, ...patch } : x)));
-    toast.success(`${id} → ${next}`);
-  };
-
-  const runExport = (matched, meta) => {
-    const headers = [
-      'Order ID', 'Date', 'Customer', 'Email', 'Phone', 'City', 'PIN',
-      'Items', 'Subtotal', 'GST', 'Delivery', 'Total', 'Payment', 'Status', 'Invoice link',
-    ];
-    const body = matched.map((o) => [
-      o.id, formatOrderDate(o.createdAt), o.customer, o.email, `+91 ${o.phone}`, o.city, o.pin,
-      o.items, o.subtotal, o.gst, o.shipping, o.total, o.payment, o.status,
-      hyperlink(invoiceUrl(o.id), `Invoice ${o.id}`),
-    ]);
-    const stamp = meta.singleDay && meta.from ? meta.from
-      : meta.from || meta.to ? `${meta.from || 'start'}_${meta.to || 'today'}`
-        : isoDate();
-    downloadSheet(`nasou-orders-${stamp}.csv`, headers, body);
-    toast.success(`${matched.length} order${matched.length === 1 ? '' : 's'} exported with invoice links`);
+  const advance = (sel) => {
+    let n = 0;
+    sel.forEach((o) => o.parts.forEach((p) => {
+      if (p.status === 'Pending') { updatePart(o.id, p.id, 'Processing', { by: user?.fullName, note: 'Bulk update' }); n += 1; }
+    }));
+    toast.success(n ? `${n} pending sub-order${n > 1 ? 's' : ''} moved to Processing` : 'Nothing pending in the selection');
   };
 
   return (
     <div className="space-y-5">
-      <AdminPageHead
-        title="Orders"
-        note={<>{filtered.length} of {rows.length} orders · <span className="tnum font-semibold text-ink-70">{money(inView)}</span> in view · demo data</>}
-      >
-        <Button size="sm" variant="outline" icon="external" onClick={() => setExporting(true)}>
-          Export to Excel
-        </Button>
-      </AdminPageHead>
-
+      <AdminPageHead title="Orders" note="Every customer order across all retailers. Each seller’s part moves on its own." />
       {!canEdit && <ViewOnlyBanner what="orders" />}
 
-      <div className="space-y-3 rounded-[20px] border border-line bg-white/86 p-3 shadow-[0_18px_40px_rgba(37,88,73,0.08)]">
-        <SearchInput placeholder="Search order # or customer" value={q} onChange={(e) => setQ(e.target.value)} />
-        <FilterTabs
-          label="Order status"
-          value={status}
-          onChange={setStatus}
-          options={[
-            { value: '', label: 'All', count: counts.all },
-            ...ORDER_STATUSES.map((st) => ({ value: st, label: st, count: counts.by[st], dot: DOT[st] })),
-          ]}
-        />
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <Kpi label="Orders" value={rows.length.toLocaleString('en-IN')} note={`${rows.reduce((n, o) => n + o.partCount, 0)} sub-orders`} icon="truck" />
+        <Kpi label="Open" value={open.length} note="Not yet delivered" icon="clock" tone={open.length ? 'amber' : 'forest'} />
+        <Kpi label="Flagged" value={flagged} note="Need a look from support" icon="bell" tone={flagged ? 'clay' : 'forest'} />
+        <Kpi label="Order value" value={rupeesCompact(rows.filter((o) => o.status !== 'Cancelled').reduce((s, o) => s + o.total, 0))} note="Incl. GST and delivery" icon="rupee" />
       </div>
 
-      {filtered.length > 0 ? (
-        <div className="grid gap-4 md:grid-cols-2">
-          {filtered.map((o, i) => (
-            <motion.div
-              key={o.id}
-              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(i, 12) * 0.03 }}
-            >
-              <OrderCard order={o} onAdvance={canEdit ? () => advance(o.id) : null} />
-            </motion.div>
-          ))}
-        </div>
-      ) : (
-        <div className="rounded-[20px] border border-dashed border-[#cad8d2] bg-[#f4f7f5] px-4 py-14 text-center">
-          <span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-sunk text-ink-35"><Icon name="search" size={20} /></span>
-          <p className="mt-3 text-[13px] text-ink-50">No orders match.</p>
-        </div>
-      )}
-
-      <ExportDialog
-        open={exporting}
-        onClose={() => setExporting(false)}
-        title="Export orders to Excel"
+      <DataTable
+        id="orders"
         rows={rows}
-        statuses={ORDER_STATUSES}
-        getDate={(o) => o.createdAt}
-        getStatus={(o) => o.status}
-        onExport={runExport}
+        columns={[
+          { key: 'id', label: 'Order', always: true, render: (o) => (
+            <span className="flex items-center gap-2 whitespace-nowrap font-mono text-[12.5px] font-bold text-ink">
+              {o.id}{o.flagged && <Icon name="bell" size={13} className="text-clay" />}
+            </span>
+          ) },
+          { key: 'createdAt', label: 'Placed', render: (o) => formatOrderDate(o.createdAt), csv: (o) => new Date(o.createdAt).toISOString() },
+          { key: 'customer', label: 'Customer', render: (o) => <span className="block min-w-[140px]"><span className="block font-bold text-ink">{o.customer}</span><span className="text-[11.5px] text-ink-50">{o.city} {o.pin}</span></span> },
+          { key: 'sellers', label: 'Sellers', render: (o) => <span className="block max-w-[220px] truncate" title={o.sellers}>{o.partCount > 1 ? `${o.partCount} sellers · ` : ''}{o.sellers}</span> },
+          { key: 'status', label: 'Status', render: (o) => <StatusPill status={o.status} /> },
+          { key: 'items', label: 'Units', align: 'right' },
+          { key: 'total', label: 'Total', align: 'right', render: (o) => money(o.total) },
+          { key: 'payment', label: 'Payment' },
+          { key: 'paymentStatus', label: 'Payment status', render: (o) => <StatusPill status={o.paymentStatus} /> },
+          { key: 'email', label: 'Email', hidden: true },
+          { key: 'phone', label: 'Phone', hidden: true },
+          { key: 'invoice', label: 'Invoice', hidden: true, sortable: false, value: (o) => invoiceUrl(o.id), render: (o) => <a href={`/invoice/${o.id}`} onClick={(e) => e.stopPropagation()} className="font-bold text-forest hover:underline">Open</a> },
+        ]}
+        searchText={(o) => `${o.id} ${o.customer} ${o.email} ${o.phone} ${o.city} ${o.sellers} ${o.parts.map((p) => p.id).join(' ')}`}
+        searchPlaceholder="Search order, sub-order, customer, phone, seller"
+        filters={[
+          { key: 'status', label: 'Status', options: ORDER_STATUSES.map((s) => ({ value: s, label: s })), test: (o, v) => o.status === v || o.parts.some((p) => p.status === v) },
+          { key: 'retailer', label: 'Retailer', options: retailers.filter((r) => r.status !== 'pending').map((r) => ({ value: r.id, label: r.name })), test: (o, v) => o.sellerIds.includes(v) },
+          { key: 'payment', label: 'Payment', options: ['UPI', 'Cards', 'Net banking', 'Cash on delivery', 'GST invoice'].map((s) => ({ value: s, label: s })), test: (o, v) => o.payment === v },
+          { key: 'pay', label: 'Payment status', options: ['Paid', 'Due on delivery', 'Collected', 'Invoice due', 'Refunded'].map((s) => ({ value: s, label: s })), test: (o, v) => o.paymentStatus === v },
+          { key: 'flag', label: 'Flag', options: [{ value: 'yes', label: 'Flagged' }, { value: 'multi', label: 'Several sellers' }], test: (o, v) => (v === 'yes' ? !!o.flagged : o.partCount > 1) },
+        ]}
+        date={(o) => o.createdAt}
+        initialSort={{ key: 'createdAt', dir: 'desc' }}
+        onRowClick={(o) => navigate(`/admin/orders/${o.id}`)}
+        bulkActions={canEdit ? [{ label: 'Move pending parts to Processing', icon: 'chevronsRight', run: advance }] : []}
+        exportName="orders"
+        rowClass={(o) => (o.flagged ? 'bg-clay-50/30' : '')}
       />
     </div>
-  );
-}
-
-/* One order as a card: who, what, where it is in the flow, and the actions. */
-function OrderCard({ order: o, onAdvance }) {
-  const step = ORDER_FLOW.indexOf(o.status);
-  const cancelled = o.status === 'Cancelled';
-  const open = o.status !== 'Delivered' && !cancelled;
-  const first = o.lines[0];
-  const more = o.lines.length - 1;
-
-  return (
-    <article className="flex h-full flex-col rounded-[20px] border border-line bg-white p-4 shadow-[0_18px_40px_rgba(37,88,73,0.08)] transition hover:-translate-y-0.5 hover:border-forest/30 hover:shadow-lift sm:p-5">
-      <header className="flex items-start justify-between gap-3">
-        <div>
-          <p className="flex items-center gap-1.5 font-mono text-[14px] font-bold">
-            {o.id}
-            {o.userId && <span className="rounded-full bg-emerald-50 px-1.5 py-0.5 font-sans text-[10px] font-bold text-emerald-700">New</span>}
-          </p>
-          <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[11.5px] text-ink-35">
-            <Icon name="calendar" size={12} /> {formatOrderDate(o.createdAt)} · {o.payment}
-            {o.paymentStatus === 'Due on delivery' && <span className="rounded-full bg-amber-50 px-1.5 font-bold text-amber">COD · due</span>}
-          </p>
-        </div>
-        <Badge tone={TONE[o.status]}>{o.status}</Badge>
-      </header>
-
-      <div className="mt-4 flex items-center gap-3">
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-emerald-50 text-[13px] font-bold text-emerald-600">
-          {o.customer[0]}
-        </span>
-        <div className="min-w-0">
-          <p className="truncate text-[13.5px] font-bold">{o.customer}</p>
-          <p className="flex items-center gap-1 truncate text-[11.5px] text-ink-50">
-            <Icon name="pin" size={11} /> {o.city} {o.pin}
-          </p>
-        </div>
-      </div>
-
-      {/* flow: Pending → Processing → Shipped → Delivered */}
-      <div className="mt-4 rounded-md bg-canvas/70 px-3 py-2.5">
-        {cancelled ? (
-          <p className="flex items-center gap-2 text-[12px] font-semibold text-clay-600">
-            <Icon name="close" size={13} /> Order cancelled
-          </p>
-        ) : (
-          <>
-            <div className="flex items-center gap-1" aria-hidden>
-              {ORDER_FLOW.map((st, k) => (
-                <span key={st} className={cx('h-1.5 flex-1 rounded-full', k <= step ? 'bg-emerald' : 'bg-line')} />
-              ))}
-            </div>
-            <p className="mt-1.5 flex justify-between text-[10.5px] font-semibold text-ink-35">
-              {ORDER_FLOW.map((st, k) => (
-                <span key={st} className={cx(k === step && 'text-emerald-600')}>{st}</span>
-              ))}
-            </p>
-          </>
-        )}
-      </div>
-
-      <p className="mb-4 mt-3 truncate text-[12px] text-ink-50" title={o.lines.map((l) => l.name).join(', ')}>
-        <span className="font-semibold text-ink-70">{o.items} items</span>
-        {first && <> · {first.name}{more > 0 && <span className="text-ink-35"> +{more} more</span>}</>}
-      </p>
-
-      <footer className="mt-auto flex items-center gap-2 border-t border-line pt-3.5">
-        <div className="mr-auto">
-          <p className="text-[10.5px] font-semibold uppercase tracking-wider text-ink-35">Total</p>
-          <p className="tnum text-[17px] font-extrabold leading-tight">{money(o.total)}</p>
-        </div>
-        <Link
-          to={`/invoice/${o.id}`}
-          className="flex items-center gap-1 rounded-md border border-line px-2.5 py-2 text-[12px] font-semibold text-ink-70 transition hover:border-ink-35 hover:text-ink"
-        >
-          <Icon name="fileText" size={13} /> Invoice
-        </Link>
-        {open && onAdvance && (
-          <button onClick={onAdvance} className="flex items-center gap-1 rounded-md border border-forest bg-forest px-2.5 py-2 text-[12px] font-semibold text-white transition hover:bg-forest-800">
-            <Icon name="chevronsRight" size={13} /> Advance
-          </button>
-        )}
-      </footer>
-    </article>
   );
 }

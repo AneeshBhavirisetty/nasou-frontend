@@ -3,6 +3,7 @@ import Icon from '../components/Icon';
 import Logo from '../components/Logo';
 import { Badge, Button, Container } from '../components/ui';
 import { findOrder, formatOrderDate } from '../data/orders';
+import { getRetailer } from '../store/retailers';
 import { brand } from '../data/site';
 import { money } from '../lib/format';
 
@@ -84,8 +85,16 @@ export default function Invoice() {
                 <th className="pb-2 text-right">Amount</th>
               </tr>
             </thead>
-            <tbody>
-              {order.lines.map((l, i) => (
+            {(order.parts?.length ? order.parts : [{ id: order.id, lines: order.lines }]).map((part) => {
+              const seller = part.retailerId && getRetailer(part.retailerId);
+              return (
+            <tbody key={part.id}>
+              {seller && (
+                <tr className="bg-[#f6f3ed]">
+                  <td colSpan={5} className="px-2 py-2 text-[12px] text-ink-70"><b className="text-forest">Sold by {seller.name}</b> · GSTIN {seller.gstin} · {seller.city} · part {part.id}{part.status ? ` · ${part.status}` : ''}</td>
+                </tr>
+              )}
+              {part.lines.map((l, i) => (
                 <tr key={i} className="border-b border-line-soft">
                   <td className="py-2.5 text-[13px] font-semibold">
                     {l.name}
@@ -98,6 +107,8 @@ export default function Invoice() {
                 </tr>
               ))}
             </tbody>
+              );
+            })}
           </table>
         </div>
 
@@ -107,7 +118,7 @@ export default function Invoice() {
             {order.discount > 0 && (
               <div className="flex justify-between text-emerald-700"><dt>Discounts{order.coupon ? ` (incl. ${order.coupon})` : ''}</dt><dd className="tnum font-semibold">− {money(order.discount)}</dd></div>
             )}
-            <div className="flex justify-between"><dt className="text-ink-50">GST (18%)</dt><dd className="tnum font-semibold">{money(order.gst)}</dd></div>
+            <div className="flex justify-between"><dt className="text-ink-50">GST</dt><dd className="tnum font-semibold">{money(order.gst)}</dd></div>
             <div className="flex justify-between">
               <dt className="text-ink-50">Delivery</dt>
               <dd className="tnum font-semibold">{order.shipping === 0 ? <span className="text-emerald-600">Free</span> : money(order.shipping)}</dd>
@@ -120,7 +131,7 @@ export default function Invoice() {
         </div>
 
         <footer className="mt-8 border-t border-line pt-5 text-[11.5px] leading-relaxed text-ink-35">
-          Computer-generated invoice — valid without signature. Goods once sold may be returned within
+          Marketplace invoice issued by Nivora (a Nasou Hive product) on behalf of the sellers named above. Computer-generated — valid without signature. Goods once sold may be returned within
           7 days if unused and in original packaging. Subject to Hyderabad jurisdiction.
         </footer>
       </article>

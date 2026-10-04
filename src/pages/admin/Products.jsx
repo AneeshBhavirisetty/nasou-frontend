@@ -9,6 +9,12 @@ import BulkImportDialog from '../../components/admin/BulkImportDialog';
 import CategoryDiscountDialog from '../../components/admin/CategoryDiscountDialog';
 import { AdminPageHead, SearchInput, ViewOnlyBanner } from '../../components/admin/AdminUI';
 import { useIam } from '../../context/IamStore';
+import DataTable from '../../components/admin/DataTable';
+import { Tabs } from '../../components/admin/AdminUI';
+import { stockLedgerStore } from '../../context/AdminStore';
+import { useStore } from '../../lib/store';
+import { useActor, useScopedProducts } from '../../lib/useScoped';
+import { useRetailers } from '../../store/retailers';
 import { Badge, Button } from '../../components/ui';
 import { useToast } from '../../context/ToastContext';
 import { useAdminStore } from '../../context/AdminStore';
@@ -18,9 +24,51 @@ import { money, cx } from '../../lib/format';
 
 const PAGE = 20;
 
+/* Stock movements: every change to stock and why — orders, cancellations,
+   manual counts (customer review: inventory must follow orders). */
+function StockLedger({ retailerId }) {
+  const ledger = useStore(stockLedgerStore);
+  const rows = retailerId ? ledger.filter((e) => e.retailerId === retailerId) : ledger;
+  return (
+    <DataTable
+      id="stock-ledger"
+      rows={rows}
+      columns={[
+        { key: 'at', label: 'When', always: true, render: (e) => <span className="whitespace-nowrap">{new Date(e.at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })}</span>, csv: (e) => new Date(e.at).toISOString() },
+        { key: 'name', label: 'Product', render: (e) => <span className="block min-w-[180px]"><span className="block font-bold text-ink">{e.name}</span><span className="font-mono text-[11px] text-ink-50">{e.sku}</span></span> },
+        { key: 'reason', label: 'Reason', render: (e) => <span className="rounded-full bg-sunk px-2 py-0.5 text-[11.5px] font-bold capitalize text-forest">{e.reason}</span> },
+        { key: 'ref', label: 'Reference', render: (e) => (e.ref ? <span className="font-mono text-[12px]">{e.ref}</span> : '—') },
+        { key: 'before', label: 'Before', align: 'right' },
+        { key: 'delta', label: 'Change', align: 'right', render: (e) => <b className={e.delta < 0 ? 'text-clay-600' : 'text-emerald-700'}>{e.delta > 0 ? '+' : ''}{e.delta}</b> },
+        { key: 'after', label: 'After', align: 'right' },
+        { key: 'by', label: 'By' },
+      ]}
+      searchText={(e) => `${e.name} ${e.sku} ${e.ref} ${e.reason} ${e.by}`}
+      searchPlaceholder="Search product, SKU or order"
+      filters={[{ key: 'reason', label: 'Reason', options: ['order', 'cancelled', 'manual count'].map((r) => ({ value: r, label: r })), test: (e, v) => e.reason === v }]}
+      date={(e) => e.at}
+      empty="No stock has moved yet. Place an order on the storefront and it appears here."
+      exportName="stock-movements"
+    />
+  );
+}
+
 export default function AdminProducts() {
+  return <ProductsManager />;
+}
+
+/* The product list for the Super Admin (all retailers) and the seller
+   console (seller = true: their own products only, master catalog only). */
+export function ProductsManager({ seller = false }) {
   const toast = useToast();
-  const { products: rows, dirty, setStock, saveProduct, deleteProduct, reset } = useAdminStore();
+  const { dirty, setStock, saveProduct, deleteProduct, reset } = useAdminStore();
+  const all = useScopedProducts();
+  const actor = useActor();
+  const retailers = useRetailers();
+  const [retailer, setRetailer] = useState('');
+  const [view, setView] = useState('list');
+  const rows = useMemo(() => (retailer ? all.filter((p) => p.retailerId === retailer) : all), [all, retailer]);
+  const sellerName = (id) => retailers.find((r) => r.id === id)?.name || '';
   const [q, setQ] = useState('');
   const [dept, setDept] = useState('');
   const [cat, setCat] = useState('');
@@ -30,7 +78,8 @@ export default function AdminProducts() {
   const [bulk, setBulk] = useState(false);
   const [discount, setDiscount] = useState(false);
   const [params, setParams] = useSearchParams();
-  const canEdit = useIam().can('products', 'edit');
+  const iam = useIam();
+  const canEdit = seller ? !actor.readOnly && iam.canSection('products') : iam.can('products', 'edit');
 
   /* /admin/products?new=1 (the dashboard's "Add product") opens the form. */
   useEffect(() => {
@@ -65,7 +114,7 @@ export default function AdminProducts() {
 
   const onSave = (prod) => {
     const isNew = !rows.some((p) => p.id === prod.id);
-    saveProduct(prod);
+    saveProduct(prod, seller ? sellerName(actor.retailerId) : undefined);
     toast.success(isNew ? `${prod.name} added` : `${prod.name} updated`);
   };
   const onBulk = (list) => list.forEach(saveProduct);
@@ -78,32 +127,43 @@ export default function AdminProducts() {
   return (
     <div className="space-y-5">
       <AdminPageHead
-        title="Products"
+        title={seller ? 'Your products' : 'Products'}
         note={<>
           {filtered.length.toLocaleString('en-IN')} of {rows.length.toLocaleString('en-IN')} SKUs
-          {dirty && <span className="ml-2 text-emerald-600">· unsaved admin changes are stored locally</span>}
+          {dirty && !seller && <span className="ml-2 text-emerald-600">· admin changes are stored in this browser</span>}
+          {seller && <span className="ml-2">· new products go live straight away</span>}
         </>}
       >
-        {canEdit && dirty && (
+        {canEdit && dirty && !seller && (
           <Button size="sm" variant="ghost" icon="refresh" onClick={() => { if (window.confirm('Discard all admin changes and restore the shipped catalogue?')) { reset(); toast.info('Catalogue restored'); } }}>
             Reset
           </Button>
         )}
-        {canEdit && <Button size="sm" variant="outline" icon="tag" onClick={() => setDiscount(true)}>Apply discount</Button>}
+        {canEdit && !seller && <Button size="sm" variant="outline" icon="tag" onClick={() => setDiscount(true)}>Apply discount</Button>}
         {canEdit && <Button size="sm" variant="outline" icon="upload" onClick={() => setBulk(true)}>Bulk import</Button>}
         {canEdit && <Button size="sm" icon="plus" onClick={() => setEditing(null)}>Add product</Button>}
         <ExcelExportButton
-          filename="nasou-products"
+          filename="nivora-products"
           label="Export"
-          headers={['SKU', 'Name', 'Category', 'Sub-category', 'Material', 'Size', 'Brand', 'Price', 'MRP', 'Discount %', 'Stock']}
-          rows={filtered.map((p) => [p.sku, p.name, departmentMeta(p.department || DEFAULT_DEPARTMENT).name, p.subcategoryName || categoryName(p.category), p.material, p.size, p.supplierName, p.price, p.mrp, p.discount, p.stock])}
+          headers={['SKU', 'Name', 'Retailer', 'Category', 'Sub-category', 'Material', 'Size', 'Brand', 'Price', 'MRP', 'Discount %', 'Stock']}
+          rows={filtered.map((p) => [p.sku, p.name, sellerName(p.retailerId), departmentMeta(p.department || DEFAULT_DEPARTMENT).name, p.subcategoryName || categoryName(p.category), p.material, p.size, p.supplierName, p.price, p.mrp, p.discount, p.stock])}
         />
       </AdminPageHead>
+
+      <Tabs value={view} onChange={setView} options={[{ value: 'list', label: 'Products', icon: 'package', count: rows.length }, { value: 'ledger', label: 'Stock movements', icon: 'refresh' }]} />
+      {view === 'ledger' && <StockLedger retailerId={seller ? actor.retailerId : retailer} />}
+      {view === 'list' && <>
 
       {!canEdit && <ViewOnlyBanner what="the catalogue" />}
 
       <div className="flex flex-wrap gap-3 rounded-[20px] border border-line bg-white/86 p-3 shadow-[0_18px_40px_rgba(37,88,73,0.08)]">
         <SearchInput placeholder="Search name, SKU or brand" value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} />
+        {!seller && (
+          <select value={retailer} onChange={(e) => { setRetailer(e.target.value); setPage(1); }} aria-label="Retailer" className="h-12 rounded-[18px] border border-line bg-white px-4 text-[13px] font-semibold text-forest outline-none transition focus:border-forest/40">
+            <option value="">All retailers</option>
+            {retailers.filter((r) => r.status !== 'pending' && r.status !== 'needs_changes').map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
+          </select>
+        )}
         <select value={dept} onChange={(e) => { setDept(e.target.value); setCat(''); setPage(1); }} aria-label="Category" className="h-12 rounded-[18px] border border-line bg-white px-4 text-[13px] font-semibold text-forest outline-none transition focus:border-forest/40">
           <option value="">All categories</option>
           {DEPARTMENTS.map((d) => <option key={d.slug} value={d.slug}>{d.name}</option>)}
@@ -141,7 +201,7 @@ export default function AdminProducts() {
                     {p.name}
                     {isCustom && <Badge tone="ok">Added</Badge>}
                   </p>
-                  <p className="text-[11px] text-ink-50">{p.sku} · {departmentMeta(p.department || DEFAULT_DEPARTMENT).name} › {p.subcategoryName || categoryName(p.category)}</p>
+                  <p className="text-[11px] text-ink-50">{p.sku} · {departmentMeta(p.department || DEFAULT_DEPARTMENT).name} › {p.subcategoryName || categoryName(p.category)}{!seller && <> · <span className="font-semibold text-forest-800">{sellerName(p.retailerId)}</span></>}</p>
                 </div>
               </div>
               <span className="tnum text-[13px] font-semibold">{money(p.price)}</span>
@@ -173,6 +233,7 @@ export default function AdminProducts() {
           <Button variant="outline" onClick={() => setPage((p) => p + 1)}>Load more</Button>
         </div>
       )}
+      </>}
 
       {discount && (
         <CategoryDiscountDialog
@@ -187,8 +248,8 @@ export default function AdminProducts() {
       <BulkImportDialog
         open={bulk}
         onClose={() => setBulk(false)}
-        existingSkus={new Set(rows.map((p) => p.sku))}
-        onImport={onBulk}
+        existingSkus={new Set(all.map((p) => p.sku))}
+        onImport={(list) => onBulk(list.map((p) => ({ ...p, retailerId: p.retailerId || (seller ? actor.retailerId : retailer || 'r1') })))}
       />
 
       {editing !== undefined && (
@@ -198,6 +259,9 @@ export default function AdminProducts() {
           product={editing}
           onClose={() => setEditing(undefined)}
           onSave={onSave}
+          retailerId={seller ? actor.retailerId : undefined}
+          retailers={seller ? [] : retailers.filter((r) => r.status === 'approved')}
+          masterOnly={seller}
         />
       )}
     </div>

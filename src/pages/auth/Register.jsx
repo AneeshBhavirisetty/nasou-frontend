@@ -97,7 +97,7 @@ export default function Register() {
         fullName: f.fullName.trim(),
         password: f.password,
       });
-      toast.success('Mobile verified — welcome to Nasou!');
+      toast.success('Mobile verified — welcome to Nivora!');
       navigate(landingFor(session, explicit), { replace: true });
     } catch (err) {
       setOtpErr(true);

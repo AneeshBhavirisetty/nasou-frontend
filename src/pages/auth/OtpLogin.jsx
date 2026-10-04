@@ -85,7 +85,7 @@ export default function OtpLogin() {
     setLoading(true);
     try {
       await register({ phone: phone.trim(), email: form.email.trim(), fullName: form.fullName.trim(), password: form.password });
-      toast.success('Account created — welcome to Nasou!');
+      toast.success('Account created — welcome to Nivora!');
       navigate(redirect, { replace: true });
     } catch (err) {
       setError(err.message || 'Could not create your account.');

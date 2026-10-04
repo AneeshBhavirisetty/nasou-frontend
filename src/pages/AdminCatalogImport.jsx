@@ -1,97 +1,89 @@
-import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { useMemo, useState } from 'react';
 import Icon from '../components/Icon';
-import { AdminPageHead, ViewOnlyBanner } from '../components/admin/AdminUI';
+import BulkImportDialog from '../components/admin/BulkImportDialog';
+import { AdminPageHead, Kpi, Panel, ViewOnlyBanner, SELECT_CLS, LABEL_CLS } from '../components/admin/AdminUI';
 import { useIam } from '../context/IamStore';
+import { useAdminStore } from '../context/AdminStore';
 import { Button } from '../components/ui';
 import { useToast } from '../context/ToastContext';
-import { products, categories } from '../data/catalog';
-import { cx } from '../lib/format';
+import { useRetailers } from '../store/retailers';
+import { categoryName } from '../data/catalog';
+import { departmentMeta } from '../data/departments';
+import { downloadSheet, isoDate } from '../lib/exportSheet';
+import { audit } from '../lib/auditLog';
+
+/* Bulk catalog import and export (requirement 28): CSV or Excel, for one
+   retailer at a time. Imports go through the same checks as the product
+   form; exports are role-limited and written to the audit log. */
+
+const HEADERS = ['SKU', 'Name', 'Category', 'Sub-category', 'Material', 'Size', 'Brand', 'Price', 'MRP', 'Stock'];
 
 export default function AdminCatalogImport() {
   const toast = useToast();
-  const [file, setFile] = useState(null);
-  const [drag, setDrag] = useState(false);
-  const [phase, setPhase] = useState('idle'); // idle | working | done
-  const [result, setResult] = useState(null);
-  const canEdit = useIam().can('products', 'edit');
+  const { can } = useIam();
+  const { products, saveProduct } = useAdminStore();
+  const retailers = useRetailers().filter((r) => r.status === 'approved' || r.status === 'suspended');
+  const [rid, setRid] = useState(retailers[0]?.id || '');
+  const [open, setOpen] = useState(false);
+  const canEdit = can('catalog', 'edit');
+  const seller = retailers.find((r) => r.id === rid);
+  const mine = useMemo(() => products.filter((p) => p.retailerId === rid), [products, rid]);
 
-  const take = (f) => {
-    if (!f) return;
-    if (!/\.(xlsx|xls|csv)$/i.test(f.name)) return toast.error('Choose an .xlsx, .xls or .csv workbook.');
-    setFile(f);
-    setResult(null);
-    setPhase('idle');
+  const exportCsv = () => {
+    downloadSheet(`nivora-catalog-${seller?.name.replace(/\W+/g, '-').toLowerCase()}-${isoDate()}.csv`, HEADERS,
+      mine.map((p) => [p.sku, p.name, departmentMeta(p.department).name, p.subcategoryName || categoryName(p.category), p.material, p.size, p.supplierName, p.price, p.mrp, p.stock]));
+    audit({ action: 'export.csv', entity: 'catalog', entityId: rid, summary: `Exported ${mine.length} products of ${seller?.name}` });
+    toast.success(`${mine.length} products exported`);
   };
-
-  const run = () => {
-    setPhase('working');
-    setTimeout(() => {
-      setResult({
-        rows: products.length,
-        created: 0,
-        updated: products.length,
-        categories: categories.length,
-        skipped: 0,
-      });
-      setPhase('done');
-      toast.success('Workbook imported — catalogue is up to date.');
-    }, 1400);
-  };
+  const template = () => downloadSheet('nivora-catalog-template.csv', HEADERS, [['PL009001', 'PVC Elbow', 'Plumbing', 'PVC fittings', 'PVC', '1/2"', 'Astral', 45, 60, 120]]);
 
   return (
     <div className="space-y-5">
-      <AdminPageHead title="Catalogue import" note="Upsert product metadata from a supplier workbook." />
+      <AdminPageHead title="Catalog import & export" note="Bring a retailer’s whole price list in from CSV or Excel, or take it out again." />
       {!canEdit && <ViewOnlyBanner what="catalogue imports" />}
 
-      <div className="max-w-2xl rounded-[20px] border border-line bg-white/86 p-5 shadow-[0_18px_40px_rgba(37,88,73,0.08)] sm:p-6">
-        <label
-          onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
-          onDragLeave={() => setDrag(false)}
-          onDrop={(e) => { e.preventDefault(); setDrag(false); take(e.dataTransfer.files?.[0]); }}
-          className={cx(
-            'flex cursor-pointer flex-col items-center rounded-lg border-2 border-dashed px-6 py-10 text-center transition',
-            drag ? 'border-emerald bg-emerald-50/50' : 'border-line bg-canvas/40 hover:border-emerald/50 hover:bg-emerald-50/30'
-          )}
-        >
-          <span className="grid h-12 w-12 place-items-center rounded-full bg-emerald-50 text-emerald-600">
-            <Icon name="layers" size={22} />
-          </span>
-          <p className="mt-3 text-[14px] font-bold">{file ? file.name : 'Drop your workbook here'}</p>
-          <p className="mt-1 text-[12px] text-ink-50">
-            {file ? `${(file.size / 1024).toFixed(0)} KB · ready to import` : '.xlsx, .xls or .csv · or click to browse'}
-          </p>
-          <input type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={(e) => take(e.target.files?.[0])} />
-        </label>
-
-        <div className="mt-4 flex gap-2">
-          <Button onClick={run} disabled={!canEdit || !file || phase === 'working'} loading={phase === 'working'} icon="package">
-            {phase === 'working' ? 'Importing…' : 'Import workbook'}
-          </Button>
-          {file && phase !== 'working' && (
-            <Button variant="ghost" onClick={() => { setFile(null); setResult(null); }}>Clear</Button>
-          )}
+      <Panel>
+        <div className="grid gap-4 sm:grid-cols-[1fr_auto] sm:items-end">
+          <label className="block">
+            <span className={LABEL_CLS}>Retailer</span>
+            <select value={rid} onChange={(e) => setRid(e.target.value)} className={SELECT_CLS}>
+              {retailers.map((r) => <option key={r.id} value={r.id}>{r.name} — {r.city}</option>)}
+            </select>
+          </label>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" icon="external" onClick={exportCsv} disabled={!mine.length}>Export CSV</Button>
+            {canEdit && <Button icon="upload" onClick={() => setOpen(true)} disabled={!rid}>Import for this retailer</Button>}
+          </div>
         </div>
+      </Panel>
 
-        {result && (
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mt-5 rounded-lg border border-emerald-100 bg-emerald-50 p-4">
-            <p className="flex items-center gap-2 text-[13.5px] font-bold text-emerald-700">
-              <Icon name="check" size={15} strokeWidth={3} /> Import complete
-            </p>
-            <dl className="mt-2 grid grid-cols-2 gap-x-6 gap-y-1 text-[12.5px] text-ink-70 sm:grid-cols-4">
-              <div><dt className="text-ink-35">Rows</dt><dd className="tnum font-bold">{result.rows.toLocaleString('en-IN')}</dd></div>
-              <div><dt className="text-ink-35">Updated</dt><dd className="tnum font-bold">{result.updated.toLocaleString('en-IN')}</dd></div>
-              <div><dt className="text-ink-35">Created</dt><dd className="tnum font-bold">{result.created}</dd></div>
-              <div><dt className="text-ink-35">Categories</dt><dd className="tnum font-bold">{result.categories}</dd></div>
-            </dl>
-          </motion.div>
-        )}
-
-        <p className="mt-4 text-[11.5px] leading-relaxed text-ink-35">
-          The live catalogue in this demo is built from <span className="font-mono">shop data 1.xlsx</span> by
-          <span className="font-mono"> scripts/build-catalog.mjs</span>. Rows without a price stay as drafts.
-        </p>
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <Kpi label="Products" value={mine.length.toLocaleString('en-IN')} icon="package" />
+        <Kpi label="In stock" value={mine.filter((p) => p.stock > 0).length.toLocaleString('en-IN')} icon="check" />
+        <Kpi label="Sub-categories" value={new Set(mine.map((p) => p.category)).size} icon="layers" />
+        <Kpi label="Brands" value={new Set(mine.map((p) => p.supplier)).size} icon="tag" />
       </div>
+
+      <Panel title="File format" note="First row is the header. Existing SKUs are skipped; new ones are created for the chosen retailer and go live straight away.">
+        <div className="thin-bar overflow-x-auto">
+          <table className="w-full min-w-[640px] text-[12.5px]">
+            <thead><tr>{HEADERS.map((h) => <th key={h} className="border-b border-line px-2 py-2 text-left font-bold text-forest-800">{h}</th>)}</tr></thead>
+            <tbody><tr>{['PL009001', 'PVC Elbow', 'Plumbing', 'PVC fittings', 'PVC', '1/2"', 'Astral', '45', '60', '120'].map((v, i) => <td key={i} className="px-2 py-2 font-mono text-ink-70">{v}</td>)}</tr></tbody>
+          </table>
+        </div>
+        <button onClick={template} className="mt-3 inline-flex items-center gap-1.5 text-[12.5px] font-bold text-forest hover:underline"><Icon name="fileText" size={14} /> Download the template</button>
+      </Panel>
+
+      <BulkImportDialog
+        open={open}
+        onClose={() => setOpen(false)}
+        existingSkus={new Set(products.map((p) => p.sku))}
+        onImport={(list) => {
+          list.forEach((p) => saveProduct({ ...p, retailerId: rid }, 'bulk import'));
+          audit({ action: 'catalog.import', entity: 'catalog', entityId: rid, summary: `Imported ${list.length} products for ${seller?.name}` });
+          toast.success(`${list.length} products added to ${seller?.name}`);
+        }}
+      />
     </div>
   );
 }

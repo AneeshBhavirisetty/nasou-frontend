@@ -1,10 +1,11 @@
 export const brand = {
-  name: 'Nasou Hive',
-  short: 'Nasou',
-  tagline: 'The plumbing counter that fits your job',
+  name: 'Nivora',
+  short: 'Nivora',
+  company: 'Nasou Hive',
+  tagline: 'Every trusted counter. One cart.',
   promise:
-    'Every PVC, uPVC and cPVC fitting, searchable by size, material, supplier and SKU — with a price you can trust and stock you can see.',
-  email: 'hello@nasouhive.com',
+    'Plumbing, electrical, hardware and more from verified local retailers — search by size, brand or SKU, order once, and track every seller’s part to your site.',
+  email: 'hello@nivora.in',
   phone: '+91 97058 07551',
   toll: '1800 120 000 066',
   /* WhatsApp Business number (digits only, with country code) for wa.me links */
@@ -17,6 +18,7 @@ export const brand = {
 export const currency = { symbol: '₹', code: 'INR', locale: 'en-IN' };
 
 export const announcements = [
+  'Nivora is now a marketplace — shop verified retailers in one cart',
   'Free delivery on orders above ₹999 · GST invoice on every order',
   'Search by product code, size or supplier — 1,400+ SKUs live',
   'Ships pan-India · dispatch same day on in-stock items before 2pm',
@@ -33,9 +35,9 @@ export const primaryNav = [
 
 export const valueProps = [
   { icon: 'tag', title: 'Verified pricing', body: 'Every price is set in the catalogue, never guessed at the counter. What you see is what you pay.' },
-  { icon: 'layers', title: 'Real supplier records', body: 'Astral, Ashirvad, Finolex, Supreme and 20 more — each SKU carries its manufacturer of record.' },
-  { icon: 'truck', title: 'Same-day dispatch', body: 'In-stock items ordered before 2pm leave the Hyderabad warehouse the same working day.' },
-  { icon: 'shieldCheck', title: 'GST invoice, always', body: 'Input-credit-ready tax invoice on 100% of orders, downloadable the moment you check out.' },
+  { icon: 'shieldCheck', title: 'Verified retailers', body: 'Every seller’s business, GST, PAN and bank are checked before they can list a single product.' },
+  { icon: 'truck', title: 'Every part tracked', body: 'One payment, many sellers — each seller ships their part and you watch every one to your site.' },
+  { icon: 'fileText', title: 'GST invoice, always', body: 'Input-credit-ready tax invoice on 100% of orders, downloadable the moment you check out.' },
 ];
 
 export const testimonials = [
@@ -84,7 +86,8 @@ export const footerColumns = [
   {
     title: 'Company',
     links: [
-      { label: 'About Nasou', to: '/about' },
+      { label: 'About Nivora', to: '/about' },
+      { label: 'Sell on Nivora', to: '/sell' },
       { label: 'Trade enquiries', to: '/enquiry' },
       { label: 'Returns policy', to: '/returns' },
     ],
@@ -101,5 +104,5 @@ export const socials = [
 export const paymentMethods = ['UPI', 'Cards', 'Net banking', 'Cash on delivery', 'GST invoice'];
 
 /* wa.me deep link with an optional prefilled message */
-export const whatsappLink = (text = 'Hi Nasou Hive, I have a question about an order.') =>
+export const whatsappLink = (text = 'Hi Nivora, I have a question about an order.') =>
   `https://wa.me/${brand.whatsapp}?text=${encodeURIComponent(text)}`;

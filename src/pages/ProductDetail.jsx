@@ -9,7 +9,7 @@ import Reveal from '../components/Reveal';
 import Accordion, { AccordionItem } from '../components/Accordion';
 import Tabs from '../components/Tabs';
 import { Badge, Button, Container, Breadcrumbs, PriceTag, Rating, SectionHead, Stepper } from '../components/ui';
-import { categoryName, departmentName, findProduct, offersFor, relatedProducts } from '../data/catalog';
+import { categoryName, departmentName, findProduct, isListed, offersFor, relatedProducts, sellerName } from '../data/catalog';
 import { useCart, MAX_QTY } from '../context/CartContext';
 import { useAdminStore } from '../context/AdminStore';
 import { bulkOffersFor, describeBulk } from '../lib/pricing';
@@ -78,6 +78,7 @@ export default function ProductDetail() {
     ['Material', product.material],
     ['Type', product.form.replace(/s$/, '')],
     ['Size', product.size || 'Standard'],
+    ['Sold by', sellerName(product) || '—'],
     ['Brand', product.supplierName],
     ['Category', categoryName(product.category)],
   ];
@@ -153,6 +154,10 @@ export default function ProductDetail() {
               {product.supplierName} · {categoryName(product.category)}
             </p>
             <h1 className="mt-2 text-[clamp(1.6rem,4vw,2rem)] font-semibold leading-tight text-forest">{product.name}</h1>
+            <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-sand-50 px-3 py-1.5 text-[12.5px] font-bold text-forest">
+              <Icon name="store" size={14} /> Sold by {sellerName(product) || 'a Nivora seller'}
+              {isListed(product) ? <Icon name="shieldCheck" size={14} className="text-emerald-700" /> : <span className="text-clay-600">· not taking orders</span>}
+            </p>
             <p className="mt-3 text-[14.5px] leading-6 text-ink-50">{product.description}</p>
 
             <div className="mt-4 flex flex-wrap items-center gap-2">

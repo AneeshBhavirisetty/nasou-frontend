@@ -7,11 +7,13 @@ import { Button, Field } from '../../components/ui';
 import Icon from '../../components/Icon';
 import AuthCard from '../../components/auth/AuthCard';
 import PasswordField from '../../components/auth/PasswordField';
-import { DEMO_ACCOUNTS } from '../../lib/api';
+import OtpInput from '../../components/auth/OtpInput';
+import { DEMO_ACCOUNTS, IS_MOCK } from '../../lib/api';
 import { landingFor } from '../../lib/auth';
-import { roleLabel } from '../../lib/roles';
 
-const MOCK = import.meta.env.VITE_API_BASE_URL === undefined || import.meta.env.VITE_MOCK_API === 'true';
+/* Sign in for all three portals. Login resolves the role (and for retailers,
+   the retailer) and lands each person in the right place. Nasou Hive team
+   accounts finish with a 6-digit second factor. */
 
 function detectType(v) {
   const t = v.trim();
@@ -22,7 +24,7 @@ function detectType(v) {
 }
 
 export default function Login() {
-  const { isAuthenticated, user, login } = useAuth();
+  const { isAuthenticated, user, login, verify2fa } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
   const [params] = useSearchParams();
@@ -32,10 +34,16 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [challenge, setChallenge] = useState(null);
+  const [code, setCode] = useState('');
 
   if (isAuthenticated) return <Navigate to={landingFor(user, explicit)} replace />;
 
   const type = detectType(identifier);
+  const done = (session) => {
+    toast.success(session.reactivated ? 'Welcome back — your account is active again' : `Welcome back, ${session.fullName.split(' ')[0]}!`);
+    navigate(landingFor(session, explicit), { replace: true });
+  };
 
   const submit = async (e) => {
     e.preventDefault();
@@ -45,12 +53,11 @@ export default function Login() {
     if (type === 'invalid') return setError('That doesn’t look like a mobile number or email.');
     if (type === 'mobile-partial') return setError('Mobile number must be exactly 10 digits.');
     if (!password) return setError('Enter your password.');
-
     setLoading(true);
     try {
-      const session = await login(trimmed, password);
-      toast.success('Welcome back!');
-      navigate(landingFor(session, explicit), { replace: true });
+      const res = await login(trimmed, password);
+      if (res?.twoFactorRequired) setChallenge(res);
+      else done(res);
     } catch (err) {
       setError(err.message || 'Invalid credentials. Please try again.');
     } finally {
@@ -58,11 +65,41 @@ export default function Login() {
     }
   };
 
+  const submitCode = async (e) => {
+    e?.preventDefault();
+    if (code.length !== 6) return setError('Enter the 6-digit code.');
+    setError('');
+    setLoading(true);
+    try {
+      done(await verify2fa(challenge.challengeId, code));
+    } catch (err) {
+      setError(err.message);
+      setCode('');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (challenge) {
+    return (
+      <AuthCard title="Two-step check" subtitle={`Nasou Hive team accounts need a second step. Enter the code sent to ${challenge.maskedPhone}.`} back={{ to: '/login', label: 'Use another account' }}>
+        <form onSubmit={submitCode} className="space-y-5">
+          <OtpInput value={code} onChange={setCode} onComplete={() => {}} />
+          {IS_MOCK && <p className="rounded-[12px] bg-[#f6f3ed] px-3 py-2 text-center text-[12px] text-ink-50">Demo code: <b className="font-mono text-forest">123456</b></p>}
+          {error && <p role="alert" className="rounded-md bg-clay-50 px-3 py-2.5 text-[13px] text-clay-600">{error}</p>}
+          <Button type="submit" full size="lg" icon="shieldCheck" loading={loading}>Verify and sign in</Button>
+        </form>
+      </AuthCard>
+    );
+  }
+
+  const groups = [...new Set(DEMO_ACCOUNTS.map((a) => a.group))];
+
   return (
     <AuthCard
       title="Sign in"
-      subtitle="Welcome back — your cart and wishlist are waiting."
-      footer={<>New to Nasou? <Link to="/login/otp" className="font-bold text-forest hover:underline">Create an account</Link></>}
+      subtitle="Shoppers, retailers and the Nivora team all sign in here."
+      footer={<>New to Nivora? <Link to="/login/otp" className="font-bold text-forest hover:underline">Create an account</Link> · <Link to="/sell" className="font-bold text-forest hover:underline">Sell on Nivora</Link></>}
     >
       <form onSubmit={submit} noValidate className="space-y-4">
         <Field
@@ -73,57 +110,49 @@ export default function Login() {
           value={identifier}
           onChange={(e) => {
             const v = e.target.value;
-            // pure-digit entry is a mobile number → cap at 10 digits
             setIdentifier(/^\d*$/.test(v) ? v.slice(0, 10) : v.trim());
           }}
           placeholder="you@example.com or 98765 43210"
           required
         />
-
-        <PasswordField
-          value={password}
-          onChange={setPassword}
-          rightLink={<Link to="/forgot-password" className="font-semibold text-forest hover:underline">Forgot password?</Link>}
-        />
-
+        <PasswordField value={password} onChange={setPassword} rightLink={<Link to="/forgot-password" className="font-semibold text-forest hover:underline">Forgot password?</Link>} />
         {error && (
-          <motion.p initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} role="alert" className="rounded-md bg-clay-50 px-3 py-2.5 text-[13px] text-clay-600">
-            {error}
-          </motion.p>
+          <motion.p initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} role="alert" className="rounded-md bg-clay-50 px-3 py-2.5 text-[13px] text-clay-600">{error}</motion.p>
         )}
-
         <Button type="submit" full size="lg" loading={loading}>{loading ? 'Signing in…' : 'Sign in'}</Button>
       </form>
 
       <div className="mt-5">
         <div className="relative py-2">
           <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-line" /></div>
-          <div className="relative flex justify-center text-xs uppercase tracking-[0.16em] text-forest-800">
-            <span className="bg-white px-3">Or continue with</span>
-          </div>
+          <div className="relative flex justify-center text-xs uppercase tracking-[0.16em] text-forest-800"><span className="bg-white px-3">Or continue with</span></div>
         </div>
-        <Link
-          to="/login/otp"
-          className="mt-3 flex w-full items-center justify-center gap-3 rounded-md border border-line bg-white/80 px-4 py-3 text-sm font-semibold text-forest transition hover:bg-sunk"
-        >
+        <Link to="/login/otp" className="mt-3 flex w-full items-center justify-center gap-3 rounded-md border border-line bg-white/80 px-4 py-3 text-sm font-semibold text-forest transition hover:bg-sunk">
           <span className="grid h-5 w-5 place-items-center rounded-full bg-forest text-white"><Icon name="phone" size={11} /></span>
           Mobile OTP
         </Link>
       </div>
 
-      {MOCK && (
-        <div className="mt-5 rounded-[14px] border border-dashed border-[#cad8d2] bg-[#f4f7f5] px-3.5 py-3 text-[11.5px] leading-relaxed text-ink-50">
-          <p className="font-bold text-forest">Demo accounts — password <span className="font-mono">nasou123</span></p>
-          <ul className="mt-1 space-y-0.5">
-            {DEMO_ACCOUNTS.map((a) => (
-              <li key={a.role} className="flex justify-between gap-2">
-                <span className="font-mono">{a.email}</span>
-                <span className="shrink-0 rounded-full bg-white px-2 font-bold text-forest">{roleLabel(a.role)}</span>
-              </li>
-            ))}
-          </ul>
-          <p className="mt-1.5 text-center text-[11px] text-ink-50">Or OTP login with the matching number + any 6 digits.</p>
-        </div>
+      {IS_MOCK && (
+        <details className="mt-5 rounded-[16px] border border-dashed border-[#cad8d2] bg-[#f6f3ed] px-3.5 py-3 text-[12px] text-ink-50" open>
+          <summary className="cursor-pointer font-bold text-forest">Demo accounts — password <span className="font-mono">nivora123</span></summary>
+          {groups.map((g) => (
+            <div key={g} className="mt-2.5">
+              <p className="text-[10.5px] font-extrabold uppercase tracking-[0.14em] text-ink-35">{g}</p>
+              <ul className="mt-1 space-y-0.5">
+                {DEMO_ACCOUNTS.filter((a) => a.group === g).map((a) => (
+                  <li key={a.email}>
+                    <button type="button" onClick={() => { setIdentifier(a.email); setPassword('nivora123'); setError(''); }} className="flex w-full items-center justify-between gap-2 rounded-[8px] px-1.5 py-1 text-left transition hover:bg-white">
+                      <span className="truncate font-mono text-[11.5px] text-ink-70">{a.email}</span>
+                      <span className="shrink-0 rounded-full bg-white px-2 text-[11px] font-bold text-forest">{a.label}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+          <p className="mt-2 text-[11px]">Tap an account to fill it in. Team accounts then ask for the 2FA code <b className="font-mono">123456</b>.</p>
+        </details>
       )}
     </AuthCard>
   );

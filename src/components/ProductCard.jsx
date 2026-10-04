@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import Icon from './Icon';
 import ProductArt from './ProductArt';
 import { Rating } from './ui';
-import { categoryName } from '../data/catalog';
+import { categoryName, sellerName } from '../data/catalog';
 import { money, discount as pctOff, cx } from '../lib/format';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
@@ -94,6 +94,11 @@ export default function ProductCard({ product, compact = false }) {
             <p className={cx('mt-1 text-[11.5px] font-semibold', out ? 'text-ink-35' : low ? 'text-amber' : 'text-emerald-700')}>
               {out ? 'Out of stock' : low ? `Only ${product.stock} left` : 'In stock'}
             </p>
+            {!compact && sellerName(product) && (
+              <p className="mt-1 flex items-center gap-1 truncate text-[11px] font-semibold text-ink-50" title={`Sold by ${sellerName(product)}`}>
+                <Icon name="store" size={11} className="shrink-0 text-forest" /> <span className="truncate">{sellerName(product)}</span>
+              </p>
+            )}
           </div>
           <button
             onClick={() => !out && add(product, { qty: 1 })}

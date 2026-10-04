@@ -1,215 +1,276 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useMemo, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Icon from '../../components/Icon';
-import Counter from '../../components/Counter';
 import { ChartCard, LineChart, BarList, Donut, SERIES } from '../../components/charts/Charts';
-import { adminApi } from '../../lib/api';
-import { departments, suppliers } from '../../data/catalog';
-import { allOrders, ORDER_STATUSES } from '../../data/orders';
-import { useAdminStore } from '../../context/AdminStore';
-import { useOrderStore } from '../../context/OrderStore';
+import { Kpi, Panel, StatusPill, Tabs } from '../../components/admin/AdminUI';
+import { useAuth } from '../../context/AuthContext';
 import { useIam } from '../../context/IamStore';
-import { billedOf, byBrand, bySubcategory, countBy, dailySeries, rupeesCompact, withinDays } from '../../lib/analytics';
+import { useAdminStore } from '../../context/AdminStore';
+import { useRetailers, useRequests } from '../../store/retailers';
+import { useRefunds } from '../../store/orders';
+import { useSettings } from '../../store/settings';
+import { useScopedOrders } from '../../lib/useScoped';
+import { useSettlements } from './Payouts';
+import { byProduct, dailySeries, rupeesCompact, withinDays } from '../../lib/analytics';
+import { userRoleLabel } from '../../lib/roles';
 import { money, cx } from '../../lib/format';
 
-/* Admin dashboard (client review 2, admin item 1: line, bar and pie charts).
-   Every number reads from the same order book as Orders / Billing / Reports
-   (seeded demo orders + orders placed at checkout) via lib/analytics.js. */
+/* Super Admin dashboards (requirement 22): Executive, Retailer performance,
+   Operations, Finance, Customers & catalog. Every number is derived from
+   the same order book, refunds and payouts the other screens use. */
 
-const STATUS_BAR = { Pending: 'bg-amber', Processing: 'bg-slate', Shipped: 'bg-slate/60', Delivered: 'bg-emerald', Cancelled: 'bg-clay' };
+const DAY = 86400000;
+const pct = (a, b) => (b ? Math.round(((a - b) / b) * 100) : a ? 100 : 0);
+const hours = (ms) => (ms / 3600000);
+const logAt = (p, s) => p.statusLog?.find((x) => x.status === s)?.at;
 
-/* Quick actions — shown only when the signed-in person may use them. */
-const ACTIONS = [
-  { label: 'Add product', icon: 'plus', to: '/admin/products?new=1', primary: true, module: 'products', need: 'edit' },
-  { label: 'Manage orders', icon: 'truck', to: '/admin/orders', module: 'orders' },
-  { label: 'Billing & payments', icon: 'rupee', to: '/admin/billing', module: 'billing' },
-  { label: 'Reports', icon: 'barChart', to: '/admin/reports', module: 'reports' },
-  { label: 'Discounts', icon: 'tag', to: '/admin/discounts', module: 'discounts' },
-  { label: 'Users & access', icon: 'users', to: '/admin/users', module: 'users' },
-];
-
-function Panel({ className = '', children }) {
-  return (
-    <section className={cx('min-w-0 rounded-[20px] border border-line bg-white p-4 shadow-card sm:p-5', className)}>
-      {children}
-    </section>
-  );
+function Delta({ now, before, dark = false }) {
+  const d = pct(now, before);
+  if (!before && !now) return null;
+  const tone = dark ? 'rounded-full bg-white/15 px-1.5 text-white' : d >= 0 ? 'text-emerald-700' : 'text-clay-600';
+  return <span className={cx('ml-1 font-bold', tone)}>{d >= 0 ? '▲' : '▼'} {Math.abs(d)}%</span>;
 }
 
-function PanelHead({ title, note, action }) {
-  return (
-    <div className="mb-4 flex items-start justify-between gap-3">
-      <div className="min-w-0">
-        <h2 className="text-[17px] font-semibold tracking-[-0.02em] sm:text-lg">{title}</h2>
-        {note && <p className="mt-0.5 text-[12.5px] text-ink-50">{note}</p>}
-      </div>
-      {action}
-    </div>
-  );
+function useDashboardData() {
+  const orders = useScopedOrders();
+  const retailers = useRetailers();
+  const refunds = useRefunds();
+  const settings = useSettings();
+  const { products } = useAdminStore();
+  const { rows: payouts, held } = useSettlements();
+
+  return useMemo(() => {
+    const now = Date.now();
+    const live = (o) => o.status !== 'Cancelled';
+    const last30 = withinDays(orders, 30);
+    const prev30 = orders.filter((o) => o.createdAt < now - 30 * DAY && o.createdAt >= now - 60 * DAY);
+    const gmv = (list) => list.filter(live).reduce((s, o) => s + o.total, 0);
+    const commission = (list) => list.reduce((s, o) => s + o.parts.filter((p) => p.status !== 'Cancelled').reduce((n, p) => n + p.commission, 0), 0);
+    const mrr = retailers.filter((r) => r.status === 'approved').reduce((s, r) => s + (settings.plans.find((p) => p.id === r.plan)?.monthly || 0), 0);
+
+    const firstOrder = new Map();
+    [...orders].sort((a, b) => a.createdAt - b.createdAt).forEach((o) => { const k = o.userId || o.email || o.phone; if (!firstOrder.has(k)) firstOrder.set(k, o.createdAt); });
+    const customers30 = new Set(last30.map((o) => o.userId || o.email || o.phone));
+    const newCustomers = [...customers30].filter((k) => firstOrder.get(k) >= now - 30 * DAY).length;
+
+    const parts = orders.flatMap((o) => o.parts.map((p) => ({ ...p, orderId: o.id, createdAt: o.createdAt, customer: o.customer })));
+    const perRetailer = retailers.filter((r) => r.status !== 'pending' && r.status !== 'needs_changes' && r.status !== 'rejected').map((r) => {
+      const mine = parts.filter((p) => p.retailerId === r.id);
+      const done = mine.filter((p) => p.status === 'Delivered' && logAt(p, 'Delivered'));
+      const fulfil = done.length ? done.reduce((s, p) => s + hours(logAt(p, 'Delivered') - p.createdAt), 0) / done.length : 0;
+      return {
+        id: r.id, name: r.name, status: r.status,
+        sales: mine.filter((p) => p.status !== 'Cancelled').reduce((s, p) => s + p.total, 0),
+        parts: mine.length,
+        cancelRate: mine.length ? Math.round((mine.filter((p) => p.status === 'Cancelled').length / mine.length) * 100) : 0,
+        fulfilHours: Math.round(fulfil),
+        commission: mine.filter((p) => p.status !== 'Cancelled').reduce((s, p) => s + p.commission, 0),
+      };
+    }).sort((a, b) => b.sales - a.sales);
+
+    const LIMIT = { Pending: 2, Processing: 3, Shipped: 5 };
+    const delayed = parts.filter((p) => LIMIT[p.status] && now - ((p.statusLog?.[p.statusLog.length - 1]?.at) || p.createdAt) > LIMIT[p.status] * DAY)
+      .map((p) => ({ ...p, stuckDays: Math.floor((now - (p.statusLog?.[p.statusLog.length - 1]?.at || p.createdAt)) / DAY) }))
+      .sort((a, b) => b.stuckDays - a.stuckDays);
+
+    const top = byProduct(last30).slice(0, 8);
+    const sold = new Set(last30.flatMap((o) => o.lines.map((l) => l.id)));
+    const noSale = products.filter((p) => !sold.has(p.id));
+    const refunds30 = refunds.filter((r) => r.status === 'processed' && (r.processedAt || r.decidedAt || 0) >= now - 30 * DAY);
+
+    return {
+      orders, last30, prev30,
+      gmv30: gmv(last30), gmvPrev: gmv(prev30),
+      net30: commission(last30) + mrr, netPrev: commission(prev30) + mrr,
+      commission30: commission(last30), mrr,
+      orders30: last30.length, ordersPrev: prev30.length,
+      aov: last30.filter(live).length ? Math.round(gmv(last30) / last30.filter(live).length) : 0,
+      activeRetailers: retailers.filter((r) => r.status === 'approved').length,
+      newCustomers, returning: customers30.size - newCustomers,
+      series: dailySeries(orders, 30).map((p) => ({ label: p.label, value: p.billed, orders: p.orders })),
+      commissionSeries: dailySeries(orders, 30).map((p) => ({ ...p, value: 0 })).map((p) => ({ ...p, value: commission(orders.filter((o) => new Date(o.createdAt).toDateString() === new Date(p.t).toDateString())) })),
+      perRetailer, parts, delayed,
+      partStatus: ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'].map((s) => ({ label: s, value: parts.filter((p) => p.status === s).length })),
+      flagged: orders.filter((o) => o.flagged),
+      payouts, held,
+      refunds30,
+      top, noSale,
+      lowStock: products.filter((p) => p.stock > 0 && p.stock <= 8),
+    };
+  }, [orders, retailers, refunds, settings, products, payouts, held]);
 }
 
 export default function AdminDashboard() {
-  const { products } = useAdminStore();
-  const { placed } = useOrderStore();
-  const { can } = useIam();
-  const [apiStats, setApiStats] = useState(null);
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { can, isOwner } = useIam();
+  const retailers = useRetailers();
+  const requests = useRequests();
+  const refunds = useRefunds();
+  const d = useDashboardData();
+  const [tab, setTab] = useState('exec');
 
-  /* a real backend can still supply headline totals; the demo derives them */
-  useEffect(() => {
-    let alive = true;
-    adminApi.dashboard().then((r) => alive && r?.stats && setApiStats(r.stats)).catch(() => {});
-    return () => { alive = false; };
-  }, []);
+  const attention = [
+    can('retailers') && { n: retailers.filter((r) => r.status === 'pending').length, label: 'retailers to approve', to: '/admin/approvals', icon: 'store' },
+    can('retailers') && { n: retailers.filter((r) => r.pendingChanges).length, label: 'profile changes', to: '/admin/approvals?tab=changes', icon: 'pencil' },
+    isOwner && { n: requests.filter((q) => q.status === 'open').length, label: 'Owner sign-offs', to: '/admin/approvals?tab=owner', icon: 'shield' },
+    can('refunds', 'approve') && { n: refunds.filter((r) => r.status === 'requested').length, label: 'refunds to approve', to: '/admin/refunds', icon: 'refresh' },
+    can('orders') && { n: d.delayed.length, label: 'delayed sub-orders', to: '/admin/orders', icon: 'clock' },
+    can('orders') && { n: d.flagged.length, label: 'flagged orders', to: '/admin/orders', icon: 'bell' },
+    can('payouts') && { n: d.payouts.filter((p) => p.status === 'pending').length, label: 'payouts to review', to: '/admin/payouts', icon: 'rupee' },
+  ].filter((x) => x && x.n > 0);
 
-  const book = useMemo(() => allOrders(placed), [placed]);
-  const last30 = useMemo(() => withinDays(book, 30), [book]);
-  const series = useMemo(() => dailySeries(book, 30).map((p) => ({ label: p.label, value: p.billed, orders: p.orders })), [book]);
-  const payMix = useMemo(() => countBy(book.filter((o) => o.status !== 'Cancelled'), (o) => o.payment), [book]);
-  const subs = useMemo(() => bySubcategory(last30).slice(0, 6), [last30]);
-  const brands = useMemo(() => byBrand(last30).slice(0, 6), [last30]);
-  const customers = useMemo(() => new Set(book.map((o) => (o.email || o.customer).toLowerCase())).size, [book]);
-
-  const tiles = [
-    { label: 'Customers', value: apiStats?.totalUsers ?? customers, icon: 'user', to: '/admin/users', detail: 'People who have ordered', module: 'users' },
-    { label: 'Products live', value: apiStats?.totalProducts ?? products.length, icon: 'package', to: '/admin/products', detail: `${departments.length} categories · ${suppliers.length} brands`, module: 'products' },
-    { label: 'Orders', value: apiStats?.totalOrders ?? book.length, icon: 'truck', to: '/admin/orders', detail: `${last30.length} in the last 30 days`, module: 'orders' },
-    { label: 'Billed', value: apiStats?.totalRevenue ?? book.reduce((s, o) => s + billedOf(o), 0), icon: 'rupee', money: true, to: '/admin/billing', detail: 'Incl. GST and delivery', module: 'billing' },
-  ];
-
-  const byStatus = ORDER_STATUSES.map((st) => ({ st, n: book.filter((o) => o.status === st).length }));
-  const actions = ACTIONS.filter((a) => can(a.module, a.need || 'view')).slice(0, 4);
+  const hour = new Date().getHours();
+  const greet = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  const settled = d.payouts.filter((p) => p.status === 'paid').reduce((s, p) => s + p.net, 0);
 
   return (
-    <div className="space-y-4 sm:space-y-5">
-      {/* hero — demo command panel with quick actions */}
-      <section className="relative overflow-hidden rounded-[24px] bg-[linear-gradient(135deg,#173d33_0%,#1f5c4a_100%)] p-5 text-white shadow-pop sm:rounded-[28px] sm:p-10">
-        <div className="field-dots-dark pointer-events-none absolute inset-0 opacity-30" />
-        <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-[rgba(72,132,112,0.35)] blur-3xl" />
-        <div className="relative grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-end lg:gap-8">
+    <div className="space-y-5">
+      <section className="relative overflow-hidden rounded-[28px] bg-[linear-gradient(135deg,#173d33_0%,#1f5c4a_60%,#2b6b55_100%)] p-5 text-white shadow-pop sm:p-8">
+        <div className="field-dots-dark pointer-events-none absolute inset-0 opacity-25" />
+        <div className="pointer-events-none absolute -right-20 -top-28 h-80 w-80 rounded-full bg-[radial-gradient(circle,rgba(229,216,199,0.28),transparent_65%)]" />
+        <div className="relative grid gap-6 lg:grid-cols-[1.2fr_1fr] lg:items-end">
           <div>
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3.5 py-1.5 text-[10.5px] font-bold uppercase tracking-[0.2em] text-white">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-100" /> Store operations
-            </span>
-            <h2 className="mt-4 text-[clamp(1.6rem,4.5vw,3.1rem)] font-semibold leading-[1.05] tracking-[-0.04em] text-white sm:mt-6">
-              Run the whole storefront from one calm console.
-            </h2>
-            <p className="mt-3 max-w-lg text-[14px] leading-6 text-sunk sm:mt-4 sm:text-[15px]">
-              Products, orders, payments, discounts and your team — in one place.
-            </p>
+            <p className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[10.5px] font-bold uppercase tracking-[0.2em]"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-100" /> {userRoleLabel(user)}</p>
+            <h2 className="font-hero mt-4 text-[clamp(1.7rem,4.2vw,2.8rem)] font-semibold leading-[1.05] text-white">{greet}, {user?.fullName?.split(' ')[0]}.</h2>
+            <p className="mt-2 max-w-lg text-[14px] text-emerald-100">{d.activeRetailers} retailers are selling on Nivora. {rupeesCompact(d.gmv30)} in orders over the last 30 days <Delta dark now={d.gmv30} before={d.gmvPrev} />.</p>
           </div>
-          {actions.length > 0 && (
-            <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
-              {actions.map((a, i) => (
-                <motion.div key={a.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 + i * 0.06 }}>
-                  <Link
-                    to={a.to}
-                    className={cx(
-                      'group flex h-full min-h-[76px] flex-col justify-between rounded-[16px] border p-3.5 transition hover:-translate-y-0.5 sm:min-h-[92px] sm:rounded-[18px] sm:p-4',
-                      a.primary ? 'border-white bg-white text-forest' : 'border-white/15 bg-white/10 text-white hover:bg-white/15'
-                    )}
-                  >
-                    <Icon name={a.icon} size={19} />
-                    <span className="mt-2 flex items-center justify-between gap-2 text-[13px] font-bold sm:mt-3 sm:text-[14px]">
-                      {a.label}
-                      <Icon name="arrowRight" size={15} className="shrink-0 transition group-hover:translate-x-0.5" />
-                    </span>
-                  </Link>
-                </motion.div>
-              ))}
-            </div>
-          )}
+          <div className="rounded-[20px] border border-white/15 bg-white/[0.07] p-4 backdrop-blur">
+            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-100">Needs your attention</p>
+            {attention.length ? (
+              <ul className="mt-2 grid gap-1.5 sm:grid-cols-2">
+                {attention.map((a) => (
+                  <li key={a.label}>
+                    <Link to={a.to} className="flex items-center gap-2 rounded-[12px] bg-white/10 px-3 py-2 text-[13px] font-semibold transition hover:bg-white/20">
+                      <Icon name={a.icon} size={14} /> <b className="tnum">{a.n}</b> <span className="truncate">{a.label}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            ) : <p className="mt-2 flex items-center gap-2 text-[13.5px] font-semibold"><Icon name="check" size={15} /> All clear — nothing waiting on you.</p>}
+          </div>
         </div>
       </section>
 
-      {/* KPI row */}
-      <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
-        {tiles.map((t, i) => {
-          const Tag = can(t.module) ? Link : 'div';
-          return (
-            <motion.div key={t.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}>
-              <Tag
-                to={t.to}
-                className="group relative block h-full overflow-hidden rounded-[18px] border border-line bg-white p-3.5 shadow-card transition hover:-translate-y-0.5 sm:rounded-[20px] sm:p-5"
-              >
-                <span className="relative flex items-start justify-between gap-2">
-                  <span className="text-[12.5px] font-semibold text-ink-70 sm:text-sm">{t.label}</span>
-                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-[10px] bg-sunk text-forest transition group-hover:bg-forest group-hover:text-white sm:h-9 sm:w-9">
-                    <Icon name={t.icon} size={16} />
-                  </span>
-                </span>
-                <p className="relative mt-2 text-[clamp(1.35rem,3.5vw,1.9rem)] font-semibold tracking-[-0.04em] text-forest sm:mt-3">
-                  {t.money ? rupeesCompact(t.value) : <Counter value={t.value} />}
-                </p>
-                <p className="relative mt-0.5 text-[11.5px] text-ink-50 sm:text-xs">{t.detail}</p>
-              </Tag>
-            </motion.div>
-          );
-        })}
-      </div>
+      <Tabs value={tab} onChange={setTab} options={[
+        { value: 'exec', label: 'Executive', icon: 'gauge' },
+        { value: 'retail', label: 'Retailer performance', icon: 'store' },
+        { value: 'ops', label: 'Operations', icon: 'truck' },
+        { value: 'fin', label: 'Finance', icon: 'rupee' },
+        { value: 'cust', label: 'Customers & catalog', icon: 'users' },
+      ]} />
 
-      {/* charts: line + pie */}
-      <div className="grid gap-4 sm:gap-5 xl:grid-cols-[1.6fr_1fr]">
-        <ChartCard
-          title="Sales, last 30 days"
-          note="Billed per day, incl. GST and delivery"
-          table={{ headers: ['Day', 'Orders', 'Billed'], rows: series.filter((p) => p.orders).map((p) => [p.label, p.orders, money(p.value)]) }}
-        >
-          <LineChart points={series} format={money} tick={rupeesCompact} label="Billed per day" sub={(p) => `${p.orders} order${p.orders === 1 ? '' : 's'}`} />
-        </ChartCard>
+      <motion.div key={tab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="space-y-5">
+        {tab === 'exec' && (
+          <>
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-6">
+              <Kpi label="Sales (30 days)" value={rupeesCompact(d.gmv30)} note={<>vs previous 30 <Delta now={d.gmv30} before={d.gmvPrev} /></>} icon="rupee" />
+              <Kpi label="Net revenue" value={rupeesCompact(d.net30)} note="Commission + plan fees" icon="percent" />
+              <Kpi label="Orders" value={d.orders30} note={<>last 30 days <Delta now={d.orders30} before={d.ordersPrev} /></>} icon="truck" />
+              <Kpi label="Avg order value" value={money(d.aov)} note="Cancelled excluded" icon="cart" />
+              <Kpi label="Active retailers" value={d.activeRetailers} note={`${retailers.length} on record`} icon="store" />
+              <Kpi label="New customers" value={d.newCustomers} note={`${d.returning} returning`} icon="userPlus" />
+            </div>
+            <div className="grid gap-5 xl:grid-cols-[1.6fr_1fr]">
+              <ChartCard title="Sales trend" note="Order value per day, last 30 days" table={{ headers: ['Day', 'Orders', 'Value'], rows: d.series.filter((p) => p.orders).map((p) => [p.label, p.orders, money(p.value)]) }}>
+                <LineChart points={d.series} format={money} tick={rupeesCompact} label="Order value per day" sub={(p) => `${p.orders} order${p.orders === 1 ? '' : 's'}`} />
+              </ChartCard>
+              <ChartCard title="Sales by retailer" note="Share of all live sub-orders" table={{ headers: ['Retailer', 'Sales'], rows: d.perRetailer.map((r) => [r.name, money(r.sales)]) }}>
+                <Donut slices={d.perRetailer.map((r) => ({ label: r.name, value: r.sales }))} format={rupeesCompact} center={{ value: rupeesCompact(d.perRetailer.reduce((s, r) => s + r.sales, 0)), label: 'all time' }} />
+              </ChartCard>
+            </div>
+          </>
+        )}
 
-        <ChartCard
-          title="Payment methods"
-          note="Share of orders (cancelled excluded)"
-          table={{ headers: ['Method', 'Orders'], rows: payMix.map((s) => [s.label, s.value]) }}
-        >
-          <Donut slices={payMix} format={(v) => `${v}`} center={{ value: payMix.reduce((n, s) => n + s.value, 0), label: 'orders' }} />
-        </ChartCard>
-      </div>
+        {tab === 'retail' && (
+          <>
+            <div className="grid gap-5 lg:grid-cols-2">
+              <ChartCard title="Sales by retailer" note="All live sub-orders" table={{ headers: ['Retailer', 'Sales', 'Sub-orders'], rows: d.perRetailer.map((r) => [r.name, money(r.sales), r.parts]) }}>
+                <BarList rows={d.perRetailer.map((r) => ({ key: r.id, label: r.name, value: r.sales, parts: r.parts }))} format={rupeesCompact} color={SERIES[0]} detail={(r) => `${r.parts} sub-orders`} />
+              </ChartCard>
+              <ChartCard title="Average fulfilment time" note="Order placed → delivered, hours" table={{ headers: ['Retailer', 'Hours'], rows: d.perRetailer.map((r) => [r.name, r.fulfilHours]) }}>
+                <BarList rows={d.perRetailer.map((r) => ({ key: r.id, label: r.name, value: r.fulfilHours }))} format={(v) => `${v} h`} color={SERIES[1]} />
+              </ChartCard>
+            </div>
+            <Panel title="Scorecard" pad={false}>
+              <div className="thin-bar overflow-x-auto">
+                <table className="w-full min-w-[640px] text-[13px]">
+                  <thead className="bg-[#f6f3ed] text-left text-[11px] uppercase tracking-[0.1em] text-forest-800"><tr><th className="px-4 py-2.5">Retailer</th><th className="px-3">Status</th><th className="px-3 text-right">Sales</th><th className="px-3 text-right">Sub-orders</th><th className="px-3 text-right">Cancelled</th><th className="px-3 text-right">Fulfilment</th><th className="px-4 text-right">Commission</th></tr></thead>
+                  <tbody>{d.perRetailer.map((r) => (
+                    <tr key={r.id} onClick={() => navigate(`/admin/retailers/${r.id}`)} className="cursor-pointer border-t border-line-soft hover:bg-[#f8f6f1]">
+                      <td className="px-4 py-2.5 font-bold text-ink">{r.name}</td><td className="px-3"><StatusPill status={r.status} /></td>
+                      <td className="tnum px-3 text-right">{money(r.sales)}</td><td className="tnum px-3 text-right">{r.parts}</td>
+                      <td className={cx('tnum px-3 text-right font-bold', r.cancelRate > 10 ? 'text-clay-600' : 'text-ink-70')}>{r.cancelRate}%</td>
+                      <td className="tnum px-3 text-right">{r.fulfilHours ? `${r.fulfilHours} h` : '—'}</td><td className="tnum px-4 text-right">{money(r.commission)}</td>
+                    </tr>
+                  ))}</tbody>
+                </table>
+              </div>
+            </Panel>
+          </>
+        )}
 
-      {/* charts: bars + status */}
-      <div className="grid gap-4 sm:gap-5 lg:grid-cols-3">
-        <ChartCard
-          title="Top sub-categories"
-          note="Net sales (ex-GST), last 30 days"
-          table={{ headers: ['Sub-category', 'Units', 'Net sales'], rows: subs.map((r) => [r.label, r.units, money(r.net)]) }}
-        >
-          <BarList rows={subs.map((r) => ({ key: r.key, label: r.label, value: r.net, units: r.units }))} format={rupeesCompact} color={SERIES[0]} detail={(r) => `${r.units} units`} />
-        </ChartCard>
-
-        <ChartCard
-          title="Top brands"
-          note="Net sales (ex-GST), last 30 days"
-          table={{ headers: ['Brand', 'Units', 'Net sales'], rows: brands.map((r) => [r.label, r.units, money(r.net)]) }}
-        >
-          <BarList rows={brands.map((r) => ({ key: r.key, label: r.label, value: r.net, units: r.units }))} format={rupeesCompact} color={SERIES[1]} detail={(r) => `${r.units} units`} />
-        </ChartCard>
-
-        <Panel>
-          <PanelHead title="Orders by status" note={`${book.length} orders in the order book`} />
-          <div className="flex h-3 gap-[2px] overflow-hidden rounded-full" aria-hidden>
-            {byStatus.map(({ st, n }) => n > 0 && (
-              <motion.span
-                key={st}
-                initial={{ width: 0 }}
-                animate={{ width: `${(n / book.length) * 100}%` }}
-                transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-                className={STATUS_BAR[st]}
-              />
-            ))}
+        {tab === 'ops' && (
+          <div className="grid gap-5 lg:grid-cols-[1fr_1.3fr]">
+            <ChartCard title="Sub-orders by status" note={`${d.parts.length} sub-orders`} table={{ headers: ['Status', 'Sub-orders'], rows: d.partStatus.map((s) => [s.label, s.value]) }}>
+              <BarList rows={d.partStatus.map((s, i) => ({ key: s.label, label: s.label, value: s.value, color: [SERIES[2], SERIES[1], '#5b9bd5', SERIES[0], SERIES[3]][i] }))} format={(v) => `${v}`} />
+            </ChartCard>
+            <Panel title="Delays" note="Pending over 2 days, processing over 3, shipped over 5." action={<Link to="/admin/orders" className="text-[12.5px] font-bold text-forest hover:underline">All orders →</Link>}>
+              <ul className="space-y-2">
+                {d.delayed.slice(0, 8).map((p) => (
+                  <li key={p.id}>
+                    <Link to={`/admin/orders/${p.orderId}`} className="flex items-center justify-between gap-3 rounded-[14px] bg-[#f6f3ed] px-3 py-2.5 text-[13px] transition hover:bg-sunk">
+                      <span className="min-w-0"><span className="font-mono font-bold text-ink">{p.id}</span> <span className="text-ink-50">· {p.retailerName}</span></span>
+                      <span className="flex shrink-0 items-center gap-2"><StatusPill status={p.status} /><b className="tnum text-clay-600">{p.stuckDays} d</b></span>
+                    </Link>
+                  </li>
+                ))}
+                {!d.delayed.length && <li className="text-[13px] text-ink-50">Nothing is running late.</li>}
+              </ul>
+              {d.flagged.length > 0 && <p className="mt-3 text-[12.5px] text-clay-600"><Icon name="bell" size={13} className="mr-1 inline" />{d.flagged.length} flagged order(s) also need support.</p>}
+            </Panel>
           </div>
-          <ul className="mt-4 space-y-2">
-            {byStatus.map(({ st, n }) => (
-              <li key={st} className="flex items-center gap-2.5 rounded-[12px] bg-[#f4f7f5] px-3 py-2 text-[13px]">
-                <span className={cx('h-2.5 w-2.5 rounded-full', STATUS_BAR[st])} />
-                <span className="flex-1 font-semibold text-ink-70">{st}</span>
-                <span className="tnum font-bold text-ink">{n}</span>
-                <span className="tnum w-10 text-right text-ink-50">{Math.round((n / (book.length || 1)) * 100)}%</span>
-              </li>
-            ))}
-          </ul>
-        </Panel>
-      </div>
+        )}
+
+        {tab === 'fin' && (
+          <>
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+              <Kpi label="Commission (30 d)" value={rupeesCompact(d.commission30)} icon="percent" />
+              <Kpi label="Subscription revenue" value={`${money(d.mrr)}/mo`} note="Active plans" icon="card" />
+              <Kpi label="Payouts to review" value={rupeesCompact(d.payouts.filter((p) => p.status === 'pending').reduce((s, p) => s + p.net, 0))} icon="clock" tone="amber" />
+              <Kpi label="Paid to retailers" value={rupeesCompact(settled)} note="All time" icon="rupee" />
+              <Kpi label="Refunds (30 d)" value={rupeesCompact(d.refunds30.reduce((s, r) => s + r.amount, 0))} note={`${d.refunds30.length} refunds`} icon="refresh" />
+            </div>
+            <div className="grid gap-5 xl:grid-cols-[1.6fr_1fr]">
+              <ChartCard title="Commission per day" note="Last 30 days" table={{ headers: ['Day', 'Commission'], rows: d.commissionSeries.filter((p) => p.value).map((p) => [p.label, money(p.value)]) }}>
+                <LineChart points={d.commissionSeries} format={money} tick={rupeesCompact} label="Commission per day" color={SERIES[0]} />
+              </ChartCard>
+              <ChartCard title="Payout status" note="Retailer × cycle" table={{ headers: ['Status', 'Amount'], rows: ['open', 'pending', 'approved', 'on_hold', 'paid'].map((s) => [s, money(d.payouts.filter((p) => p.status === s).reduce((n, p) => n + p.net, 0))]) }}>
+                <Donut slices={[['Paid', 'paid'], ['To review', 'pending'], ['Approved', 'approved'], ['Open cycle', 'open']].map(([label, s]) => ({ label, value: Math.max(0, d.payouts.filter((p) => p.status === s).reduce((n, p) => n + p.net, 0)) }))} format={rupeesCompact} center={{ value: rupeesCompact(Object.values(d.held).reduce((s, v) => s + v, 0)), label: 'held' }} />
+              </ChartCard>
+            </div>
+            <p className="text-[12.5px] text-ink-50"><Link to="/admin/reconciliation" className="font-bold text-forest hover:underline">Reconciliation</Link> lists anything Razorpay and our books disagree on.</p>
+          </>
+        )}
+
+        {tab === 'cust' && (
+          <div className="grid gap-5 lg:grid-cols-3">
+            <ChartCard title="New vs returning" note="Customers who ordered in the last 30 days" table={{ headers: ['Type', 'Customers'], rows: [['New', d.newCustomers], ['Returning', d.returning]] }}>
+              <Donut slices={[{ label: 'New', value: d.newCustomers }, { label: 'Returning', value: d.returning }]} format={(v) => `${v}`} center={{ value: d.newCustomers + d.returning, label: 'customers' }} />
+            </ChartCard>
+            <ChartCard title="Top products" note="Net sales, last 30 days" table={{ headers: ['Product', 'Units', 'Net'], rows: d.top.map((r) => [r.label, r.units, money(r.net)]) }}>
+              <BarList rows={d.top.map((r) => ({ key: r.key, label: r.label, value: r.net, units: r.units }))} format={rupeesCompact} color={SERIES[1]} detail={(r) => `${r.units} units`} />
+            </ChartCard>
+            <Panel title="No-sale products" note={`${d.noSale.length.toLocaleString('en-IN')} listed products sold nothing in 30 days`}>
+              <ul className="space-y-1.5 text-[12.5px]">
+                {d.noSale.slice(0, 7).map((p) => <li key={p.id} className="flex justify-between gap-2 rounded-[10px] bg-[#f6f3ed] px-2.5 py-1.5"><span className="truncate text-ink-70">{p.name}</span><span className="tnum shrink-0 text-ink-50">{p.stock} in stock</span></li>)}
+              </ul>
+              <p className="mt-3 text-[12.5px] text-amber"><b>{d.lowStock.length}</b> products are down to 8 units or fewer.</p>
+            </Panel>
+          </div>
+        )}
+      </motion.div>
     </div>
   );
 }

@@ -30,7 +30,7 @@ export default function AuthCard({ title, subtitle, children, footer, back }) {
           </span>
           <div>
             <p className="text-[11px] uppercase tracking-[0.24em] text-forest-800">{signup ? 'Creating an account on' : 'Signing in to'}</p>
-            <p className="font-semibold text-forest">Nasou Hive</p>
+            <p className="font-hero text-[17px] font-semibold text-forest">Nivora</p>
           </div>
         </div>
 

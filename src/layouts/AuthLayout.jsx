@@ -17,7 +17,7 @@ export default function AuthLayout() {
               <span aria-hidden="true">&lt;</span>
               <span>Back to shop</span>
             </Link>
-            <Link to="/" aria-label="Nasou Hive home">
+            <Link to="/" aria-label="Nivora home">
               <Logo variant="tile" className="[&>span:first-child]:h-9 [&>span:first-child]:w-9 [&>span:first-child]:rounded-[12px] [&>span:last-child]:text-[15px]" />
             </Link>
           </div>

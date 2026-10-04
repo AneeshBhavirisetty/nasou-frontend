@@ -61,7 +61,7 @@ export default function CartDrawer() {
                 <div>
                   <p className="text-[18px] font-semibold text-ink">Nothing here yet</p>
                   <p className="mt-1 text-[13.5px] text-ink-50">
-                    Everything you add keeps its trace record attached.
+                    Add from any seller — you still check out once.
                   </p>
                 </div>
                 <Button to="/shop" onClick={() => setOpen(false)} variant="primary">
@@ -114,7 +114,7 @@ export default function CartDrawer() {
                             </button>
                           </div>
                           <p className="mt-0.5 truncate text-[11.5px] text-ink-50">
-                            Sold by {line.supplier?.name} · {line.supplier?.eta}
+                            Sold by <b className="font-semibold text-forest">{line.seller}</b> · {line.supplier?.eta}
                           </p>
                           {line.bulk && (
                             <p className="mt-1 truncate text-[11.5px] font-semibold text-emerald-700">

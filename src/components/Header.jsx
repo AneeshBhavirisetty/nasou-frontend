@@ -5,7 +5,8 @@ import Icon from './Icon';
 import Logo from './Logo';
 import ProductArt from './ProductArt';
 import NotificationBell from './NotificationBell';
-import { roleLabel } from '../lib/roles';
+import DeliverTo from './DeliverTo';
+import { userRoleLabel } from '../lib/roles';
 import { Badge } from './ui';
 import { departments, searchProducts } from '../data/catalog';
 import { announcements } from '../data/site';
@@ -136,7 +137,7 @@ function SearchBox({ onDone }) {
 
 /* ── account menu (demo avatar circle) ─────────────────────────────────── */
 function AccountMenu() {
-  const { isAuthenticated, user, isAdmin, logout } = useAuth();
+  const { isAuthenticated, user, isAdmin, isRetailer, logout } = useAuth();
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   const navigate = useNavigate();
@@ -164,8 +165,9 @@ function AccountMenu() {
     { label: 'My profile', to: '/account', icon: 'user' },
     { label: 'Orders', to: '/orders', icon: 'package' },
     { label: 'Wishlist', to: '/wishlist', icon: 'heart' },
-    { label: 'Addresses', to: '/checkout', icon: 'pin' },
-    ...(isAdmin ? [{ label: 'Admin console', to: '/admin/dashboard', icon: 'gauge' }] : []),
+    { label: 'Addresses', to: '/account#addresses', icon: 'pin' },
+    ...(isAdmin ? [{ label: 'Super Admin console', to: '/admin/dashboard', icon: 'gauge' }] : []),
+    ...(isRetailer ? [{ label: 'Seller console', to: '/seller', icon: 'store' }] : []),
   ];
 
   return (
@@ -191,7 +193,7 @@ function AccountMenu() {
               <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white text-[12px] font-black text-forest">{initials}</span>
               <div className="min-w-0">
                 <p className="truncate text-[13.5px] font-bold">{user?.fullName || 'Your account'}</p>
-                <p className="text-[11.5px] text-emerald-100">{roleLabel(user?.role)}</p>
+                <p className="text-[11.5px] text-emerald-100">{userRoleLabel(user)}</p>
               </div>
             </div>
             <div className="py-1">
@@ -360,9 +362,11 @@ export default function Header() {
           <Icon name={mobile ? 'close' : 'menu'} size={20} />
         </button>
 
-        <Link to="/" className="shrink-0" aria-label="Nasou Hive home">
+        <Link to="/" className="shrink-0" aria-label="Nivora home">
           <Logo variant="tile" className="[&>span:last-child]:hidden sm:[&>span:last-child]:inline" />
         </Link>
+
+        <DeliverTo className="hidden xl:block" />
 
         <div className="mx-auto hidden w-full max-w-2xl md:block">
           <SearchBox />
@@ -416,6 +420,9 @@ export default function Header() {
           <NavLink to="/enquiry" className={({ isActive }) => cx(TAB({ isActive }), 'flex items-center gap-1.5')}>
             <Icon name="mail" size={14} /> Enquire now
           </NavLink>
+          <NavLink to="/sell" className={({ isActive }) => cx(TAB({ isActive }), 'flex items-center gap-1.5')}>
+            <Icon name="store" size={14} /> Sell on Nivora
+          </NavLink>
           <Ticker className="ml-auto min-w-0 max-w-[420px] flex-1" />
         </div>
 
@@ -439,6 +446,7 @@ export default function Header() {
             className="overflow-hidden border-t border-white/60 lg:hidden"
           >
             <div className="max-h-[70dvh] overflow-y-auto px-4 pb-5 pt-3 sm:px-6">
+              <DeliverTo className="mb-3" />
               <p className="eyebrow mb-2 px-1">Categories</p>
               <div className="grid gap-1 rounded-[18px] bg-white p-1.5 shadow-card">
                 {departments.map((d) => (
@@ -469,7 +477,8 @@ export default function Header() {
                 {!isAuthenticated
                   ? <Link to="/login" className="rounded-[14px] bg-white px-3 py-3 text-center text-[13px] font-bold text-forest shadow-card">Sign in</Link>
                   : <Link to="/account" className="rounded-[14px] bg-white px-3 py-3 text-center text-[13px] font-bold text-forest shadow-card">My profile</Link>}
-                <Link to="/enquiry" className="col-span-2 rounded-[14px] bg-forest px-3 py-3 text-center text-[13px] font-bold text-white shadow-btn">Enquire now</Link>
+                <Link to="/enquiry" className="rounded-[14px] bg-forest px-3 py-3 text-center text-[13px] font-bold text-white shadow-btn">Enquire now</Link>
+                <Link to="/sell" className="rounded-[14px] bg-sand px-3 py-3 text-center text-[13px] font-bold text-forest shadow-card">Sell on Nivora</Link>
               </div>
               <p className="mt-4 px-1 text-[12px] font-semibold text-ink-50">{announcements[0]}</p>
             </div>

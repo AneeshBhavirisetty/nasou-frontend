@@ -18,13 +18,20 @@ import { money, cx } from '../../lib/format';
  * checkout — with no coupon code for the shopper to type. Leaving the minimum
  * quantity at 1 makes it apply to every unit; raising it turns the same rule
  * into a trade / bulk offer. Manage or end them under Discounts › Bulk pricing.
+ *
+ * Review 5, admin item 2: the same dialog can instead apply an existing
+ * discount *code* from the Discounts module to the category. The code is
+ * scoped to that category and set to auto-apply at checkout; shoppers can
+ * still type it.
  * ==========================================================================*/
 
 const SELECT = 'h-12 w-full rounded-md border border-line bg-white/80 px-4 text-[14px] text-ink outline-none transition focus:border-forest focus:shadow-[0_0_0_2px_rgba(31,92,74,0.18)]';
 const LABEL = 'mb-1.5 block text-[11.5px] font-semibold uppercase tracking-[0.16em] text-forest-800';
 
 export default function CategoryDiscountDialog({ open, onClose, products, department = '', category = '' }) {
-  const { saveBulkRule } = useAdminStore();
+  const { saveBulkRule, coupons, saveCoupon } = useAdminStore();
+  const [mode, setMode] = useState('rule');
+  const [code, setCode] = useState('');
   const toast = useToast();
 
   /* Sub-categories actually present in the catalogue, labelled with their category. */
@@ -70,8 +77,18 @@ export default function CategoryDiscountDialog({ open, onClose, products, depart
     return { count: hit.length, each };
   }, [products, f.scopeType, f.scopeValue, pct, value]);
 
+  const coupon = coupons.find((c) => c.code === code.trim().toUpperCase());
+  const couponScope = f.scopeType === 'department' ? `dept:${f.scopeValue}` : f.scopeValue;
+
   const submit = (e) => {
     e.preventDefault();
+    if (mode === 'code') {
+      if (!coupon) return toast.error('No discount code with that name — create it under Discounts first.');
+      if (!preview.count) return toast.error('No products in that selection yet.');
+      saveCoupon({ ...coupon, scope: couponScope, autoApply: true, active: true });
+      toast.success(`${coupon.code} now applies itself to ${scopeLabel}`);
+      return onClose();
+    }
     if (value <= 0) return toast.error('Enter a discount greater than zero.');
     if (pct && value > 100) return toast.error('A percentage discount cannot be more than 100%.');
     if (!preview.count) return toast.error('No products in that selection yet.');
@@ -93,9 +110,17 @@ export default function CategoryDiscountDialog({ open, onClose, products, depart
   return (
     <Modal open={open} onClose={onClose} title="Apply discount to a category" size="md">
       <form onSubmit={submit} className="space-y-4">
-        <p className="rounded-md bg-sunk px-3.5 py-2.5 text-[12.5px] leading-relaxed text-ink-70">
-          The discount applies itself on the product page, in the cart and at checkout — shoppers type nothing.
-          End it any time under Discounts › Bulk pricing.
+        <div className="flex gap-2 rounded-md bg-sunk p-1">
+          {[['rule', 'Set a discount here', 'tag'], ['code', 'Use a discount code', 'key']].map(([k, label, ic]) => (
+            <button key={k} type="button" onClick={() => setMode(k)} className={cx('flex flex-1 items-center justify-center gap-1.5 rounded-sm py-2.5 text-[13px] font-bold transition', mode === k ? 'bg-forest text-white shadow-btn' : 'text-forest-800 hover:text-forest')}>
+              <Icon name={ic} size={14} /> {label}
+            </button>
+          ))}
+        </div>
+        <p className="rounded-md bg-sunk/60 px-3.5 py-2.5 text-[12.5px] leading-relaxed text-ink-70">
+          {mode === 'rule'
+            ? 'The discount applies itself on the product page, in the cart and at checkout — shoppers type nothing. End it any time under Discounts › Bulk pricing.'
+            : 'Pick a code made in the Discounts module. It is limited to this category and applied automatically at checkout; shoppers can also type it.'}
         </p>
 
         <div className="grid gap-4 sm:grid-cols-2">
@@ -129,6 +154,18 @@ export default function CategoryDiscountDialog({ open, onClose, products, depart
             </select>
           </div>
 
+          {mode === 'code' ? (
+            <div className="sm:col-span-2">
+              <span className={LABEL}>Discount code</span>
+              <input list="discount-codes" value={code} onChange={(e) => setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))} placeholder="e.g. MONSOON10" className={SELECT} />
+              <datalist id="discount-codes">{coupons.map((c) => <option key={c.id} value={c.code}>{c.kind === 'percent' ? `${c.value}% off` : `₹${c.value} off`}</option>)}</datalist>
+              <span className="mt-1.5 block text-[12px] text-ink-50">
+                {coupon
+                  ? <>{coupon.kind === 'percent' ? `${coupon.value}% off` : `${money(coupon.value)} off`}{coupon.minOrder ? ` · min order ${money(coupon.minOrder)}` : ''}{coupon.maxDiscount ? ` · capped at ${money(coupon.maxDiscount)}` : ''}{!coupon.active && ' · currently inactive (will be switched on)'}</>
+                  : code ? 'No code with that name yet.' : `${coupons.length} codes in the Discounts module`}
+              </span>
+            </div>
+          ) : (<>
           <div>
             <span className={LABEL}>Discount type</span>
             <div className="flex gap-2">
@@ -171,6 +208,7 @@ export default function CategoryDiscountDialog({ open, onClose, products, depart
             onChange={(e) => set('name')(e.target.value)}
             placeholder={`${pct ? `${value || 0}% off` : `${money(value || 0)} off`} ${scopeLabel}`}
           />
+          </>)}
         </div>
 
         <div className="flex items-center gap-2.5 rounded-md border border-line bg-white/70 px-3.5 py-3 text-[13px]">
@@ -179,8 +217,9 @@ export default function CategoryDiscountDialog({ open, onClose, products, depart
           </span>
           <p className="min-w-0 text-ink-70">
             <span className="font-bold text-ink">{preview.count.toLocaleString('en-IN')}</span> product{preview.count === 1 ? '' : 's'} in {scopeLabel}
-            {preview.count > 0 && value > 0 && <> · about <span className="tnum font-bold text-emerald-700">{money(preview.each)}</span> off each unit</>}
-            {minQty > 1 && <> · from {minQty} units</>}
+            {mode === 'rule' && preview.count > 0 && value > 0 && <> · about <span className="tnum font-bold text-emerald-700">{money(preview.each)}</span> off each unit</>}
+            {mode === 'rule' && minQty > 1 && <> · from {minQty} units</>}
+            {mode === 'code' && coupon && <> · code <b>{coupon.code}</b> applies itself at checkout</>}
           </p>
         </div>
 
@@ -192,7 +231,7 @@ export default function CategoryDiscountDialog({ open, onClose, products, depart
           >
             Cancel
           </button>
-          <Button type="submit" icon="tag">Apply discount</Button>
+          <Button type="submit" icon="tag">{mode === 'code' ? 'Apply code to category' : 'Apply discount'}</Button>
         </div>
       </form>
     </Modal>

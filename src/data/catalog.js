@@ -10,11 +10,14 @@
 import generated from './catalog.generated.json';
 import supplierList from './suppliers.json';
 import { DEPARTMENTS, DEFAULT_DEPARTMENT, departmentMeta } from './departments';
+import { canSell, retailerForRow } from '../lib/marketplace';
+import { getRetailer, retailersStore } from '../store/retailers';
+import { settingsStore } from '../store/settings';
 
 /* Admin edits (add / edit / delist done in /admin/products) are persisted by
    AdminStore under this key. We fold them in here at load so the storefront and
    the admin see the same catalogue. Changes take effect on the next page load. */
-const ADMIN_KEY = 'nasou_admin_v1';
+const ADMIN_KEY = 'nasou_admin_v1'; // key kept so existing admin edits survive the rename
 function applyAdminPatch(list) {
   try {
     if (typeof localStorage === 'undefined') return list;
@@ -29,49 +32,79 @@ function applyAdminPatch(list) {
   }
 }
 
-/* Every product carries its department and an image list (empty until an
-   admin attaches one — the UI falls back to ProductArt). */
+/* Every product carries its department, an image list (empty until an
+   admin attaches one — the UI falls back to ProductArt) and the retailer who
+   sells it. Generated rows are spread over the demo retailers. */
 const withOwnership = generated.products.map((p) => ({
   ...p,
   department: p.department ?? DEFAULT_DEPARTMENT,
   images: p.images ?? [],
+  retailerId: p.retailerId ?? retailerForRow(p.row),
 }));
 
-/* Rows added before departments existed default to plumbing. */
-const withDepartment = (p) => (p.department ? p : { ...p, department: DEFAULT_DEPARTMENT });
+/* Rows added before departments / retailers existed get defaults. */
+const withDefaults = (p) => ({
+  ...p,
+  department: p.department || DEFAULT_DEPARTMENT,
+  retailerId: p.retailerId || retailerForRow(p.row || 0),
+});
 
 /* The as-shipped catalogue, before admin edits — AdminStore builds its patch on this. */
 export const catalogBase = withOwnership;
-export const products = applyAdminPatch(withOwnership).map(withDepartment);
+/* Every product, listed or not — orders, carts and the consoles look up here. */
+export const allProducts = applyAdminPatch(withOwnership).map(withDefaults);
 export const suppliers = supplierList;
 export const generatedAt = generated.generatedAt;
 
-/* Sub-categories: the seven generated plumbing categories plus any that
-   admins created on products (name carried as product.subcategoryName). */
-const baseSubs = generated.categories.map((c) => ({ ...c, department: DEFAULT_DEPARTMENT }));
-const extraSubs = [];
-for (const p of products) {
-  if (baseSubs.some((c) => c.slug === p.category) || extraSubs.some((c) => c.slug === p.category)) continue;
-  extraSubs.push({ slug: p.category, name: p.subcategoryName || p.category, department: p.department, blurb: '' });
-}
-export const categories = [...baseSubs, ...extraSubs].map((c) => ({
-  ...c,
-  count: products.filter((p) => p.category === c.slug).length,
-}));
+const _byId = new Map(allProducts.map((p) => [p.id, p]));
+const _bySku = new Map(allProducts.map((p) => [p.sku, p]));
+const _supplierName = new Map(suppliers.map((s) => [s.slug, s.name]));
 
-/* Departments → with live counts and their sub-categories. */
-export const departments = DEPARTMENTS.map((d) => ({
-  ...d,
-  subs: categories.filter((c) => c.department === d.slug),
-  count: products.filter((p) => p.department === d.slug).length,
-}));
+/* Listed on the storefront only while its retailer may sell (requirement 11:
+   suspending a retailer hides their products). */
+export const isListed = (p) => !!p && canSell(getRetailer(p.retailerId));
+export const sellerName = (p) => getRetailer(p?.retailerId)?.name || '';
+
+/* Live bindings: rebuilt whenever a retailer's status changes, so the shop
+   updates without a reload. */
+export let products = [];
+export let categories = [];
+export let departments = [];
+let _catName = new Map();
+
+const baseSubs = generated.categories.map((c) => ({ ...c, department: DEFAULT_DEPARTMENT }));
+
+function rebuild() {
+  products = allProducts.filter(isListed);
+  /* Sub-categories: the seven generated plumbing categories plus any created
+     on products (name carried as product.subcategoryName) or in the master
+     catalog. */
+  const extra = [];
+  for (const p of allProducts) {
+    if (baseSubs.some((c) => c.slug === p.category) || extra.some((c) => c.slug === p.category)) continue;
+    extra.push({ slug: p.category, name: p.subcategoryName || p.category, department: p.department, blurb: '' });
+  }
+  for (const c of masterSubs()) {
+    if (baseSubs.some((x) => x.slug === c.slug) || extra.some((x) => x.slug === c.slug)) continue;
+    extra.push({ ...c, blurb: c.blurb || '' });
+  }
+  categories = [...baseSubs, ...extra].map((c) => ({ ...c, count: products.filter((p) => p.category === c.slug).length }));
+  departments = DEPARTMENTS.map((d) => ({
+    ...d,
+    subs: categories.filter((c) => c.department === d.slug),
+    count: products.filter((p) => p.department === d.slug).length,
+  }));
+  _catName = new Map(categories.map((c) => [c.slug, c.name]));
+  bestsellers = products.filter((p) => p.badges.includes('Bestseller') && p.stock > 0).slice(0, 12);
+  newProducts = products.filter((p) => p.badges.includes('New')).slice(0, 8);
+  dealProducts = [...products].filter((p) => p.discount >= 18 && p.stock > 0).sort((a, b) => b.discount - a.discount).slice(0, 12);
+}
+function masterSubs() {
+  try { return settingsStore.get().catalog?.subs || []; } catch { return []; }
+}
+
 export const departmentName = (slug) => departmentMeta(slug).name;
 export const subcategoriesOf = (dept) => categories.filter((c) => c.department === dept);
-
-const _byId = new Map(products.map((p) => [p.id, p]));
-const _bySku = new Map(products.map((p) => [p.sku, p]));
-const _catName = new Map(categories.map((c) => [c.slug, c.name]));
-const _supplierName = new Map(suppliers.map((s) => [s.slug, s.name]));
 
 export const findProduct = (id) => _byId.get(id) ?? _bySku.get(id) ?? null;
 
@@ -81,6 +114,13 @@ export const findProduct = (id) => _byId.get(id) ?? _bySku.get(id) ?? null;
 export function syncLiveProduct(id, fields) {
   const p = _byId.get(id);
   if (p) Object.assign(p, fields);
+  else if (fields?.id) {
+    const row = withDefaults(fields);
+    allProducts.unshift(row);
+    _byId.set(row.id, row);
+    if (row.sku) _bySku.set(row.sku, row);
+    rebuild();
+  }
 }
 export const categoryName = (slug) => _catName.get(slug) ?? slug;
 export const supplierName = (slug) => _supplierName.get(slug) ?? slug;
@@ -91,12 +131,13 @@ export const brandSlug = (name) => slugifyBrand(name) || 'nasou';
 export const brandForName = (name) => suppliers.find((s) => s.slug === slugifyBrand(name)) ?? null;
 
 /* Curated rails ----------------------------------------------------------- */
-export const bestsellers = products.filter((p) => p.badges.includes('Bestseller') && p.stock > 0).slice(0, 12);
-export const newProducts = products.filter((p) => p.badges.includes('New')).slice(0, 8);
-export const dealProducts = [...products]
-  .filter((p) => p.discount >= 18 && p.stock > 0)
-  .sort((a, b) => b.discount - a.discount)
-  .slice(0, 12);
+export let bestsellers = [];
+export let newProducts = [];
+export let dealProducts = [];
+
+rebuild();
+retailersStore.subscribe(rebuild);
+settingsStore.subscribe(rebuild);
 
 export const byCategory = (slug) => products.filter((p) => p.category === slug);
 
@@ -175,7 +216,7 @@ export function buildTrace(product) {
     { stage: 'Supplier', place: product.supplierName, detail: 'Manufacturer of record', code: 'SUP' },
     { stage: 'Material', place: product.material, detail: `${product.form} · ${product.size || 'standard'}`, code: 'MAT' },
     { stage: 'Batch', place: batchId(product), detail: 'Deterministic batch reference', code: 'BAT' },
-    { stage: 'Warehouse', place: 'Nasou · Hyderabad', detail: product.stock > 0 ? `${product.stock} in stock` : 'Awaiting restock', code: 'WH' },
+    { stage: 'Seller', place: sellerName(product) || 'Nivora seller', detail: product.stock > 0 ? `${product.stock} in stock` : 'Awaiting restock', code: 'WH' },
     { stage: 'Dispatch', place: 'Pan-India courier', detail: 'GST invoice included', code: 'SHIP' },
   ];
 }
