@@ -9,6 +9,7 @@ import { saveSetting, useSettings } from '../../store/settings';
 import { DEPARTMENTS, slugifyCategory } from '../../data/departments';
 import { categories as liveCats } from '../../data/catalog';
 import { cx } from '../../lib/format';
+import { act } from '../../lib/act';
 
 /* Master catalog (requirement 16): the Super Admin owns the categories,
    sub-types and the item schema. Retailers pick from these when they add a
@@ -59,7 +60,7 @@ export default function AdminMasterCatalog() {
   };
   const removeSub = (s) => {
     if (counts.n.get(s.slug)) return toast.error('Products use this sub-category — move them first.');
-    saveSetting('catalog', { ...catalog, subs: catalog.subs.filter((x) => x.slug !== s.slug) }, `Removed sub-category ${s.name}`);
+    act(toast, () => saveSetting('catalog', { ...catalog, subs: catalog.subs.filter((x) => x.slug !== s.slug) }, `Removed sub-category ${s.name}`));
   };
   const setAttrs = (list, summary) => saveSetting('catalog', { ...catalog, attributes: { ...catalog.attributes, [dept]: list } }, summary);
 

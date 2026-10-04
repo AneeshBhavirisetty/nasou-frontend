@@ -2,6 +2,7 @@ import { useCallback, useMemo } from 'react';
 import { useAuth } from './AuthContext';
 import { useStore } from '../lib/store';
 import { audiencesOf, hideFor, markRead, notificationsStore, notify } from '../store/notifications';
+import { LIVE } from '../lib/config';
 
 /* ============================================================================
  * Bell notifications (customer review item 4) — React side of
@@ -21,8 +22,9 @@ export function useNotifications() {
   const me = user?.id || 'guest';
   const aud = useMemo(() => audiencesOf(user), [user]);
 
+  /* LIVE: the server already returns only this person's notices, with read state */
   const list = useMemo(
-    () => all.filter((n) => aud.includes(n.userId) && !n.hiddenFor.includes(me)).map((n) => ({ ...n, read: n.readBy.includes(me) })),
+    () => (LIVE ? all : all.filter((n) => aud.includes(n.userId) && !n.hiddenFor.includes(me)).map((n) => ({ ...n, read: n.readBy.includes(me) }))),
     [all, aud, me]
   );
   const unread = list.filter((n) => !n.read).length;

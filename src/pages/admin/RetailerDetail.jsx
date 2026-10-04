@@ -10,6 +10,7 @@ import { useIam } from '../../context/IamStore';
 import { useToast } from '../../context/ToastContext';
 import { useAdminStore } from '../../context/AdminStore';
 import { requestAction, setRetailerStatus, updateRetailer, useRetailer } from '../../store/retailers';
+import DocLink from '../../components/admin/DocLink';
 import { useOrders, useRefunds } from '../../store/orders';
 import { computeSettlements, pendingBalance, usePayoutRecords } from '../../store/payouts';
 import { useSettings } from '../../store/settings';
@@ -20,6 +21,7 @@ import { DOC_TYPES, retailerStatusLabel } from '../../lib/marketplace';
 import { categories, categoryName } from '../../data/catalog';
 import { formatOrderDate } from '../../data/orders';
 import { money, cx } from '../../lib/format';
+import { act } from '../../lib/act';
 
 const mask = (acct = '') => (acct ? `•••• ${String(acct).slice(-4)}` : '—');
 const when = (ms) => new Date(ms).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' });
@@ -61,8 +63,7 @@ function CommissionEditor({ retailer, canEdit, plans, fallback }) {
   const save = () => {
     const byCategory = {};
     for (const o of over) if (o.cat && o.v !== '') byCategory[o.cat] = Math.max(0, Math.min(50, Number(o.v)));
-    updateRetailer(retailer.id, { commission: { rate: rate === '' ? null : Math.max(0, Math.min(50, Number(rate))), byCategory }, plan }, 'Commission / plan changed');
-    toast.success('Commission and plan saved');
+    act(toast, () => updateRetailer(retailer.id, { commission: { rate: rate === '' ? null : Math.max(0, Math.min(50, Number(rate))), byCategory }, plan }, 'Commission / plan changed'), 'Commission and plan saved');
   };
   return (
     <div className="grid gap-5 lg:grid-cols-2">
@@ -162,7 +163,7 @@ export default function RetailerDetail() {
             {(r.status === 'pending' || r.status === 'needs_changes') && canEdit && <Link to={`/admin/approvals?id=${r.id}`} className="inline-flex h-10 items-center gap-1.5 rounded-full bg-white px-4 text-[13px] font-bold text-forest"><Icon name="shieldCheck" size={15} /> Review application</Link>}
             {canView && <button onClick={() => setDialog('view')} className="inline-flex h-10 items-center gap-1.5 rounded-full border border-white/25 bg-white/10 px-4 text-[13px] font-bold text-white hover:bg-white/20"><Icon name="eye" size={15} /> View as retailer</button>}
             {canStatus && r.status === 'approved' && <button onClick={() => setDialog('suspend')} className="inline-flex h-10 items-center gap-1.5 rounded-full border border-white/25 bg-white/10 px-4 text-[13px] font-bold text-white hover:bg-white/20"><Icon name="lock" size={15} /> Suspend</button>}
-            {canStatus && (r.status === 'suspended' || r.status === 'deactivated') && <button onClick={() => { setRetailerStatus(r.id, 'approved', { by, note: 'Reinstated' }); toast.success(`${r.name} is active again`); }} className="inline-flex h-10 items-center gap-1.5 rounded-full bg-white px-4 text-[13px] font-bold text-forest"><Icon name="check" size={15} /> Reinstate</button>}
+            {canStatus && (r.status === 'suspended' || r.status === 'deactivated') && <button onClick={() => { act(toast, () => setRetailerStatus(r.id, 'approved', { by, note: 'Reinstated' }), `${r.name} is active again`); }} className="inline-flex h-10 items-center gap-1.5 rounded-full bg-white px-4 text-[13px] font-bold text-forest"><Icon name="check" size={15} /> Reinstate</button>}
             {canStatus && (r.status === 'approved' || r.status === 'suspended') && <button onClick={() => setDialog('deactivate')} className="inline-flex h-10 items-center gap-1.5 rounded-full border border-white/25 bg-white/10 px-4 text-[13px] font-bold text-white hover:bg-white/20"><Icon name="close" size={15} /> Deactivate</button>}
             {r.status !== 'deleted' && (canStatus || canRequest) && <button onClick={() => setDialog(canStatus ? 'delete' : 'request')} className="inline-flex h-10 items-center gap-1.5 rounded-full border border-clay/40 bg-clay/20 px-4 text-[13px] font-bold text-white hover:bg-clay/35"><Icon name="trash" size={15} /> {canStatus ? 'Delete' : 'Request deletion'}</button>}
           </div>
@@ -229,7 +230,7 @@ export default function RetailerDetail() {
                   </div>
                   {d && <StatusPill status={d.status === 'verified' ? 'approved' : d.status === 'rejected' ? 'rejected' : 'pending'} label={d.status === 'verified' ? 'Verified' : d.status === 'rejected' ? 'Rejected' : 'To review'} />}
                 </div>
-                {d?.dataUrl && (d.mime || '').startsWith('image/') && <img src={d.dataUrl} alt={t.label} className="mt-3 max-h-48 w-full rounded-[12px] object-contain bg-sunk" />}
+                <DocLink doc={d} label={t.label} />
               </Panel>
             );
           })}
@@ -282,7 +283,7 @@ export default function RetailerDetail() {
       {tab === 'notes' && (
         <Panel title="Internal notes" note="Only the Nasou Hive team sees these.">
           {canEdit && (
-            <form onSubmit={(e) => { e.preventDefault(); if (note.trim().length < 3) return; updateRetailer(r.id, { notes: [{ text: note.trim(), by, at: Date.now() }, ...(r.notes || [])] }, 'Internal note added'); setNote(''); }} className="mb-4 space-y-2">
+            <form onSubmit={(e) => { e.preventDefault(); if (note.trim().length < 3) return; act(toast, () => updateRetailer(r.id, { notes: [{ text: note.trim(), by, at: Date.now() }, ...(r.notes || [])] }, 'Internal note added')); setNote(''); }} className="mb-4 space-y-2">
               <textarea value={note} onChange={(e) => setNote(e.target.value)} className={TEXTAREA_CLS} placeholder="e.g. Spoke to Ravi — GST certificate renewal due in March." />
               <Button size="sm" type="submit" icon="plus">Add note</Button>
             </form>
@@ -311,18 +312,18 @@ export default function RetailerDetail() {
 
       <ReasonDialog open={dialog === 'suspend'} onClose={() => setDialog(null)} title={`Suspend ${r.name}?`} confirm="Suspend" tone="danger"
         intro="Their products disappear from the storefront and new orders are blocked. Open orders stay with them to finish. You can reinstate them any time."
-        onConfirm={(why) => { suspendRetailer(r.id, { by, reason: why }); toast.success(`${r.name} suspended`); }} />
+        onConfirm={(why) => { act(toast, () => suspendRetailer(r.id, { by, reason: why }), `${r.name} suspended`); }} />
       <ReasonDialog open={dialog === 'deactivate'} onClose={() => setDialog(null)} title={`Deactivate ${r.name}?`} confirm="Deactivate" tone="danger"
         intro="Nobody at this retailer can sign in and their products are hidden. Reversible."
-        onConfirm={(why) => { setRetailerStatus(r.id, 'deactivated', { by, note: why }); toast.success(`${r.name} deactivated`); }} />
+        onConfirm={(why) => { act(toast, () => setRetailerStatus(r.id, 'deactivated', { by, note: why }), `${r.name} deactivated`); }} />
       <ReasonDialog open={dialog === 'request'} onClose={() => setDialog(null)} title={`Ask the Owner to delete ${r.name}`} confirm="Send request"
         intro="Deleting a retailer needs Owner approval. They will see your reason and the effects before deciding."
-        onConfirm={(why) => { requestAction({ kind: 'delete', retailerId: r.id, reason: why, by }); toast.success('Request sent to the Owner'); }} />
+        onConfirm={(why) => { act(toast, () => requestAction({ kind: 'delete', retailerId: r.id, reason: why, by }), 'Request sent to the Owner'); }} />
       <ReasonDialog open={dialog === 'view'} onClose={() => setDialog(null)} title={`View as ${r.name}`} confirm="Start view-only session" label="Why do you need to see their console?" placeholder="e.g. Retailer reports payouts page shows the wrong cycle — ticket #4471"
         intro={<>You will see their seller console exactly as they do, <b>read-only</b>, for up to 15 minutes. A banner stays on screen and the session is recorded in the audit log.</>}
-        onConfirm={(why) => { startView(r.id, why); navigate('/seller'); }} />
+        onConfirm={async (why) => { if (await act(toast, () => startView(r.id, why))) navigate('/seller'); }} />
       {dialog === 'delete' && (
-        <DeleteDialog retailer={r} onClose={() => setDialog(null)} onConfirm={(why) => { deleteRetailer(r.id, { by, reason: why }); toast.success(`${r.name} deleted`); }} />
+        <DeleteDialog retailer={r} onClose={() => setDialog(null)} onConfirm={(why) => { act(toast, () => deleteRetailer(r.id, { by, reason: why }), `${r.name} deleted`); }} />
       )}
     </div>
   );

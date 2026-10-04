@@ -10,6 +10,7 @@ import { useRetailers } from '../../store/retailers';
 import { uid } from '../../lib/store';
 import { DEPARTMENTS } from '../../data/departments';
 import { cx } from '../../lib/format';
+import { act } from '../../lib/act';
 
 /* Content and settings (requirements 24–27): homepage banners and featured
    categories, tax rules, shipping rules and message templates. */
@@ -37,7 +38,7 @@ function Banners({ canEdit }) {
   return (
     <div className="space-y-5">
       <Panel title="Homepage banners" note="Shown in order on the storefront hero. Inactive banners are kept but hidden."
-        action={<SaveBar canEdit={canEdit} dirty={dirty} onSave={() => { saveSetting('banners', list, 'Updated homepage banners'); toast.success('Banners published'); }} />}>
+        action={<SaveBar canEdit={canEdit} dirty={dirty} onSave={() => { act(toast, () => saveSetting('banners', list, 'Updated homepage banners'), 'Banners published'); }} />}>
         <div className="space-y-3">
           {list.map((b, i) => (
             <div key={b.id} className={cx('grid gap-3 rounded-[18px] border p-4 lg:grid-cols-[1fr_1fr_auto]', b.active ? 'border-line bg-white' : 'border-dashed border-line bg-[#f6f3ed] opacity-75')}>
@@ -69,7 +70,7 @@ function Banners({ canEdit }) {
         </div>
       </Panel>
       <Panel title="Featured categories" note="Highlighted on the homepage, in this order."
-        action={<SaveBar canEdit={canEdit} dirty={fDirty} onSave={() => { saveSetting('featured', featured, 'Updated featured categories'); toast.success('Featured categories saved'); }} />}>
+        action={<SaveBar canEdit={canEdit} dirty={fDirty} onSave={() => { act(toast, () => saveSetting('featured', featured, 'Updated featured categories'), 'Featured categories saved'); }} />}>
         <div className="flex flex-wrap gap-2">
           {DEPARTMENTS.map((d) => {
             const on = featured.includes(d.slug);
@@ -86,7 +87,7 @@ function RuleTable({ title, note, section, columns, blank, canEdit }) {
   const [rows, setRows, dirty] = useDraft(section);
   const set = (i, k, v) => setRows((l) => l.map((r, j) => (j === i ? { ...r, [k]: v } : r)));
   return (
-    <Panel title={title} note={note} action={<SaveBar canEdit={canEdit} dirty={dirty} onSave={() => { saveSetting(section, rows, `Updated ${title.toLowerCase()}`); toast.success(`${title} saved`); }} />}>
+    <Panel title={title} note={note} action={<SaveBar canEdit={canEdit} dirty={dirty} onSave={() => { act(toast, () => saveSetting(section, rows, `Updated ${title.toLowerCase()}`), `${title} saved`); }} />}>
       <div className="thin-bar overflow-x-auto">
         <table className="w-full min-w-[640px] text-[13px]">
           <thead><tr>{columns.map((c) => <th key={c.key} className="px-2 pb-2 text-left text-[11px] font-extrabold uppercase tracking-[0.1em] text-forest-800">{c.label}</th>)}<th /></tr></thead>
@@ -121,7 +122,7 @@ function Templates({ canEdit }) {
   const set = (k, v) => setList((l) => l.map((x) => (x.key === sel ? { ...x, [k]: v } : x)));
   return (
     <Panel title="Message templates" note="Email, SMS and in-app notification text. Use {{placeholders}} for live values."
-      action={<SaveBar canEdit={canEdit} dirty={dirty} onSave={() => { saveSetting('templates', list, 'Updated message templates'); toast.success('Templates saved'); }} />}>
+      action={<SaveBar canEdit={canEdit} dirty={dirty} onSave={() => { act(toast, () => saveSetting('templates', list, 'Updated message templates'), 'Templates saved'); }} />}>
       <div className="grid gap-5 lg:grid-cols-[240px_1fr_1fr]">
         <ul className="space-y-1">
           {list.map((x) => (

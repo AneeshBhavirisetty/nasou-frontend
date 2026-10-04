@@ -8,10 +8,11 @@ import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
 import { useAdminStore, couponDiscount, productById } from '../context/AdminStore';
-import { placeOrder as saveOrder } from '../store/orders';
+import { checkout as checkoutLive, placeOrder as saveOrder } from '../store/orders';
 import { notify } from '../store/notifications';
 import { shippingFor, taxRateFor } from '../store/settings';
-import { checkoutApi, IS_MOCK } from '../lib/api';
+import { IS_MOCK, post } from '../lib/api';
+import { LIVE } from '../lib/config';
 import { addressBook, formatAddress } from '../lib/geo';
 import { allocate } from '../lib/marketplace';
 import { isListed } from '../data/catalog';
@@ -22,7 +23,9 @@ import { cx, money } from '../lib/format';
    One payment, one order — split into a part per seller. Delivery fees come
    from the shipping rules per seller, GST from the tax rules per product
    and delivery state, category codes apply themselves, and placing the
-   order takes the stock out (through the API when one is configured). */
+   order takes the stock out (through the API when one is configured).
+   With the API (LIVE) every figure on this page comes from POST
+   /pricing/quote — the same code that charges at POST /checkout. */
 
 const STEPS = ['Address', 'Delivery', 'Payment', 'Review'];
 
@@ -74,6 +77,8 @@ export default function Checkout() {
   const [code, setCode] = useState('');
   const [manual, setManual] = useState(null);
   const [removedAuto, setRemovedAuto] = useState(false);
+  const [quote, setQuote] = useState(null);
+  const [liveCode, setLiveCode] = useState(null);
 
   const book = addressBook(profile);
   const [addrId, setAddrId] = useState(() => (book.find((a) => a.isDefault) || book[0])?.id || 'new');
@@ -83,8 +88,27 @@ export default function Checkout() {
   useEffect(() => { if (addrId !== 'new' && !book.some((a) => a.id === addrId)) setAddrId(book[0]?.id || 'new'); }, [book, addrId]);
   const addr = addrId === 'new' ? draft : book.find((a) => a.id === addrId) || draft;
 
+  /* LIVE: the server's quote, re-asked whenever the cart, code, speed or state change */
+  const couponParam = liveCode || (removedAuto ? 'NONE' : null);
+  const cartKey = items.map((l) => `${l.product.sku}:${l.qty}`).join(',');
+  useEffect(() => {
+    if (!LIVE || !items.length) return undefined;
+    let stale = false;
+    const t = setTimeout(() => {
+      post('/pricing/quote', { items: items.map((l) => ({ sku: l.product.sku, qty: l.qty })), coupon: couponParam, delivery: speed, state: addr.state || null })
+        .then((q) => { if (!stale) setQuote(q); })
+        .catch((e) => { if (!stale) toast.error(e.message); });
+    }, 200);
+    return () => { stale = true; clearTimeout(t); };
+  }, [cartKey, couponParam, speed, addr.state]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!LIVE || !quote || !liveCode) return;
+    if (quote.couponError) { toast.error(quote.couponError); setLiveCode(null); }
+    else if (quote.coupon === liveCode) toast.success(`${liveCode} applied — you save ${money(quote.couponDiscount)}`);
+  }, [quote]); // eslint-disable-line react-hooks/exhaustive-deps
+
   /* ── money ──────────────────────────────────────────────────────────── */
-  const calc = useMemo(() => {
+  const local = useMemo(() => {
     const cats = new Set();
     for (const it of items) { cats.add(it.product.category); cats.add(`dept:${it.product.department || 'plumbing'}`); }
     const lineNet = (it) => it.price * it.qty - (it.bulk?.amount || 0);
@@ -129,6 +153,26 @@ export default function Checkout() {
     };
   }, [items, groups, totals.net, coupons, manual, removedAuto, speed, addr.state]);
 
+  const calc = useMemo(() => {
+    if (!LIVE || !quote) return local;
+    const byRetailer = new Map((quote.parts || []).map((p) => [p.retailerId, p]));
+    const parts = groups.map((g) => {
+      const q = byRetailer.get(g.retailerId) || {};
+      return { ...g, net: q.net ?? 0, disc: q.discount ?? 0, ship: q.shipping ?? 0, gst: q.gst ?? 0, total: q.total ?? 0 };
+    });
+    const ok = quote.coupon && !quote.couponError;
+    return {
+      coupon: ok ? { code: quote.coupon } : null,
+      auto: quote.couponAuto,
+      result: ok ? { ok: true, amount: quote.couponDiscount } : null,
+      couponAmount: ok ? quote.couponDiscount : 0,
+      parts,
+      shipping: quote.shipping,
+      gst: quote.gst,
+      grand: quote.total,
+    };
+  }, [local, quote, groups]);
+
   useEffect(() => {
     if (manual && calc.result && !calc.result.ok) { toast.error(calc.result.reason); setManual(null); }
     else if (manual && calc.result?.ok) toast.success(`${manual.code} applied — you save ${money(calc.couponAmount)}`);
@@ -159,6 +203,12 @@ export default function Checkout() {
   }
 
   const applyCode = () => {
+    if (LIVE) {
+      if (!code.trim()) return undefined;
+      setLiveCode(code.trim().toUpperCase());
+      setRemovedAuto(false);
+      return undefined;
+    }
     const c = coupons.find((x) => x.code === code.trim().toUpperCase());
     if (!c) return toast.error('That code isn’t valid.');
     setManual(c);
@@ -188,16 +238,21 @@ export default function Checkout() {
 
     setPaying(true);
     try {
-      if (!IS_MOCK) {
-        /* the API re-prices, checks stock and decrements it in one transaction */
-        await checkoutApi.create({
+      if (LIVE) {
+        /* the API re-prices, checks stock, splits per seller and takes payment in one transaction */
+        const order = await checkoutLive({
           items: items.map((l) => ({ sku: l.product.sku, qty: l.qty })),
-          coupon: calc.coupon?.code || null,
+          coupon: couponParam,
           delivery: speed,
           payment: pay,
-          address: { name: addr.name, phone: addr.phone, address: [addr.line1, addr.landmark].filter(Boolean).join(', '), city: addr.city, pin: addr.pin },
-        }, crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`);
-      } else if (ONLINE(pay)) {
+          address: { name: addr.name.trim(), phone: addr.phone, address: [addr.line1, addr.landmark].filter(Boolean).join(', '), city: addr.city.trim(), pin: addr.pin, state: addr.state, lat: addr.lat ?? null, lng: addr.lng ?? null },
+        }, (crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`).replace(/[^A-Za-z0-9_.:-]/g, ''));
+        setPlaced(true);
+        navigate('/order-confirmed', { replace: true, state: { id: order.id, total: order.total, count: totals.count, delivery: speed, pay, coupon: order.coupon, couponAmount: order.couponDiscount, parts: order.parts.length } });
+        clear();
+        return;
+      }
+      if (ONLINE(pay)) {
         await new Promise((r) => setTimeout(r, 1100)); // Razorpay checkout stand-in
       }
 
@@ -394,7 +449,7 @@ export default function Checkout() {
               {calc.coupon && calc.couponAmount > 0 ? (
                 <div className="flex items-center justify-between rounded-[12px] bg-emerald-50 px-3 py-2.5 text-[12.5px]">
                   <span className="font-semibold text-emerald-700"><Icon name="tag" size={12} className="mr-1 inline" />{calc.coupon.code} {calc.auto ? 'auto-applied' : 'applied'}</span>
-                  <button onClick={() => { if (calc.auto) setRemovedAuto(true); setManual(null); setCode(''); }} className="font-semibold text-ink-50 hover:text-ink">Remove</button>
+                  <button onClick={() => { if (calc.auto) setRemovedAuto(true); setManual(null); setLiveCode(null); setCode(''); }} className="font-semibold text-ink-50 hover:text-ink">Remove</button>
                 </div>
               ) : (
                 <div className="flex gap-2">

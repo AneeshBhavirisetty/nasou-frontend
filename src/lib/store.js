@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react';
+import { LIVE } from './config';
 
 /* ============================================================================
  * store.js — tiny persisted store shared by the marketplace modules.
@@ -8,20 +9,25 @@ import { useSyncExternalStore } from 'react';
  * useStore(). Writes notify subscribers in this tab; the 'storage' event
  * keeps other tabs in step (admin console open next to the shop).
  *
- * Swap a store's body for API calls when the matching endpoint exists — the
- * selectors that screens use do not change.
+ * With an API configured (LIVE), stores are a memory-only cache of what the
+ * server returned (src/lib/live.js fills them): nothing business-related is
+ * written to the browser, and `liveInit` (default: the same shape, empty)
+ * replaces the demo seed. The selectors screens use do not change.
  * ==========================================================================*/
 
 const hasStorage = () => {
   try { return typeof localStorage !== 'undefined'; } catch { return false; }
 };
 
-export function createStore(key, init) {
+const emptyLike = (v) => (Array.isArray(v) ? [] : v);
+
+export function createStore(key, demoInit, liveInit) {
+  const init = LIVE ? (liveInit || (() => emptyLike(demoInit()))) : demoInit;
   let state;
   const subs = new Set();
 
   const read = () => {
-    if (!hasStorage()) return undefined;
+    if (LIVE || !hasStorage()) return undefined;
     try {
       const raw = localStorage.getItem(key);
       return raw ? JSON.parse(raw) : undefined;
@@ -30,7 +36,7 @@ export function createStore(key, init) {
     }
   };
   const write = () => {
-    if (!hasStorage()) return;
+    if (LIVE || !hasStorage()) return;
     try { localStorage.setItem(key, JSON.stringify(state)); } catch { /* quota — non-fatal */ }
   };
   const emit = () => subs.forEach((fn) => fn());
@@ -44,7 +50,7 @@ export function createStore(key, init) {
     return state;
   };
 
-  if (typeof window !== 'undefined') {
+  if (typeof window !== 'undefined' && !LIVE) {
     window.addEventListener('storage', (e) => {
       if (e.key !== key) return;
       const next = read();

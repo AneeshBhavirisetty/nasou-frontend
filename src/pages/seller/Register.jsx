@@ -10,6 +10,8 @@ import { DOC_TYPES } from '../../lib/marketplace';
 import { DEPARTMENTS } from '../../data/departments';
 import { readDocument } from '../../lib/files';
 import { cx, isMobile10 } from '../../lib/format';
+import { LIVE } from '../../lib/config';
+import { post } from '../../lib/api';
 
 /* Retailer signup with document upload (requirement 5). Every new retailer
    starts Pending and cannot sell until the Nivora team approves them.
@@ -89,6 +91,23 @@ export default function SellerRegister() {
     if (step < STEPS.length - 1) { setStep(step + 1); window.scrollTo({ top: 0 }); return; }
     setBusy(true);
     try {
+      if (LIVE) {
+        /* one multipart request: the application, the four documents and the
+           owner's login — the server creates them together and signs in */
+        const form = new FormData();
+        const fields = {
+          name: f.name.trim(), legalName: f.legalName.trim(), type: f.type, contact: f.contact.trim(), email: f.email.trim().toLowerCase(),
+          phone: f.phone, password: f.password, address: f.address.trim(), city: f.city.trim(), state: f.state, pin: f.pin,
+          categories: f.categories.join(','), gstin: f.gstin, pan: f.pan, bankHolder: f.holder.trim(), bankAccount: f.account,
+          bankIfsc: f.ifsc, website: f.website, startedAt: String(started.current),
+        };
+        Object.entries(fields).forEach(([k, v]) => form.append(k, v));
+        DOC_TYPES.forEach((d) => form.append(d.key, docs[d.key].file, docs[d.key].name));
+        signInAccount(await post('/sellers/apply', form));
+        toast.success('Application submitted — we will review it shortly');
+        navigate('/seller', { replace: true });
+        return;
+      }
       const r = createRetailer({
         name: f.name.trim(), legalName: f.legalName.trim(), type: f.type, contact: f.contact.trim(), email: f.email.trim().toLowerCase(), phone: f.phone,
         address: f.address.trim(), city: f.city.trim(), state: f.state, pin: f.pin, categories: f.categories.map((c) => DEPARTMENTS.find((d) => d.slug === c)?.name),
@@ -109,7 +128,7 @@ export default function SellerRegister() {
   const attach = async (key, file) => {
     try {
       const d = await readDocument(file, key);
-      setDocs((s) => ({ ...s, [key]: d }));
+      setDocs((s) => ({ ...s, [key]: { ...d, file } }));
     } catch (x) {
       toast.error(x.message);
     }

@@ -15,6 +15,7 @@ import { useCustomers } from './Users';
 import { useOrders } from '../../store/orders';
 import { formatOrderDate } from '../../data/orders';
 import { money, isMobile10 } from '../../lib/format';
+import { act } from '../../lib/act';
 
 /* Customer support control (requirement 12): edit details, block or unblock,
    send a password reset, internal notes; opened from the Customers list. */
@@ -30,7 +31,7 @@ function EditDetails({ account, onClose }) {
     if (!f.fullName.trim()) return toast.error('Enter a name.');
     if (f.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email)) return toast.error('Enter a valid email.');
     if (f.phone && !isMobile10(f.phone)) return toast.error('Mobile must be 10 digits.');
-    updateAccount(account.id, { ...f, email: f.email.trim().toLowerCase() }, 'Customer details edited by support');
+    act(toast, () => updateAccount(account.id, { ...f, email: f.email.trim().toLowerCase() }, 'Customer details edited by support'));
     notify({ userId: account.id, icon: 'user', kind: 'account', title: 'Nivora support updated your details', body: 'If you did not ask for this, reply in chat.', to: '/account' });
     toast.success('Details saved');
     onClose();
@@ -89,7 +90,7 @@ export default function AdminCustomerDetail() {
                 toast.success(`Reset link sent to ${a.email || `+91 ${a.phone}`}`);
               }}>Send password reset</Button>
               {c.status === 'blocked'
-                ? <Button size="sm" icon="check" onClick={() => { updateAccount(a.id, { status: 'active', blockedReason: null }, 'Customer unblocked'); toast.success('Unblocked'); }}>Unblock</Button>
+                ? <Button size="sm" icon="check" onClick={() => { act(toast, () => updateAccount(a.id, { status: 'active', blockedReason: null }, 'Customer unblocked'), 'Unblocked'); }}>Unblock</Button>
                 : <Button size="sm" icon="lock" className="!border-clay !bg-clay" onClick={() => setDialog('block')}>Block</Button>}
             </div>
           )}
@@ -131,7 +132,7 @@ export default function AdminCustomerDetail() {
           {a && (
             <Panel title="Internal notes" note="Team only.">
               {canEdit && (
-                <form onSubmit={(e) => { e.preventDefault(); if (note.trim().length < 3) return; addAccountNote(a.id, note.trim(), user?.fullName); setNote(''); }} className="mb-3 space-y-2">
+                <form onSubmit={(e) => { e.preventDefault(); if (note.trim().length < 3) return; act(toast, () => addAccountNote(a.id, note.trim(), user?.fullName)); setNote(''); }} className="mb-3 space-y-2">
                   <textarea value={note} onChange={(e) => setNote(e.target.value)} className={TEXTAREA_CLS} placeholder="e.g. Prefers delivery after 6 pm; site contact is his foreman." />
                   <Button size="sm" type="submit" icon="plus">Add note</Button>
                 </form>
@@ -148,7 +149,7 @@ export default function AdminCustomerDetail() {
       {dialog === 'edit' && <EditDetails account={a} onClose={() => setDialog(null)} />}
       <ReasonDialog open={dialog === 'block'} onClose={() => setDialog(null)} title={`Block ${c.fullName}?`} confirm="Block customer" tone="danger" label="Reason (team only)"
         intro="They are signed out and cannot sign in or place orders until unblocked. Their order history stays."
-        onConfirm={(why) => { updateAccount(a.id, { status: 'blocked', blockedReason: why }, 'Customer blocked'); toast.success('Customer blocked'); }} />
+        onConfirm={(why) => { act(toast, () => updateAccount(a.id, { status: 'blocked', blockedReason: why }, 'Customer blocked'), 'Customer blocked'); }} />
     </div>
   );
 }

@@ -1,6 +1,8 @@
 import { createStore, useStore, uid } from '../lib/store';
 import { audit } from '../lib/auditLog';
 import { notify } from './notifications';
+import { LIVE } from '../lib/config';
+import { del, get, patch as apiPatch, post, refresh } from '../lib/live';
 
 /* ============================================================================
  * Accounts — every sign-in identity the demo knows about, so the mock auth
@@ -40,7 +42,7 @@ function seed() {
   ];
 }
 
-export const accountsStore = createStore('nivora_accounts_v1', seed);
+export const accountsStore = createStore('nivora_accounts_v1', seed, () => []);
 
 /* Saved addresses for the demo customer, used until they edit their own. */
 export const DEMO_PROFILES = {
@@ -94,6 +96,12 @@ export async function setPassword(id, password) {
 }
 
 export async function createAccount(fields, { password, by } = {}) {
+  if (LIVE) {
+    if (fields.role !== 'ADMIN') throw new Error('Accounts are created by sign-up or invite.');
+    const a = await post('/admin/team', { fullName: fields.fullName, email: fields.email, phone: fields.phone, title: fields.title, teamRole: fields.teamRole, password: password || null });
+    await refresh('accounts');
+    return a;
+  }
   const email = norm(fields.email);
   if (email && findAccount(email)) throw new Error('An account with that email already exists.');
   if (fields.phone && findAccount(fields.phone)) throw new Error('An account with that mobile number already exists.');
@@ -107,6 +115,7 @@ export async function createAccount(fields, { password, by } = {}) {
 
 /* field edits, each audited with old → new values */
 export function updateAccount(id, fields, summary = 'Updated account') {
+  if (LIVE) return updateLive(id, fields);
   const before = getAccount(id);
   if (!before) return null;
   const after = { ...before, ...fields };
@@ -124,6 +133,7 @@ export function updateAccount(id, fields, summary = 'Updated account') {
 }
 
 export function addAccountNote(id, text, by) {
+  if (LIVE) return post(`/admin/customers/${id}/notes`, { text }).then(() => refresh('accounts'));
   const a = getAccount(id);
   if (!a) return;
   accountsStore.set((list) => list.map((x) => (x.id === id ? { ...x, notes: [{ id: uid('nt'), text, by, at: Date.now() }, ...(x.notes || [])] } : x)));
@@ -132,6 +142,7 @@ export function addAccountNote(id, text, by) {
 
 /* ── retailer staff invites (requirement 21) ─────────────────────────────── */
 export function inviteStaff({ email, retailerId, staffRole, invitedBy, retailerName }) {
+  if (LIVE) return post('/seller/invites', { email, staffRole }).then(async (inv) => { await refresh('accounts'); return { ...inv, token: inv.id }; });
   const e = norm(email);
   if (findAccount(e)) throw new Error('Someone already has an account with that email.');
   if (invitesStore.get().some((i) => i.email === e && i.status === 'pending')) throw new Error('That person already has a pending invite.');
@@ -143,6 +154,7 @@ export function inviteStaff({ email, retailerId, staffRole, invitedBy, retailerN
 }
 export const findInvite = (token) => invitesStore.get().find((i) => i.token === token) || null;
 export async function acceptInvite(token, { fullName, phone, password }) {
+  if (LIVE) return post(`/invites/${encodeURIComponent(token)}/accept`, { fullName, phone, password });
   const inv = findInvite(token);
   if (!inv || inv.status !== 'pending') throw new Error('This invite is no longer valid.');
   const a = await createAccount({ fullName, phone, email: inv.email, role: 'RETAILER', retailerId: inv.retailerId, staffRole: inv.staffRole }, { password });
@@ -151,5 +163,27 @@ export async function acceptInvite(token, { fullName, phone, password }) {
   return a;
 }
 export function revokeInvite(token) {
+  if (LIVE) return del(`/seller/invites/${token}`).then(() => refresh('accounts'));
   invitesStore.set((list) => list.map((i) => (i.token === token ? { ...i, status: 'revoked' } : i)));
+}
+
+/* LIVE: an invite as the server describes it (null if the link is not valid). */
+export const fetchInvite = (token) => get(`/invites/${encodeURIComponent(token)}`).catch(() => null);
+
+/* LIVE: one edit, routed to the endpoint for that kind of account. */
+async function updateLive(id, fields) {
+  const a = getAccount(id);
+  const status = fields.status;
+  if (a?.role === 'ADMIN') {
+    await apiPatch(`/admin/team/${id}`, { fullName: fields.fullName, phone: fields.phone, title: fields.title, teamRole: fields.teamRole, status: status ? status.toUpperCase() : undefined });
+  } else if (a?.role === 'RETAILER') {
+    await apiPatch(`/seller/team/${id}`, { staffRole: fields.staffRole, status });
+  } else {
+    if (status === 'blocked') await post(`/admin/customers/${id}/block`, { reason: fields.blockedReason || 'Blocked by support' });
+    else if (status === 'active') await post(`/admin/customers/${id}/unblock`, {});
+    const basics = Object.fromEntries(['fullName', 'phone', 'city'].filter((k) => fields[k] !== undefined).map((k) => [k, fields[k]]));
+    if (Object.keys(basics).length) await apiPatch(`/admin/customers/${id}`, basics);
+  }
+  await refresh('accounts');
+  return getAccount(id);
 }

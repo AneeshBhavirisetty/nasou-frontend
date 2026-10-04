@@ -13,6 +13,7 @@ import { categories } from '../../data/catalog';
 import { DEPARTMENTS, departmentMeta } from '../../data/departments';
 import { money, cx } from '../../lib/format';
 import { EASE } from '../../lib/motion';
+import { act } from '../../lib/act';
 
 const blank = { code: '', kind: 'percent', value: 10, minOrder: 0, maxDiscount: 0, scope: '', expiry: '', active: true, autoApply: false };
 
@@ -190,7 +191,7 @@ export default function AdminDiscounts() {
                       </div>
                       {canEdit && <div className="flex shrink-0 gap-1.5">
                         <button
-                          onClick={() => { saveCoupon({ ...c, active: !c.active }); }}
+                          onClick={() => { act(toast, () => saveCoupon({ ...c, active: !c.active })); }}
                           className={cx('grid h-8 w-8 place-items-center rounded-md border transition', c.active ? 'border-line text-emerald-600 hover:border-emerald' : 'border-line text-ink-35 hover:text-ink')}
                           aria-label={c.active ? 'Deactivate' : 'Activate'}
                           title={c.active ? 'Deactivate' : 'Activate'}
@@ -201,7 +202,7 @@ export default function AdminDiscounts() {
                           <Icon name="wrench" size={14} />
                         </button>
                         <button
-                          onClick={() => { if (window.confirm(`Delete code ${c.code}?`)) { deleteCoupon(c.id); toast.success('Code deleted'); } }}
+                          onClick={() => { if (window.confirm(`Delete code ${c.code}?`)) { act(toast, () => deleteCoupon(c.id), 'Code deleted'); } }}
                           className="grid h-8 w-8 place-items-center rounded-md border border-line text-ink-50 transition hover:border-clay/40 hover:text-clay"
                           aria-label="Delete"
                         >
@@ -252,7 +253,7 @@ export default function AdminDiscounts() {
           open
           coupon={editing}
           onClose={() => setEditing(undefined)}
-          onSave={(c) => { saveCoupon(c); toast.success(coupons.some((x) => x.id === c.id) ? 'Code updated' : `${c.code} created`); }}
+          onSave={(c) => { act(toast, () => saveCoupon(c), coupons.some((x) => x.id === c.id) ? 'Code updated' : `${c.code} created`); }}
         />
       )}
     </div>

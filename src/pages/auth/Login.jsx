@@ -8,7 +8,8 @@ import Icon from '../../components/Icon';
 import AuthCard from '../../components/auth/AuthCard';
 import PasswordField from '../../components/auth/PasswordField';
 import OtpInput from '../../components/auth/OtpInput';
-import { DEMO_ACCOUNTS, IS_MOCK } from '../../lib/api';
+import { DEMO_ACCOUNTS } from '../../lib/api';
+import { SHOW_DEMO } from '../../lib/config';
 import { landingFor } from '../../lib/auth';
 
 /* Sign in for all three portals. Login resolves the role (and for retailers,
@@ -85,7 +86,7 @@ export default function Login() {
       <AuthCard title="Two-step check" subtitle={`Nasou Hive team accounts need a second step. Enter the code sent to ${challenge.maskedPhone}.`} back={{ to: '/login', label: 'Use another account' }}>
         <form onSubmit={submitCode} className="space-y-5">
           <OtpInput value={code} onChange={setCode} onComplete={() => {}} />
-          {IS_MOCK && <p className="rounded-[12px] bg-[#f6f3ed] px-3 py-2 text-center text-[12px] text-ink-50">Demo code: <b className="font-mono text-forest">123456</b></p>}
+          {SHOW_DEMO && <p className="rounded-[12px] bg-[#f6f3ed] px-3 py-2 text-center text-[12px] text-ink-50">Demo code: <b className="font-mono text-forest">123456</b></p>}
           {error && <p role="alert" className="rounded-md bg-clay-50 px-3 py-2.5 text-[13px] text-clay-600">{error}</p>}
           <Button type="submit" full size="lg" icon="shieldCheck" loading={loading}>Verify and sign in</Button>
         </form>
@@ -133,7 +134,7 @@ export default function Login() {
         </Link>
       </div>
 
-      {IS_MOCK && (
+      {SHOW_DEMO && (
         <details className="mt-5 rounded-[16px] border border-dashed border-[#cad8d2] bg-[#f6f3ed] px-3.5 py-3 text-[12px] text-ink-50" open>
           <summary className="cursor-pointer font-bold text-forest">Demo accounts — password <span className="font-mono">nivora123</span></summary>
           {groups.map((g) => (

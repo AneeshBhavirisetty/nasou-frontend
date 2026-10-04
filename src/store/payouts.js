@@ -2,6 +2,8 @@ import { createStore, useStore, uid } from '../lib/store';
 import { cycleEnd, cycleHasMonthStart, cycleLabel, cycleStart, settle } from '../lib/marketplace';
 import { audit } from '../lib/auditLog';
 import { notify } from './notifications';
+import { LIVE } from '../lib/config';
+import { post, refresh } from '../lib/live';
 
 /* ============================================================================
  * Payouts and settlements (requirement 13) and reconciliation (requirement 20).
@@ -22,14 +24,20 @@ import { notify } from './notifications';
 const DAY = 86400000;
 export const payoutRecordsStore = createStore('nivora_payouts_v1', () => ({}));
 export const reconStore = createStore('nivora_recon_v1', () => ({}));
-export const usePayoutRecords = () => useStore(payoutRecordsStore);
+/* LIVE: the server computes the cycles (GET /admin/payouts, /seller/payouts)
+   and the reconciliation (GET /admin/reconciliation). */
+export const payoutsStore = createStore('nivora_payout_rows', () => ({ rows: [], held: {} }));
+export const reconRowsStore = createStore('nivora_recon_rows', () => ({ rows: [] }));
+export const usePayoutRecords = () => useStore(LIVE ? payoutsStore : payoutRecordsStore);
 export const useRecon = () => useStore(reconStore);
+export const useReconRows = () => useStore(reconRowsStore);
 
 const key = (rid, start) => `${rid}:${start}`;
 const deliveredAt = (p) => [...(p.statusLog || [])].reverse().find((s) => s.status === 'Delivered')?.at;
 
 /* every retailer × cycle with money in it */
 export function computeSettlements({ orders, refunds, retailers, settings, records }) {
+  if (LIVE) return payoutsStore.get();
   const now = Date.now();
   const current = cycleStart(now);
   const byKey = new Map();
@@ -103,12 +111,14 @@ function writeRecord(k, fn) {
 }
 
 export function setPayoutStatus(row, status, { by, utr = '', note = '' }) {
+  if (LIVE) return post(`/admin/payouts/${row.retailerId}/${row.cycle}/status`, { status, utr: utr || null, note: note || null }).then(() => refresh('payouts', 'notifications', 'recon'));
   writeRecord(row.key, (r) => ({ ...r, status, [`${status}By`]: by, [`${status}At`]: Date.now(), ...(utr ? { utr } : {}), ...(note ? { note } : {}) }));
   audit({ action: `payout.${status === 'paid' ? 'mark_paid' : status}`, entity: 'payout', entityId: row.key, summary: `${row.retailerName} ${row.label}: ${row.status} → ${status} · ₹${row.net.toLocaleString('en-IN')}${utr ? ` · ${utr}` : ''}`, before: { status: row.status }, after: { status } });
   if (status === 'paid') notify({ userId: `retailer:${row.retailerId}`, icon: 'rupee', title: `Payout for ${row.label} sent`, body: `₹${row.net.toLocaleString('en-IN')} · ${utr}`, to: '/seller/payouts' });
 }
 
 export function addAdjustment(row, amount, note, by) {
+  if (LIVE) return post(`/admin/payouts/${row.retailerId}/${row.cycle}/adjustments`, { amount, note }).then(() => refresh('payouts'));
   writeRecord(row.key, (r) => ({ ...r, adjustments: [...(r.adjustments || []), { id: uid('adj'), amount: Math.round(amount), note, by, at: Date.now() }] }));
   audit({ action: 'payout.adjust', entity: 'payout', entityId: row.key, summary: `${amount > 0 ? 'Added' : 'Deducted'} ₹${Math.abs(Math.round(amount)).toLocaleString('en-IN')} on ${row.retailerName} ${row.label}: ${note}` });
 }
@@ -152,6 +162,7 @@ export function reconcile(ledger, report) {
 }
 
 export function resolveRecon(id, note, by) {
+  if (LIVE) return post(`/admin/reconciliation/${encodeURIComponent(id)}/resolve`, { note }).then(() => refresh('recon'));
   reconStore.set((all) => ({ ...all, [id]: { status: 'resolved', note, by, at: Date.now() } }));
   audit({ action: 'recon.resolve', entity: 'reconciliation', entityId: id, summary: `Resolved ${id}: ${note}` });
 }

@@ -6,6 +6,8 @@ import { getSettings } from './settings';
 import { audit } from '../lib/auditLog';
 import { notify } from './notifications';
 import { adjustStock } from '../context/AdminStore';
+import { LIVE } from '../lib/config';
+import { api, patch as apiPatch, post, refresh, who } from '../lib/live';
 
 /* ============================================================================
  * Order book (requirements 8, 9, 12, 15, 19).
@@ -109,7 +111,7 @@ function seed() {
   return list;
 }
 
-export const ordersStore = createStore('nivora_orders_v1', seed);
+export const ordersStore = createStore('nivora_orders_v1', seed, () => []);
 export const refundsStore = createStore('nivora_refunds_v1', () => {
   /* the cancelled, prepaid parts of the seed were refunded by the system */
   const out = [];
@@ -121,7 +123,27 @@ export const refundsStore = createStore('nivora_refunds_v1', () => {
     }
   }
   return out;
-});
+}, () => []);
+
+/* ── LIVE: nasou-api does the work (and the audit and notifications) ──────── */
+const partNo = (partId) => String(partId).split('-').pop();
+const afterChange = () => refresh('orders', 'refunds', 'notifications', 'payouts');
+
+/* POST /checkout — the server prices, splits, takes stock and payment. */
+export async function checkout(body, idempotencyKey) {
+  const order = await api('/checkout', { method: 'POST', headers: { 'Idempotency-Key': idempotencyKey }, body: JSON.stringify(body) });
+  ordersStore.set((list) => [order, ...list.filter((o) => o.id !== order.id)]);
+  refresh('notifications', 'catalog');
+  return order;
+}
+
+async function updatePartLive(orderId, partId, status, note) {
+  const role = who()?.role;
+  if (role === 'CUSTOMER') await post(`/orders/${orderId}/parts/${partNo(partId)}/cancel`, { reason: note || null });
+  else await apiPatch(`/${role === 'ADMIN' ? 'admin' : 'seller'}/orders/${orderId}/parts/${partNo(partId)}/status`, { status, note: note || null });
+  await afterChange();
+  return findOrder(orderId);
+}
 
 export const getOrders = () => ordersStore.get();
 export const findOrder = (id) => ordersStore.get().find((o) => o.id === id) || null;
@@ -155,6 +177,7 @@ function settleOrder(o) {
 
 /* ── placing an order (checkout) ──────────────────────────────────────────── */
 export function placeOrder(draft) {
+  if (LIVE) throw new Error('Orders are placed through checkout().');
   const id = nextId();
   const createdAt = Date.now();
   const online = draft.payment !== 'Cash on delivery' && draft.payment !== 'GST invoice';
@@ -199,6 +222,7 @@ const WORDS = { Processing: 'is being packed', Shipped: 'has shipped', Delivered
 
 /* ── one part moves on (retailer or platform) ─────────────────────────────── */
 export function updatePart(orderId, partId, status, { by = '', note = '', byRetailer = false } = {}) {
+  if (LIVE) return updatePartLive(orderId, partId, status, note);
   const before = findOrder(orderId);
   const part = before?.parts.find((p) => p.id === partId);
   if (!part || part.status === status) return before;
@@ -231,14 +255,17 @@ export function updatePart(orderId, partId, status, { by = '', note = '', byReta
 }
 
 export function addOrderNote(orderId, text, by) {
+  if (LIVE) return post(`/admin/orders/${orderId}/notes`, { text }).then(() => refresh('orders'));
   writeOrder(orderId, (o) => ({ ...o, notes: [{ id: uid('nt'), text, by, at: Date.now() }, ...(o.notes || [])] }));
   audit({ action: 'order.note', entity: 'order', entityId: orderId, summary: `Note on ${orderId}`, after: { note: text } });
 }
 export function setOrderFlag(orderId, flag, by) {
+  if (LIVE) return post(`/admin/orders/${orderId}/flag`, { reason: flag || null }).then(() => refresh('orders'));
   writeOrder(orderId, (o) => ({ ...o, flagged: flag ? { by, at: Date.now(), reason: flag } : null }));
   audit({ action: flag ? 'order.flag' : 'order.unflag', entity: 'order', entityId: orderId, summary: flag ? `Flagged ${orderId}: ${flag}` : `Cleared flag on ${orderId}` });
 }
 export function updateOrderContact(orderId, fields, by) {
+  if (LIVE) return apiPatch(`/admin/orders/${orderId}/contact`, fields).then(() => refresh('orders'));
   const before = findOrder(orderId);
   writeOrder(orderId, (o) => ({ ...o, ...fields }));
   audit({ action: 'order.update', entity: 'order', entityId: orderId, summary: `Delivery details changed on ${orderId} by ${by}`, before: Object.fromEntries(Object.keys(fields).map((k) => [k, before?.[k]])), after: fields });
@@ -253,6 +280,7 @@ export function refundableOn(orderId, partId) {
 }
 
 export function createRefund({ orderId, partId, amount, reason, by, system = false }) {
+  if (LIVE) return post('/admin/refunds', { orderId, partId, amount: Number(amount), reason }).then(async (r) => { await afterChange(); return r; });
   const o = findOrder(orderId);
   const p = o?.parts.find((x) => x.id === partId);
   if (!p) throw new Error('Pick a part of the order to refund.');
@@ -293,6 +321,7 @@ export function processRefund(r, by) {
 }
 
 export function decideRefund(id, approve, { by, note = '' }) {
+  if (LIVE) return post(`/admin/refunds/${id}/decision`, { approve, note }).then(afterChange);
   const r = refundsStore.get().find((x) => x.id === id);
   if (!r || r.status !== 'requested') return;
   if (!approve) {
@@ -306,6 +335,7 @@ export function decideRefund(id, approve, { by, note = '' }) {
 
 /* COD / invoice money received (Billing & payments) */
 export function setPaymentStatus(orderId, paymentStatus, by = '') {
+  if (LIVE) return apiPatch(`/admin/orders/${orderId}/payment`, { status: paymentStatus }).then(() => refresh('orders'));
   const before = findOrder(orderId);
   if (!before) return;
   writeOrder(orderId, (o) => ({ ...o, paymentStatus }));

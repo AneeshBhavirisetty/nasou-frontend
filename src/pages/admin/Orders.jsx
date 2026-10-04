@@ -13,6 +13,7 @@ import { ORDER_STATUSES, formatOrderDate } from '../../data/orders';
 import { invoiceUrl } from '../../lib/exportSheet';
 import { rupeesCompact } from '../../lib/analytics';
 import { money } from '../../lib/format';
+import { act } from '../../lib/act';
 
 /* Orders — global list view (requirement 7). One row per customer order;
    each order has one sub-order per retailer, tracked separately. Opening a
@@ -39,7 +40,7 @@ export default function AdminOrders() {
   const advance = (sel) => {
     let n = 0;
     sel.forEach((o) => o.parts.forEach((p) => {
-      if (p.status === 'Pending') { updatePart(o.id, p.id, 'Processing', { by: user?.fullName, note: 'Bulk update' }); n += 1; }
+      if (p.status === 'Pending') { act(toast, () => updatePart(o.id, p.id, 'Processing', { by: user?.fullName, note: 'Bulk update' })); n += 1; }
     }));
     toast.success(n ? `${n} pending sub-order${n > 1 ? 's' : ''} moved to Processing` : 'Nothing pending in the selection');
   };

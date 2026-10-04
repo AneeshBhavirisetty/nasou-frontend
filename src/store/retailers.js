@@ -2,6 +2,8 @@ import { createStore, useStore, uid } from '../lib/store';
 import { seedRetailers, retailerStatusLabel } from '../lib/marketplace';
 import { audit } from '../lib/auditLog';
 import { notify } from './notifications';
+import { LIVE } from '../lib/config';
+import { patch as apiPatch, post, refresh } from '../lib/live';
 
 /* ============================================================================
  * Retailers (Super Admin requirements 5, 6, 10, 11, 17) and the Owner's
@@ -12,8 +14,39 @@ import { notify } from './notifications';
  * stays so old orders and payouts keep their link).
  * ==========================================================================*/
 
-export const retailersStore = createStore('nivora_retailers_v1', seedRetailers);
+export const retailersStore = createStore('nivora_retailers_v1', seedRetailers, () => []);
 export const requestsStore = createStore('nivora_requests_v1', () => []);
+
+const isTeam = () => {
+  try { return JSON.parse(sessionStorage.getItem('nasou_session') || 'null')?.role === 'ADMIN'; } catch { return false; }
+};
+
+/* LIVE: the same actions, done by nasou-api (which audits and notifies). */
+const live = {
+  async update(id, fields) {
+    if (!isTeam()) {
+      await apiPatch('/seller/profile', fields);
+      return refresh('retailers');
+    }
+    if (fields.commission || fields.plan) {
+      await apiPatch(`/admin/retailers/${id}/commercials`, { rate: fields.commission?.rate ?? null, byCategory: fields.commission?.byCategory || {}, plan: fields.plan });
+    }
+    if (fields.notes) await post(`/admin/retailers/${id}/notes`, { text: fields.notes[0]?.text });
+    const contact = Object.fromEntries(Object.entries(fields).filter(([k]) => !['commission', 'plan', 'notes'].includes(k)));
+    if (Object.keys(contact).length) await apiPatch(`/admin/retailers/${id}/contact`, contact);
+    return refresh('retailers');
+  },
+  async status(id, status, note) {
+    if (status === 'deleted') await post(`/admin/retailers/${id}/delete`, { status, note });
+    else await apiPatch(`/admin/retailers/${id}/status`, { status, note });
+    return refresh('retailers', 'requests', 'orders', 'refunds');
+  },
+};
+
+export async function setDocumentStatus(retailerId, docId, status) {
+  await apiPatch(`/admin/retailers/${retailerId}/documents/${docId}`, { status });
+  return refresh('retailers');
+}
 
 export const getRetailers = () => retailersStore.get();
 export const getRetailer = (id) => retailersStore.get().find((r) => r.id === id) || null;
@@ -39,6 +72,7 @@ function patch(id, fn) {
 
 /* plain field edits made by the Super Admin (contact, notes …) */
 export function updateRetailer(id, fields, summary = 'Updated retailer details') {
+  if (LIVE) return live.update(id, fields);
   const { before, after } = patch(id, (r) => ({ ...r, ...fields }));
   if (!before) return;
   const changed = Object.keys(fields);
@@ -59,6 +93,7 @@ const STATUS_COPY = {
   deleted: ['Your store was closed', 'Open orders were closed and paid orders refunded.'],
 };
 export function setRetailerStatus(id, status, { note = '', by = '' } = {}) {
+  if (LIVE) return live.status(id, status, note);
   const { before, after } = patch(id, (r) => ({
     ...r,
     status,
@@ -115,12 +150,14 @@ export function resubmitApplication(id, fields) {
 /* Requirement 17: bank, tax and legal edits wait for approval. */
 export const SENSITIVE_FIELDS = ['legalName', 'gstin', 'pan', 'bank', 'type'];
 export function proposeChanges(id, fields, by) {
+  if (LIVE) return post('/seller/changes', fields).then(() => refresh('retailers'));
   const { after } = patch(id, (r) => ({ ...r, pendingChanges: { fields: { ...(r.pendingChanges?.fields || {}), ...fields }, at: Date.now(), by } }));
   if (!after) return;
   audit({ action: 'retailer.change_request', entity: 'retailer', entityId: id, summary: `${after.name} asked to change ${Object.keys(fields).join(', ')}`, after: fields });
   notify({ userId: 'team:owner', icon: 'pencil', title: 'Retailer profile change to approve', body: `${after.name}: ${Object.keys(fields).join(', ')}`, to: '/admin/approvals?tab=changes' });
 }
 export function decideChanges(id, approve, { note = '', by = '' } = {}) {
+  if (LIVE) return post(`/admin/retailers/${id}/changes/decision`, { approve, note }).then(() => refresh('retailers'));
   const { before, after } = patch(id, (r) => {
     if (!r.pendingChanges) return r;
     return approve ? { ...r, ...r.pendingChanges.fields, pendingChanges: null } : { ...r, pendingChanges: null };
@@ -139,6 +176,7 @@ export function decideChanges(id, approve, { note = '', by = '' } = {}) {
 
 /* Operations "request" deletion; only the Owner can carry it out. */
 export function requestAction({ kind, retailerId, reason, by }) {
+  if (LIVE) return post('/admin/requests', { kind, retailerId, reason }).then((q) => { refresh('requests'); return q; });
   const r = getRetailer(retailerId);
   const req = { id: uid('rq'), kind, retailerId, retailerName: r?.name, reason, by, at: Date.now(), status: 'open' };
   requestsStore.set((list) => [req, ...list]);
@@ -147,5 +185,6 @@ export function requestAction({ kind, retailerId, reason, by }) {
   return req;
 }
 export function closeRequest(id, status, by) {
+  if (LIVE) return status === 'declined' ? post(`/admin/requests/${id}/decline`, {}).then(() => refresh('requests')) : refresh('requests');
   requestsStore.set((list) => list.map((q) => (q.id === id ? { ...q, status, decidedBy: by, decidedAt: Date.now() } : q)));
 }

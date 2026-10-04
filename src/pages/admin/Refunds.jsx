@@ -11,6 +11,7 @@ import { useSettings } from '../../store/settings';
 import { useScopedRefunds } from '../../lib/useScoped';
 import { formatOrderDate } from '../../data/orders';
 import { money } from '../../lib/format';
+import { act } from '../../lib/act';
 
 /* Refunds (requirement 19). Support starts a refund from an order's part;
    Finance approves it; approval pays it back through Razorpay and reverses
@@ -59,7 +60,7 @@ export default function AdminRefunds() {
           ...(canApprove ? [{ key: 'act', label: '', sortable: false, csv: false, always: true, render: (r) => r.status === 'requested' && (
             <span className="flex justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
               <button onClick={() => setDeclining(r)} className="h-8 rounded-full border border-line px-3 text-[12px] font-bold text-ink-70 hover:border-clay/40 hover:text-clay">Decline</button>
-              <button onClick={() => { decideRefund(r.id, true, { by }); toast.success(`${money(r.amount)} refunded via Razorpay`); }} className="h-8 rounded-full bg-forest px-3 text-[12px] font-bold text-white">Approve</button>
+              <button onClick={() => { act(toast, () => decideRefund(r.id, true, { by }), `${money(r.amount)} refunded via Razorpay`); }} className="h-8 rounded-full bg-forest px-3 text-[12px] font-bold text-white">Approve</button>
             </span>
           ) }] : []),
         ]}
@@ -78,7 +79,7 @@ export default function AdminRefunds() {
 
       {declining && (
         <ReasonDialog open onClose={() => setDeclining(null)} title={`Decline ${money(declining.amount)} refund?`} confirm="Decline" tone="danger" label="Reason (seen by the person who started it)"
-          onConfirm={(why) => { decideRefund(declining.id, false, { by, note: why }); toast.success('Refund declined'); }} />
+          onConfirm={(why) => { act(toast, () => decideRefund(declining.id, false, { by, note: why }), 'Refund declined'); }} />
       )}
     </div>
   );

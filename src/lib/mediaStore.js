@@ -5,7 +5,19 @@
  * far too small for images). Every record exposes a `url` the app can drop
  * straight into an <img src>, so when the real blob storage lands you only swap
  * `putImage` for an upload call and keep returning { id, url, name }.
+ *
+ * LIVE: photos are uploaded to nasou-api (POST /admin/media or /seller/media),
+ * which keeps them in Azure Blob Storage (or a local volume) and returns a
+ * URL; nothing is kept in the browser.
  * ==========================================================================*/
+
+import { LIVE } from './config';
+import { api } from './api';
+import { getStoredSession } from './auth';
+
+const isTeam = () => getStoredSession()?.role === 'ADMIN';
+const fromServer = (m) => ({ id: m.id, name: m.name, url: m.url, width: m.width, height: m.height, bytes: m.bytes, at: Date.parse(m.createdAt) || Date.now() });
+let sessionUploads = []; // a retailer's uploads this session (sellers have no library listing)
 
 const DB = 'nasou_media';
 const STORE = 'images';
@@ -79,6 +91,15 @@ export async function putImage(file) {
   if (!file.type.startsWith('image/')) throw new Error(`${file.name} is not an image.`);
   if (file.size > 8 * 1024 * 1024) throw new Error(`${file.name} is larger than 8 MB.`);
   const { url, w, h } = await shrink(file);
+  if (LIVE) {
+    const blob = await (await fetch(url)).blob();
+    const form = new FormData();
+    form.append('file', new File([blob], file.name.replace(/\.[^.]+$/, '') + '.jpg', { type: 'image/jpeg' }));
+    const rec = fromServer(await api(isTeam() ? '/admin/media' : '/seller/media', { method: 'POST', body: form }));
+    sessionUploads = [rec, ...sessionUploads];
+    ping();
+    return rec;
+  }
   const rec = {
     id: `img_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`,
     name: file.name,
@@ -103,11 +124,22 @@ export async function putImages(files) {
 }
 
 export async function listImages() {
+  if (LIVE) {
+    if (!isTeam()) return sessionUploads;
+    const page = await api('/admin/media?size=200');
+    return (page?.items || []).map(fromServer);
+  }
   const all = await tx('readonly', (s) => s.getAll());
   return (all || []).sort((a, b) => b.at - a.at);
 }
 
 export async function deleteImage(id) {
+  if (LIVE) {
+    if (isTeam()) await api(`/admin/media/${id}`, { method: 'DELETE' });
+    sessionUploads = sessionUploads.filter((m) => m.id !== id);
+    ping();
+    return;
+  }
   await tx('readwrite', (s) => s.delete(id));
   ping();
 }

@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import AuthCard from '../components/auth/AuthCard';
 import { Button, Field } from '../components/ui';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { acceptInvite, findInvite } from '../store/accounts';
+import { acceptInvite, fetchInvite, findInvite } from '../store/accounts';
+import { LIVE } from '../lib/config';
 import { getRetailer } from '../store/retailers';
 import { staffRole } from '../lib/access';
 import { isMobile10 } from '../lib/format';
@@ -16,12 +17,16 @@ export default function InviteAccept() {
   const navigate = useNavigate();
   const toast = useToast();
   const { signInAccount } = useAuth();
-  const inv = findInvite(token);
-  const store = inv && getRetailer(inv.retailerId);
+  /* LIVE: the server knows the invite; the demo keeps it in the browser */
+  const [remote, setRemote] = useState(LIVE ? undefined : null);
+  useEffect(() => { if (LIVE) fetchInvite(token).then(setRemote); }, [token]);
+  const inv = LIVE ? remote : findInvite(token);
+  const store = LIVE ? (inv ? { name: inv.retailerName } : null) : inv && getRetailer(inv.retailerId);
   const [f, setF] = useState({ fullName: '', phone: '', password: '' });
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
 
+  if (inv === undefined) return <AuthCard title="Checking your invite…" subtitle="One moment." />;
   if (!inv || inv.status !== 'pending') {
     return (
       <AuthCard title="This invite has expired" subtitle="Ask your store owner to send a new one.">

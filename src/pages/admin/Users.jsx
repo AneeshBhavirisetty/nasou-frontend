@@ -15,6 +15,7 @@ import { useOrders } from '../../store/orders';
 import { ADMIN_MODULES, LEVEL_LABEL, TEAM_ROLES, levelOptions, teamRoleLabel } from '../../lib/access';
 import { formatOrderDate } from '../../data/orders';
 import { money, cx, isMobile10 } from '../../lib/format';
+import { act } from '../../lib/act';
 
 /* Team & customers (customer review admin item 1; requirements 3 and 7).
    Internal users: the Nasou Hive team. Exactly one Owner (the IAM admin);
@@ -70,8 +71,7 @@ function MemberForm({ member, team, onClose }) {
         notify({ userId: a.id, icon: 'users', title: 'Welcome to the Nivora team', body: `You joined as ${teamRoleLabel(f.teamRole)}. Two-factor sign-in is on for your account.`, to: '/admin/dashboard' });
         toast.success(`${a.fullName} added as ${teamRoleLabel(f.teamRole)} — invite sent to ${a.email}`);
       } else {
-        updateAccount(member.id, { fullName: f.fullName.trim(), phone: f.phone, title: f.title.trim(), ...(owner ? {} : { teamRole: f.teamRole }) }, 'Team member updated');
-        toast.success('Saved');
+        act(toast, () => updateAccount(member.id, { fullName: f.fullName.trim(), phone: f.phone, title: f.title.trim(), ...(owner ? {} : { teamRole: f.teamRole }) }, 'Team member updated'), 'Saved');
       }
       onClose();
     } catch (x) {
@@ -122,7 +122,7 @@ function RolesMatrix({ presets, canEdit }) {
     <section className="overflow-hidden rounded-[22px] border border-line bg-white shadow-card">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line-soft p-4">
         <p className="text-[13px] text-ink-50">V = view · E = view and act · Request / Start / Approve are the special steps from the brief. Owner is always full access.</p>
-        {canEdit && <Button size="sm" icon="check" disabled={!dirty} onClick={() => { saveSetting('presets', draft, 'Changed team role permissions'); toast.success('Role permissions saved — they apply on the next click'); }}>Save roles</Button>}
+        {canEdit && <Button size="sm" icon="check" disabled={!dirty} onClick={() => { act(toast, () => saveSetting('presets', draft, 'Changed team role permissions'), 'Role permissions saved — they apply on the next click'); }}>Save roles</Button>}
       </div>
       <div className="thin-bar overflow-x-auto">
         <table className="w-full min-w-[820px] text-[13px]">
@@ -181,8 +181,7 @@ export default function AdminUsers() {
 
   const toggle = (u) => {
     const next = u.status === 'suspended' ? 'active' : 'suspended';
-    updateAccount(u.id, { status: next }, next === 'active' ? 'Team member re-activated' : 'Team member suspended');
-    toast.success(`${u.fullName} ${next === 'active' ? 're-activated' : 'suspended'}`);
+    act(toast, () => updateAccount(u.id, { status: next }, next === 'active' ? 'Team member re-activated' : 'Team member suspended'), `${u.fullName} ${next === 'active' ? 're-activated' : 'suspended'}`);
   };
 
   return (
@@ -217,7 +216,7 @@ export default function AdminUsers() {
                   {u.teamRole !== 'owner' && u.id !== user?.id && (
                     <>
                       <button onClick={() => toggle(u)} className="h-8 rounded-full border border-line px-3 text-[12px] font-bold text-ink-70 hover:border-forest">{u.status === 'suspended' ? 'Re-activate' : 'Suspend'}</button>
-                      <button onClick={() => { if (window.confirm(`Remove ${u.fullName} from the team? Their audit history stays.`)) { updateAccount(u.id, { status: 'deleted' }, 'Team member removed'); toast.success('Removed'); } }} className="grid h-8 w-8 place-items-center rounded-full border border-line text-ink-50 hover:text-clay" aria-label={`Remove ${u.fullName}`}><Icon name="trash" size={13} /></button>
+                      <button onClick={() => { if (window.confirm(`Remove ${u.fullName} from the team? Their audit history stays.`)) { act(toast, () => updateAccount(u.id, { status: 'deleted' }, 'Team member removed'), 'Removed'); } }} className="grid h-8 w-8 place-items-center rounded-full border border-line text-ink-50 hover:text-clay" aria-label={`Remove ${u.fullName}`}><Icon name="trash" size={13} /></button>
                     </>
                   )}
                 </span>

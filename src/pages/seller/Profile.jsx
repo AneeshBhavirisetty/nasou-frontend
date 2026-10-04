@@ -9,6 +9,7 @@ import { proposeChanges, updateRetailer } from '../../store/retailers';
 import { useSettings } from '../../store/settings';
 import { useSeller } from '../../layouts/SellerLayout';
 import { money, cx } from '../../lib/format';
+import { act } from '../../lib/act';
 
 /* Store profile (requirement 14). Contact details change straight away;
    legal name, business type, GSTIN, PAN and bank account go to the Nivora
@@ -31,8 +32,7 @@ export default function SellerProfile() {
   const saveContact = (e) => {
     e.preventDefault();
     if (!/^\d{10}$/.test(c.phone) || !/^\d{6}$/.test(c.pin)) return toast.error('Mobile needs 10 digits and PIN 6.');
-    updateRetailer(r.id, c, `Store details edited by ${user.fullName}`);
-    toast.success('Store details saved');
+    act(toast, () => updateRetailer(r.id, c, `Store details edited by ${user.fullName}`), 'Store details saved');
   };
   const proposeSensitive = (e) => {
     e.preventDefault();
@@ -47,8 +47,7 @@ export default function SellerProfile() {
     if (s.pan !== r.pan) fields.pan = s.pan;
     if (s.holder !== r.bank?.holder || s.account !== r.bank?.account || s.ifsc !== r.bank?.ifsc) fields.bank = { holder: s.holder, account: s.account, ifsc: s.ifsc };
     if (!Object.keys(fields).length) return toast.info('Nothing changed.');
-    proposeChanges(r.id, fields, user.fullName);
-    toast.success('Sent to Nivora for approval — the current details stay in use until then');
+    act(toast, () => proposeChanges(r.id, fields, user.fullName), 'Sent to Nivora for approval — the current details stay in use until then');
   };
   const field = (state, set, k, label, extra = {}) => (
     <label className={extra.wide ? 'sm:col-span-2' : ''}>

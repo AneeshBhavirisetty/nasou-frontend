@@ -7,11 +7,14 @@ import { Button } from '../../components/ui';
 import { useAuth } from '../../context/AuthContext';
 import { useIam } from '../../context/IamStore';
 import { useToast } from '../../context/ToastContext';
-import { closeRequest, decideChanges, retailersStore, setRetailerStatus, useRequests, useRetailers } from '../../store/retailers';
+import { closeRequest, decideChanges, retailersStore, setDocumentStatus, setRetailerStatus, useRequests, useRetailers } from '../../store/retailers';
+import DocLink from '../../components/admin/DocLink';
+import { LIVE } from '../../lib/config';
 import { deleteRetailer, retailerFootprint } from '../../store/actions';
 import { DOC_TYPES } from '../../lib/marketplace';
 import { money, cx } from '../../lib/format';
 import { timeAgo } from '../../context/NotificationStore';
+import { act } from '../../lib/act';
 
 /* Approval queue (requirements 6 and 17, plus Owner sign-off from 11).
    Applications: review documents → approve, reject with a reason, or ask
@@ -21,8 +24,9 @@ const mask = (a = '') => (a ? `•••• ${String(a).slice(-4)}` : '—');
 const FIELD_LABEL = { legalName: 'Legal name', gstin: 'GSTIN', pan: 'PAN', bank: 'Bank account', type: 'Business type' };
 const show = (k, v) => (k === 'bank' && v ? `${v.holder} · ${mask(v.account)} · ${v.ifsc}` : String(v ?? '—'));
 
-function setDocStatus(retailerId, type, status) {
-  retailersStore.set((list) => list.map((r) => (r.id === retailerId ? { ...r, documents: r.documents.map((d) => (d.type === type ? { ...d, status } : d)) } : r)));
+function setDocStatus(retailerId, type, status, doc) {
+  if (LIVE) return setDocumentStatus(retailerId, doc.id, status);
+  return retailersStore.set((list) => list.map((r) => (r.id === retailerId ? { ...r, documents: r.documents.map((d) => (d.type === type ? { ...d, status } : d)) } : r)));
 }
 
 function Application({ r, canEdit, by }) {
@@ -61,12 +65,11 @@ function Application({ r, canEdit, by }) {
                   <p className="truncate text-[12px] text-ink-50">{doc ? `${doc.name} · ${Math.round(doc.size / 1024)} KB` : hint}</p>
                 </div>
               </div>
-              {doc?.dataUrl && doc.mime?.startsWith('image/') && <img src={doc.dataUrl} alt={label} className="mt-3 max-h-40 w-full rounded-[10px] bg-white object-contain" />}
-              {doc?.dataUrl && doc.mime === 'application/pdf' && <a href={doc.dataUrl} target="_blank" rel="noreferrer" className="mt-2 inline-block text-[12px] font-bold text-forest hover:underline">Open PDF ↗</a>}
+              <DocLink doc={doc} label={label} />
               {doc && canEdit && (
                 <div className="mt-3 flex gap-1.5">
                   {[['verified', 'Looks right', 'check'], ['rejected', 'Problem', 'close']].map(([st, txt, ic]) => (
-                    <button key={st} type="button" onClick={() => setDocStatus(r.id, key, st)} className={cx('flex h-8 flex-1 items-center justify-center gap-1 rounded-full border text-[12px] font-bold transition', doc.status === st ? (st === 'verified' ? 'border-emerald bg-emerald text-white' : 'border-clay bg-clay text-white') : 'border-line bg-white text-ink-70 hover:border-forest/40')}>
+                    <button key={st} type="button" onClick={() => act(toast, () => setDocStatus(r.id, key, st, doc))} className={cx('flex h-8 flex-1 items-center justify-center gap-1 rounded-full border text-[12px] font-bold transition', doc.status === st ? (st === 'verified' ? 'border-emerald bg-emerald text-white' : 'border-clay bg-clay text-white') : 'border-line bg-white text-ink-70 hover:border-forest/40')}>
                       <Icon name={ic} size={12} /> {txt}
                     </button>
                   ))}
@@ -82,15 +85,15 @@ function Application({ r, canEdit, by }) {
           <span className="mr-auto text-[12.5px] text-ink-50">{rejected.length ? `${rejected.length} document(s) marked with a problem` : missing ? 'Some documents are missing' : 'Ready to decide'}</span>
           <Button variant="outline" size="sm" icon="close" onClick={() => setDialog('reject')}>Reject</Button>
           <Button variant="outline" size="sm" icon="pencil" onClick={() => setDialog('changes')}>Ask for corrections</Button>
-          <Button size="sm" icon="check" disabled={missing > 0 || rejected.length > 0} onClick={() => { setRetailerStatus(r.id, 'approved', { by, note: 'Documents verified' }); toast.success(`${r.name} approved — Razorpay linked account created`); }}>Approve</Button>
+          <Button size="sm" icon="check" disabled={missing > 0 || rejected.length > 0} onClick={() => { act(toast, () => setRetailerStatus(r.id, 'approved', { by, note: 'Documents verified' }), `${r.name} approved — Razorpay linked account created`); }}>Approve</Button>
         </div>
       )}
 
       <ReasonDialog open={dialog === 'changes'} onClose={() => setDialog(null)} title="Ask for corrections" confirm="Send to retailer" label="What should they fix?"
         placeholder={rejected.length ? `Please re-upload: ${rejected.map((d) => d.label).join(', ')}` : 'e.g. The GSTIN on the certificate does not match the one entered.'}
-        onConfirm={(why) => { setRetailerStatus(r.id, 'needs_changes', { by, note: why }); toast.success('Sent — the retailer can fix and re-submit'); }} />
+        onConfirm={(why) => { act(toast, () => setRetailerStatus(r.id, 'needs_changes', { by, note: why }), 'Sent — the retailer can fix and re-submit'); }} />
       <ReasonDialog open={dialog === 'reject'} onClose={() => setDialog(null)} title={`Reject ${r.name}?`} confirm="Reject application" tone="danger" label="Reason (sent to the retailer)"
-        onConfirm={(why) => { setRetailerStatus(r.id, 'rejected', { by, note: why }); toast.success('Application rejected'); }} />
+        onConfirm={(why) => { act(toast, () => setRetailerStatus(r.id, 'rejected', { by, note: why }), 'Application rejected'); }} />
     </div>
   );
 }
@@ -155,7 +158,7 @@ export default function AdminApprovals() {
               {canEdit && (
                 <div className="mt-4 flex justify-end gap-2">
                   <Button size="sm" variant="outline" icon="close" onClick={() => setDeciding({ r, approve: false })}>Decline</Button>
-                  <Button size="sm" icon="check" onClick={() => { decideChanges(r.id, true, { by }); toast.success('Change approved and applied'); }}>Approve</Button>
+                  <Button size="sm" icon="check" onClick={() => { act(toast, () => decideChanges(r.id, true, { by }), 'Change approved and applied'); }}>Approve</Button>
                 </div>
               )}
             </Panel>
@@ -180,8 +183,8 @@ export default function AdminApprovals() {
                   </div>
                   {q.status === 'open' ? (isOwner && (
                     <div className="flex gap-2">
-                      <Button size="sm" variant="outline" onClick={() => { closeRequest(q.id, 'declined', by); toast.success('Request declined'); }}>Decline</Button>
-                      <Button size="sm" icon="trash" className="!border-clay !bg-clay" onClick={() => { deleteRetailer(q.retailerId, { by, reason: `Approved request from ${q.by}: ${q.reason}` }); closeRequest(q.id, 'approved', by); toast.success(`${q.retailerName} deleted`); }}>Approve & delete</Button>
+                      <Button size="sm" variant="outline" onClick={() => { act(toast, () => closeRequest(q.id, 'declined', by), 'Request declined'); }}>Decline</Button>
+                      <Button size="sm" icon="trash" className="!border-clay !bg-clay" onClick={() => { act(toast, () => deleteRetailer(q.retailerId, { by, reason: `Approved request from ${q.by}: ${q.reason}` })); act(toast, () => closeRequest(q.id, 'approved', by), `${q.retailerName} deleted`); }}>Approve & delete</Button>
                     </div>
                   )) : <StatusPill status={q.status === 'approved' ? 'approved' : 'deactivated'} label={`${q.status} · ${q.decidedBy}`} />}
                 </div>
@@ -193,7 +196,7 @@ export default function AdminApprovals() {
 
       {deciding && (
         <ReasonDialog open onClose={() => setDeciding(null)} title={`Decline ${deciding.r.name}’s change`} confirm="Decline change" label="Reason (sent to the retailer)"
-          onConfirm={(why) => { decideChanges(deciding.r.id, false, { by, note: why }); toast.success('Change declined'); }} />
+          onConfirm={(why) => { act(toast, () => decideChanges(deciding.r.id, false, { by, note: why }), 'Change declined'); }} />
       )}
       <p className="text-[12px] text-ink-35">Every decision is recorded in the audit log with who decided and why.</p>
     </div>

@@ -14,6 +14,7 @@ import { useAccounts } from '../../store/accounts';
 import { useScopedOrders } from '../../lib/useScoped';
 import { formatOrderDate } from '../../data/orders';
 import { money } from '../../lib/format';
+import { act } from '../../lib/act';
 
 /* One customer order (requirement 12): every seller's part with its own
    status, cancel and refund; order flag, internal notes, delivery details. */
@@ -26,8 +27,7 @@ function ContactEditor({ order, by, onClose }) {
   const save = (e) => {
     e.preventDefault();
     if (!/^\d{10}$/.test(f.phone) || !/^\d{6}$/.test(f.pin)) return toast.error('Mobile needs 10 digits and PIN 6.');
-    updateOrderContact(order.id, f, by);
-    toast.success('Delivery details updated');
+    act(toast, () => updateOrderContact(order.id, f, by), 'Delivery details updated');
     onClose();
   };
   return (
@@ -78,7 +78,7 @@ export default function AdminOrderDetail() {
         <div className="flex flex-wrap gap-2">
           <Button size="sm" variant="outline" icon="fileText" to={`/invoice/${o.id}`}>Invoice</Button>
           {canEdit && (o.flagged
-            ? <Button size="sm" variant="outline" icon="check" onClick={() => { setOrderFlag(o.id, null, by); toast.success('Flag cleared'); }}>Clear flag</Button>
+            ? <Button size="sm" variant="outline" icon="check" onClick={() => { act(toast, () => setOrderFlag(o.id, null, by), 'Flag cleared'); }}>Clear flag</Button>
             : <Button size="sm" variant="outline" icon="bell" onClick={() => setDialog('flag')}>Flag</Button>)}
         </div>
       </div>
@@ -135,7 +135,7 @@ export default function AdminOrderDetail() {
 
           <Panel title="Internal notes" note="Team only — never shown to the customer or seller.">
             {canEdit && (
-              <form onSubmit={(e) => { e.preventDefault(); if (note.trim().length < 3) return; addOrderNote(o.id, note.trim(), by); setNote(''); }} className="mb-3 space-y-2">
+              <form onSubmit={(e) => { e.preventDefault(); if (note.trim().length < 3) return; act(toast, () => addOrderNote(o.id, note.trim(), by)); setNote(''); }} className="mb-3 space-y-2">
                 <textarea value={note} onChange={(e) => setNote(e.target.value)} className={TEXTAREA_CLS} placeholder="e.g. Called customer — happy to wait for the cPVC part." />
                 <Button size="sm" type="submit" icon="plus">Add note</Button>
               </form>
@@ -149,7 +149,7 @@ export default function AdminOrderDetail() {
         </aside>
       </div>
 
-      <ReasonDialog open={dialog === 'flag'} onClose={() => setDialog(null)} title={`Flag ${o.id}`} confirm="Flag order" label="What needs attention?" onConfirm={(why) => { setOrderFlag(o.id, why, by); toast.success('Order flagged'); }} />
+      <ReasonDialog open={dialog === 'flag'} onClose={() => setDialog(null)} title={`Flag ${o.id}`} confirm="Flag order" label="What needs attention?" onConfirm={(why) => { act(toast, () => setOrderFlag(o.id, why, by), 'Order flagged'); }} />
       {dialog === 'contact' && <ContactEditor order={o} by={by} onClose={() => setDialog(null)} />}
     </div>
   );

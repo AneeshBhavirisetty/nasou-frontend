@@ -4,26 +4,28 @@ import { AnimatePresence, motion } from 'framer-motion';
 import Icon from '../Icon';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import { DEMO_ACCOUNTS, IS_MOCK } from '../../lib/api';
+import { DEMO_ACCOUNTS } from '../../lib/api';
+import { SHOW_DEMO } from '../../lib/config';
 import { landingFor } from '../../lib/auth';
 import { userRoleLabel } from '../../lib/roles';
 import { cx } from '../../lib/format';
 
 /* Demo-only: switch between the seeded accounts (every portal and role) in
-   one click, skipping the password and 2FA steps. Not rendered when a real
-   backend is configured. */
+   one click. In the browser demo it skips the password and 2FA steps; on a
+   dev/staging server (config.js demo: true) it signs in with the seeded
+   password and the dev 2FA code. Never rendered in production. */
 export default function DemoSwitch() {
   const { user, quickLogin, logout } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
-  if (!IS_MOCK) return null;
+  if (!SHOW_DEMO) return null;
   const groups = [...new Set(DEMO_ACCOUNTS.map((a) => a.group))];
 
-  const go = (email) => {
+  const go = async (email) => {
     try {
       logout();
-      const a = quickLogin(email);
+      const a = await quickLogin(email);
       setOpen(false);
       navigate(landingFor(a));
       toast.info(`Signed in as ${a.fullName}`);

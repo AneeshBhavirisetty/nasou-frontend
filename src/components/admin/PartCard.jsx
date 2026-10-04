@@ -8,6 +8,7 @@ import { createRefund, refundableOn, updatePart } from '../../store/orders';
 import { useToast } from '../../context/ToastContext';
 import { ORDER_FLOW, nextStatus } from '../../lib/marketplace';
 import { money, cx } from '../../lib/format';
+import { act } from '../../lib/act';
 
 /* One retailer's sub-order: lines, progress, Razorpay transfer and the
    actions the viewer may take. Shared by the Super Admin order page and the
@@ -26,8 +27,7 @@ export default function PartCard({ order, part, by, canAdvance, canCancel, canRe
   const next = nextStatus(part.status);
 
   const advance = () => {
-    updatePart(order.id, part.id, next, { by, byRetailer });
-    toast.success(`${part.id} → ${next}`);
+    act(toast, () => updatePart(order.id, part.id, next, { by, byRetailer }), `${part.id} → ${next}`);
   };
 
   return (
@@ -101,7 +101,7 @@ export default function PartCard({ order, part, by, canAdvance, canCancel, canRe
 
       <ReasonDialog open={dialog === 'cancel'} onClose={() => setDialog(null)} title={`Cancel ${part.id}?`} confirm="Cancel this part" tone="danger" label="Reason (shown to the customer)"
         intro={<>Only <b>{part.retailerName}</b>’s part is cancelled; other sellers’ parts carry on. Stock goes back{order.payment !== 'Cash on delivery' ? ` and ${money(part.total - (part.refunded || 0))} is refunded` : ''}.</>}
-        onConfirm={(why) => { updatePart(order.id, part.id, 'Cancelled', { by, note: why, byRetailer }); toast.success(`${part.id} cancelled`); }} />
+        onConfirm={(why) => { act(toast, () => updatePart(order.id, part.id, 'Cancelled', { by, note: why, byRetailer }), `${part.id} cancelled`); }} />
       <ReasonDialog open={dialog === 'refund'} onClose={() => setDialog(null)} title={`Refund on ${part.id}`} confirm="Start refund" label="Reason"
         intro={<>Comes only out of <b>{part.retailerName}</b>’s share (commission is returned pro rata). Up to <b>{money(max)}</b>. Finance approves before Razorpay pays it out.</>}
         onConfirm={(why) => { createRefund({ orderId: order.id, partId: part.id, amount, reason: why, by }); toast.success('Refund started — waiting for Finance'); }}>

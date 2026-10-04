@@ -8,6 +8,7 @@ import { categoryName } from '../../data/catalog';
 import { DEPARTMENTS, DEFAULT_DEPARTMENT, departmentMeta } from '../../data/departments';
 import { ruleMatches } from '../../lib/pricing';
 import { money, cx } from '../../lib/format';
+import { act } from '../../lib/act';
 
 /* ============================================================================
  * CategoryDiscountDialog — "apply a discount to this category" from the
@@ -85,15 +86,14 @@ export default function CategoryDiscountDialog({ open, onClose, products, depart
     if (mode === 'code') {
       if (!coupon) return toast.error('No discount code with that name — create it under Discounts first.');
       if (!preview.count) return toast.error('No products in that selection yet.');
-      saveCoupon({ ...coupon, scope: couponScope, autoApply: true, active: true });
-      toast.success(`${coupon.code} now applies itself to ${scopeLabel}`);
+      act(toast, () => saveCoupon({ ...coupon, scope: couponScope, autoApply: true, active: true }), `${coupon.code} now applies itself to ${scopeLabel}`);
       return onClose();
     }
     if (value <= 0) return toast.error('Enter a discount greater than zero.');
     if (pct && value > 100) return toast.error('A percentage discount cannot be more than 100%.');
     if (!preview.count) return toast.error('No products in that selection yet.');
 
-    saveBulkRule({
+    act(toast, () => saveBulkRule({
       id: `b${Date.now().toString(36)}`,
       name: f.name.trim() || `${pct ? `${value}% off` : `${money(value)} off`} ${scopeLabel}`,
       scopeType: f.scopeType,
@@ -102,8 +102,7 @@ export default function CategoryDiscountDialog({ open, onClose, products, depart
       kind: f.kind,
       value,
       active: true,
-    });
-    toast.success(`Discount applied to ${preview.count} product${preview.count === 1 ? '' : 's'}`);
+    }), `Discount applied to ${preview.count} product${preview.count === 1 ? '' : 's'}`);
     return onClose();
   };
 

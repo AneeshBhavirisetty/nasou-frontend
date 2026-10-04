@@ -13,6 +13,7 @@ import { DEPARTMENTS, DEFAULT_DEPARTMENT, departmentMeta } from './departments';
 import { canSell, retailerForRow } from '../lib/marketplace';
 import { getRetailer, retailersStore } from '../store/retailers';
 import { settingsStore } from '../store/settings';
+import { LIVE } from '../lib/config';
 
 /* Admin edits (add / edit / delist done in /admin/products) are persisted by
    AdminStore under this key. We fold them in here at load so the storefront and
@@ -51,14 +52,16 @@ const withDefaults = (p) => ({
 
 /* The as-shipped catalogue, before admin edits — AdminStore builds its patch on this. */
 export const catalogBase = withOwnership;
-/* Every product, listed or not — orders, carts and the consoles look up here. */
-export const allProducts = applyAdminPatch(withOwnership).map(withDefaults);
-export const suppliers = supplierList;
-export const generatedAt = generated.generatedAt;
+/* Every product, listed or not — orders, carts and the consoles look up here.
+   With an API (LIVE) this starts empty and setLiveCatalog() fills it from
+   GET /storefront/snapshot before the app renders. */
+export let allProducts = LIVE ? [] : applyAdminPatch(withOwnership).map(withDefaults);
+export let suppliers = LIVE ? [] : supplierList;
+export let generatedAt = LIVE ? null : generated.generatedAt;
 
-const _byId = new Map(allProducts.map((p) => [p.id, p]));
-const _bySku = new Map(allProducts.map((p) => [p.sku, p]));
-const _supplierName = new Map(suppliers.map((s) => [s.slug, s.name]));
+let _byId = new Map(allProducts.map((p) => [p.id, p]));
+let _bySku = new Map(allProducts.map((p) => [p.sku, p]));
+let _supplierName = new Map(suppliers.map((s) => [s.slug, s.name]));
 
 /* Listed on the storefront only while its retailer may sell (requirement 11:
    suspending a retailer hides their products). */
@@ -72,7 +75,20 @@ export let categories = [];
 export let departments = [];
 let _catName = new Map();
 
-const baseSubs = generated.categories.map((c) => ({ ...c, department: DEFAULT_DEPARTMENT }));
+let baseSubs = LIVE ? [] : generated.categories.map((c) => ({ ...c, department: DEFAULT_DEPARTMENT }));
+
+/* LIVE: the server's catalogue replaces the bundled one. `row` keeps the
+   deterministic per-product details (offers, batch ids) stable. */
+export function setLiveCatalog({ products: list = [], categories: cats = [], brands = [], generatedAt: at = null }) {
+  allProducts = list.map((p, i) => withDefaults({ ...p, row: p.row ?? i + 1, images: p.images ?? [], badges: p.badges ?? [] }));
+  _byId = new Map(allProducts.map((p) => [p.id, p]));
+  _bySku = new Map(allProducts.map((p) => [p.sku, p]));
+  suppliers = brands.map((b) => ({ slug: b.slug, name: b.name, tier: b.tier, blurb: b.blurb || '' }));
+  _supplierName = new Map(suppliers.map((b) => [b.slug, b.name]));
+  baseSubs = cats.map((c) => ({ slug: c.slug, name: c.name, department: c.department || DEFAULT_DEPARTMENT, blurb: c.blurb || '' }));
+  generatedAt = at;
+  rebuild();
+}
 
 function rebuild() {
   products = allProducts.filter(isListed);

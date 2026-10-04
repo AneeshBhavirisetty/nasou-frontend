@@ -5,6 +5,8 @@ import { audit, resetBypassLog, setAuditActor } from '../lib/auditLog';
 import { DEMO_PROFILES, findAccount, getAccount, passwordMatches, setPassword, updateAccount } from '../store/accounts';
 import { getRetailer } from '../store/retailers';
 import { notify } from '../store/notifications';
+import { LIVE } from '../lib/config';
+import { clearSessionData, loadSession, startPolling, stopPolling } from '../lib/live';
 
 const AuthContext = createContext(null);
 
@@ -35,6 +37,7 @@ const readView = () => {
 
 function initialSession() {
   const stored = getStoredSession();
+  if (LIVE && stored?.accessToken && stored.refreshToken) return stored; // api.js refreshes an expired access token
   if (!stored?.accessToken || isTokenExpired(stored.accessToken)) {
     clearSession();
     return null;
@@ -61,8 +64,28 @@ export function AuthProvider({ children }) {
   const readProfile = (id) => {
     try { return JSON.parse(localStorage.getItem(profileKey(id)) || 'null') || (IS_MOCK && DEMO_PROFILES[id]) || {}; } catch { return {}; }
   };
-  const [profile, setProfile] = useState(() => readProfile(session?.userId));
-  useEffect(() => { setProfile(readProfile(session?.userId)); }, [session?.userId]);
+  const [profile, setProfile] = useState(() => (LIVE ? {} : readProfile(session?.userId)));
+  useEffect(() => { if (!LIVE) setProfile(readProfile(session?.userId)); }, [session?.userId]);
+
+  /* LIVE: load what this person may see, keep it fresh, and fetch the
+     customer's profile and address book from the API. */
+  useEffect(() => {
+    if (!LIVE || !session?.userId) return undefined;
+    loadSession();
+    startPolling();
+    if (session.role === 'CUSTOMER') {
+      Promise.all([profileApi.me().catch(() => null), profileApi.addresses().catch(() => [])])
+        .then(([me, addresses]) => setProfile({ ...(me ? { fullName: me.fullName, email: me.email, phone: me.phone } : {}), addresses }));
+    } else setProfile({});
+    return () => stopPolling();
+  }, [session?.userId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /* api.js swapped an expired access token for a fresh one */
+  useEffect(() => {
+    const onRefresh = () => setSessionState(getStoredSession());
+    window.addEventListener('auth:refreshed', onRefresh);
+    return () => window.removeEventListener('auth:refreshed', onRefresh);
+  }, []);
 
   const user = useMemo(() => {
     if (!session?.accessToken) return null;
@@ -87,6 +110,17 @@ export function AuthProvider({ children }) {
 
   const updateProfile = useCallback(async (fields) => {
     if (!session) throw new Error('Sign in to edit your profile.');
+    if (LIVE) {
+      const { addresses, ...basics } = fields;
+      let next = { ...profile };
+      if (Object.keys(basics).length) {
+        const me = await profileApi.update(basics);
+        next = { ...next, fullName: me.fullName, email: me.email, phone: me.phone };
+      }
+      if (addresses) next.addresses = await syncAddresses(profile.addresses || [], addresses);
+      setProfile(next);
+      return next;
+    }
     if (!IS_MOCK) await profileApi.update(fields);
     const next = { ...readProfile(session.userId), ...fields };
     try { localStorage.setItem(profileKey(session.userId), JSON.stringify(next)); } catch { /* quota */ }
@@ -103,6 +137,7 @@ export function AuthProvider({ children }) {
     resetBypassLog();
     setSession(data);
     setSessionState(data);
+    if (LIVE) return;
     const who = { id: data.userId, name: data.fullName, role: data.teamRole || data.staffRole || String(data.role).toLowerCase() };
     audit({ action: 'auth.login', entity: 'session', entityId: data.userId, summary: `${data.fullName} signed in${data.twoFactor ? ' with a two-factor code' : ''}${data.reactivated ? ' and re-activated their account' : ''}`, actor: who });
     if (data.role === 'CUSTOMER') {
@@ -140,36 +175,53 @@ export function AuthProvider({ children }) {
   }, [_apply]);
 
   /* Retailer signup and staff invites create their account, then sign in. */
-  const signInAccount = useCallback((account) => _apply(sessionFor(account)), [_apply]);
+  const signInAccount = useCallback((account) => _apply(LIVE ? account : sessionFor(account)), [_apply]);
 
   const endView = useCallback((why = 'ended') => {
     const v = readView();
     try { sessionStorage.removeItem(VIEW_KEY); } catch { /* ignore */ }
     setView(null);
+    if (v && LIVE) api('/admin/impersonation/end', { method: 'POST', body: JSON.stringify({ retailerId: v.retailerId, reason: why }) }).catch(() => {});
     if (v) audit({ action: 'impersonate.end', entity: 'retailer', entityId: v.retailerId, summary: `Stopped viewing as ${v.retailerName} (${why})` });
   }, []);
 
   const logout = useCallback(({ everywhere = false } = {}) => {
     if (session) {
       audit({ action: everywhere ? 'auth.logout_all' : 'auth.logout', entity: 'session', entityId: session.userId, summary: `${session.fullName} signed out${everywhere ? ' of every device' : ''}` });
-      if (!IS_MOCK) api(everywhere ? '/auth/logout-all' : '/auth/logout', { method: 'POST' }).catch(() => {});
+      if (!IS_MOCK) {
+        const refreshToken = getStoredSession()?.refreshToken;
+        (everywhere ? api('/auth/logout-all', { method: 'POST' }) : api('/auth/logout', { method: 'POST', body: JSON.stringify({ refreshToken }) })).catch(() => {});
+      }
     }
     if (readView()) endView('signed out');
     clearSession();
     setSessionState(null);
+    stopPolling();
+    clearSessionData();
   }, [session, endView]);
 
   /* Customer self-service (customer review item 5). Deactivation is undone
      by signing in again; deletion is permanent for the customer and keeps
      only what tax law needs (orders and invoices). */
-  const deactivateAccount = useCallback((reason) => {
+  const deactivateAccount = useCallback(async (reason) => {
     if (!session) return;
+    if (LIVE) {
+      await api('/users/me/deactivate', { method: 'POST', body: JSON.stringify({ reason: reason || null }) });
+      clearSession(); setSessionState(null); stopPolling(); clearSessionData();
+      return;
+    }
     updateAccount(session.userId, { status: 'deactivated', deactivatedAt: Date.now(), deactivationReason: reason || '' }, 'Customer deactivated their account');
     logout();
   }, [session, logout]);
 
-  const deleteAccount = useCallback((reason) => {
+  const deleteAccount = useCallback(async (reason) => {
     if (!session) return;
+    if (LIVE) {
+      await api('/users/me', { method: 'DELETE', body: JSON.stringify({ reason: reason || null }) });
+      try { localStorage.removeItem('nasou_wishlist'); localStorage.removeItem('nasou_cart'); } catch { /* ignore */ }
+      clearSession(); setSessionState(null); stopPolling(); clearSessionData();
+      return;
+    }
     updateAccount(session.userId, { status: 'deleted', deletedAt: Date.now(), deletionReason: reason || '', email: `deleted+${session.userId}@nivora.invalid`, phone: '', aliases: [] }, 'Customer deleted their account');
     try {
       localStorage.removeItem(profileKey(session.userId));
@@ -191,12 +243,14 @@ export function AuthProvider({ children }) {
   }, [session]);
 
   /* "Log in as retailer" (requirement 29) */
-  const startView = useCallback((retailerId, reason) => {
+  const startView = useCallback(async (retailerId, reason) => {
     if (!session || session.role !== 'ADMIN') throw new Error('Only the Nasou Hive team can do this.');
     if (!['owner', 'operations'].includes(session.teamRole)) throw new Error('Only Owner and Operations can view as a retailer.');
     if (!reason || reason.trim().length < 8) throw new Error('Give a reason (at least 8 characters) — it goes in the audit log.');
     const r = getRetailer(retailerId);
-    const v = { retailerId, retailerName: r?.name, reason: reason.trim(), by: session.fullName, startedAt: Date.now(), expiresAt: Date.now() + VIEW_MINUTES * 60000 };
+    /* LIVE: the server checks the role, audits the start and issues a 15-minute read-only token */
+    const granted = LIVE ? await api('/admin/impersonation', { method: 'POST', body: JSON.stringify({ retailerId, reason: reason.trim() }) }) : null;
+    const v = { retailerId, retailerName: r?.name, reason: reason.trim(), by: session.fullName, startedAt: Date.now(), expiresAt: granted?.expiresAt || Date.now() + VIEW_MINUTES * 60000, token: granted?.token };
     try { sessionStorage.setItem(VIEW_KEY, JSON.stringify(v)); } catch { /* ignore */ }
     setView(v);
     audit({ action: 'impersonate.start', entity: 'retailer', entityId: retailerId, summary: `Started a view-only session as ${r?.name}: ${v.reason}` });
@@ -211,7 +265,13 @@ export function AuthProvider({ children }) {
   }, [view, endView]);
 
   /* Demo pill: sign in as any seeded account in one click (skips 2FA). */
-  const quickLogin = useCallback((email) => {
+  const quickLogin = useCallback(async (email) => {
+    if (LIVE) {
+      const first = await api('/auth/login', { method: 'POST', body: JSON.stringify({ identifier: email, password: 'nivora123' }) });
+      const data = first?.twoFactorRequired ? await authApi.verify2fa(first.challengeId, '123456') : first;
+      _apply(data);
+      return data;
+    }
     const a = findAccount(email);
     if (!a) throw new Error('No such demo account.');
     _apply(sessionFor(a, { quick: true }));
@@ -247,4 +307,21 @@ export function useAuth() {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error('useAuth must be used inside AuthProvider');
   return ctx;
+}
+
+/* LIVE: bring the server's address book in line with the edited list. */
+async function syncAddresses(before, after) {
+  const field = (a) => ({ label: a.label, name: a.name, phone: a.phone, line1: a.line1, landmark: a.landmark || null, city: a.city, state: a.state, pin: a.pin, lat: a.lat ?? null, lng: a.lng ?? null, isDefault: !!a.isDefault });
+  const known = new Set(before.map((a) => a.id));
+  const kept = new Set(after.map((a) => a.id));
+  let latest = null;
+  for (const a of before) if (!kept.has(a.id)) latest = await profileApi.deleteAddress(a.id);
+  for (const a of after) {
+    if (!known.has(a.id)) latest = await profileApi.addAddress(field(a));
+    else {
+      const old = before.find((b) => b.id === a.id);
+      if (JSON.stringify(field(old)) !== JSON.stringify(field(a))) latest = await profileApi.updateAddress(a.id, field(a));
+    }
+  }
+  return latest || profileApi.addresses();
 }

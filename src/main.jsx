@@ -10,9 +10,12 @@ import { AdminStoreProvider } from './context/AdminStore';
 import { OrderStoreProvider } from './context/OrderStore';
 import { NotificationProvider } from './context/NotificationStore';
 import { IamProvider } from './context/IamStore';
+import { bootstrap } from './lib/live';
 import './index.css';
 
-ReactDOM.createRoot(document.getElementById('root')).render(
+/* With an API configured, the catalogue, public settings and seller list
+   come from GET /storefront/snapshot before the first render. */
+bootstrap().finally(() => ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <AuthProvider>
       <ToastProvider>
@@ -34,4 +37,4 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       </ToastProvider>
     </AuthProvider>
   </React.StrictMode>
-);
+));

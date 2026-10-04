@@ -8,6 +8,8 @@ import { DOC_TYPES } from '../../lib/marketplace';
 import { readDocument } from '../../lib/files';
 import { useSeller } from '../../layouts/SellerLayout';
 import { cx } from '../../lib/format';
+import { LIVE } from '../../lib/config';
+import { post, refresh } from '../../lib/live';
 
 /* What a retailer sees until they are approved (requirements 5 and 6):
    where the application stands, what the team asked for, and — when
@@ -25,13 +27,27 @@ export default function SellerStatus() {
   const replace = async (type, file) => {
     try {
       const d = await readDocument(file, type);
-      setDocs((list) => [...list.filter((x) => x.type !== type), d]);
+      setDocs((list) => [...list.filter((x) => x.type !== type), { ...d, file }]);
     } catch (x) {
       toast.error(x.message);
     }
   };
-  const resubmit = () => {
+  const resubmit = async () => {
     setBusy(true);
+    if (LIVE) {
+      const form = new FormData();
+      docs.filter((d) => d.file).forEach((d) => form.append(d.type, d.file, d.name));
+      try {
+        await post('/seller/resubmit', form);
+        await refresh('retailers');
+        toast.success('Re-submitted — the Nivora team will review it again');
+      } catch (x) {
+        toast.error(x.message);
+      } finally {
+        setBusy(false);
+      }
+      return;
+    }
     resubmitApplication(r.id, { documents: docs.map((d) => (d.status === 'rejected' ? d : { ...d, status: d.status === 'verified' ? 'verified' : 'submitted' })) });
     toast.success('Re-submitted — the Nivora team will review it again');
     setBusy(false);

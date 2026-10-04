@@ -2,8 +2,13 @@
 
 Multi-retailer marketplace: customer storefront, a seller console for each
 retailer (`/seller`) and the Nasou Hive Super Admin console (`/admin`).
-Front end only — it runs against an in-browser demo backend
-(`VITE_MOCK_API=true`) so every flow works without a server.
+Runs two ways, from the same build:
+
+- **Live** — against [nasou-api](../nasou-api) (Spring Boot + MySQL, deployed on
+  Azure). Every list and every change goes to the server; nothing
+  business-related is kept in the browser.
+- **Browser demo** — no API configured (the Vercel preview): an in-browser
+  backend in `src/store` runs every flow from localStorage.
 
 **Start with [docs/MARKETPLACE.md](docs/MARKETPLACE.md)** — demo accounts for
 every role, and where each requirement lives.
@@ -17,6 +22,26 @@ npm run build          # production build (three.js is a lazy chunk)
 npm run build:catalog  # regenerate the catalog from shop data 1.xlsx
 npm test               # retailer scoping (cross-retailer access must fail) + marketplace maths
 ```
+
+## Against the API
+
+The API URL is read at run time from `/config.js`, so one build serves every
+environment:
+
+```js
+window.__NIVORA__ = { apiBaseUrl: 'https://<api>/api/v1', demo: false };
+```
+
+- Local: `VITE_API_BASE_URL=http://localhost:8080/api/v1 npm run dev`, or the
+  whole stack with `docker compose up` in `nasou-api` (web on :5173).
+- Docker: the image (`Dockerfile`, nginx) writes `config.js` from
+  `API_BASE_URL` and `SHOW_DEMO` when it starts.
+- Azure Static Web Apps: `.github/workflows/deploy.yml` writes it from the
+  repository variables. See nasou-api `docs/AZURE.md`.
+
+`src/lib/live.js` fills the stores from the API after sign-in (per role) and
+refreshes them after each change; `src/lib/config.js` decides the mode.
+Checkout prices come from `POST /pricing/quote`, the same code that charges.
 
 ## Catalog
 

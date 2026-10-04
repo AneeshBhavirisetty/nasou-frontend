@@ -2,6 +2,8 @@ import { createStore, useStore } from '../lib/store';
 import { audit } from '../lib/auditLog';
 import { defaultPresets } from '../lib/access';
 import { DEFAULT_COMMISSION, DEFAULT_PLANS } from '../lib/marketplace';
+import { LIVE } from '../lib/config';
+import { put, refresh } from '../lib/live';
 
 /* ============================================================================
  * Platform settings the Super Admin owns (requirements 3, 10, 16, 18, 24–27)
@@ -61,12 +63,19 @@ function seed() {
   };
 }
 
-export const settingsStore = createStore('nivora_settings_v1', seed);
+/* LIVE keeps the defaults until the server's values arrive (public subset at
+   start-up, everything for the team after sign-in). */
+export const settingsStore = createStore('nivora_settings_v1', seed, seed);
 export const useSettings = (sel = (s) => s) => useStore(settingsStore, sel);
 export const getSettings = () => settingsStore.get();
 
 /* update one top-level section, with an audit entry */
 export function saveSetting(section, value, summary) {
+  if (LIVE) {
+    settingsStore.set((s) => ({ ...s, [section]: value }));
+    return put(section === 'presets' ? '/admin/roles' : `/admin/settings/${section}`, value)
+      .finally(() => refresh('settings', 'accounts', 'audit'));
+  }
   const before = settingsStore.get()[section];
   settingsStore.set((s) => ({ ...s, [section]: value }));
   audit({

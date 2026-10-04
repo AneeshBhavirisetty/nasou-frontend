@@ -10,6 +10,7 @@ import { DEPARTMENTS, DEFAULT_DEPARTMENT, departmentMeta } from '../../data/depa
 import { BULK_SCOPES, applyBulkRules, describeBulk, ruleMatches } from '../../lib/pricing';
 import { money, cx } from '../../lib/format';
 import { EASE } from '../../lib/motion';
+import { act } from '../../lib/act';
 
 /* Bulk (quantity) pricing rules — client review 2, admin item 8.
    A rule: "N+ units of <category | sub-category | brand | product> → X% or
@@ -202,7 +203,7 @@ export default function BulkPricingPanel({ creating, setCreating, canEdit = true
                           <button onClick={() => setEditing(r)} className="grid h-8 w-8 place-items-center rounded-md border border-line text-ink-50 transition hover:border-ink-35 hover:text-ink" aria-label="Edit rule">
                             <Icon name="pencil" size={14} />
                           </button>
-                          <button onClick={() => { if (window.confirm(`Delete rule “${r.name}”?`)) { deleteBulkRule(r.id); toast.success('Rule deleted'); } }} className="grid h-8 w-8 place-items-center rounded-md border border-line text-ink-50 transition hover:border-clay/40 hover:text-clay" aria-label="Delete rule">
+                          <button onClick={() => { if (window.confirm(`Delete rule “${r.name}”?`)) { act(toast, () => deleteBulkRule(r.id), 'Rule deleted'); } }} className="grid h-8 w-8 place-items-center rounded-md border border-line text-ink-50 transition hover:border-clay/40 hover:text-clay" aria-label="Delete rule">
                             <Icon name="trash" size={14} />
                           </button>
                         </div>
@@ -236,7 +237,7 @@ export default function BulkPricingPanel({ creating, setCreating, canEdit = true
           key={editing?.id ?? 'new'}
           rule={editing}
           onClose={() => { setEditing(null); setCreating(false); }}
-          onSave={(rule) => { saveBulkRule(rule); toast.success(editing ? 'Rule updated' : `${rule.name} created`); }}
+          onSave={(rule) => { act(toast, () => saveBulkRule(rule), editing ? 'Rule updated' : `${rule.name} created`); }}
         />
       )}
     </>

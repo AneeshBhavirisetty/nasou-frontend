@@ -2,6 +2,8 @@ import { useCallback, useMemo } from 'react';
 import { catalogBase as CATALOG, syncLiveProduct } from '../data/catalog';
 import { createStore, useStore, uid } from '../lib/store';
 import { audit } from '../lib/auditLog';
+import { LIVE } from '../lib/config';
+import { del, patch as apiPatch, post, put, refresh, who } from '../lib/live';
 
 /* ============================================================================
  * AdminStore — the working copy of catalogue + discount data.
@@ -37,8 +39,66 @@ function seedCoupons() {
 }
 
 const init = () => ({ patch: emptyPatch, coupons: seedCoupons(), bulkRules: seedBulkRules() });
-export const adminStore = createStore(KEY, init);
+export const adminStore = createStore(KEY, init, () => ({ patch: emptyPatch, coupons: [], bulkRules: [] }));
 export const stockLedgerStore = createStore('nivora_stock_ledger_v1', () => []);
+/* LIVE: the console's products as the API returns them (every retailer's
+   for the team, the retailer's own in the seller console). */
+export const liveProductsStore = createStore('nivora_live_products', () => []);
+
+/* ── LIVE: products, codes and bulk rules through nasou-api ──────────────── */
+const base = () => (who()?.role === 'ADMIN' ? '/admin' : '/seller');
+const sku = (p) => encodeURIComponent(p.sku || p.id);
+const productInput = (p) => ({
+  sku: p.sku, name: p.name, description: p.description, department: p.department,
+  subcategory: p.subcategoryName || p.category, supplierName: p.supplierName, material: p.material, form: p.form,
+  kind: p.kind, art: p.art, size: p.size, price: p.price, mrp: p.mrp, stock: p.stock,
+  images: p.images || [], badges: p.badges || [], version: p.version,
+});
+const afterProducts = () => refresh('products', 'stock', 'catalog');
+const live = {
+  async saveProduct(prod) {
+    const existing = liveProductsStore.get().find((p) => p.id === prod.id || p.sku === prod.sku);
+    if (existing) await put(`${base()}/products/${sku(existing)}`, productInput({ ...existing, ...prod, version: existing.version }));
+    else if (base() === '/admin') await post(`/admin/products?retailerId=${encodeURIComponent(prod.retailerId || '')}`, productInput(prod));
+    else await post('/seller/products', productInput(prod));
+    return afterProducts();
+  },
+  async setStock(id, stock) {
+    const p = productById(id);
+    await apiPatch(`${base()}/products/${sku(p || { id })}/inventory`, { stock });
+    return afterProducts();
+  },
+  async deleteProduct(id) {
+    const p = productById(id);
+    await del(`${base()}/products/${sku(p || { id })}`);
+    return afterProducts();
+  },
+  async saveCoupon(c) {
+    const body = { code: c.code, kind: c.kind, value: c.value, minOrder: c.minOrder || 0, maxDiscount: c.maxDiscount || 0, scope: c.scope || '', startsOn: c.startsOn || '', expiry: c.expiry || '', active: c.active !== false, usageLimit: c.usageLimit ?? null, version: c.version, autoApply: !!c.autoApply };
+    const known = adminStore.get().coupons.some((x) => x.id === c.id);
+    if (known) await put(`/admin/coupons/${c.id}`, body);
+    else await post('/admin/coupons', body);
+    return refresh('discounts');
+  },
+  /* a whole sheet in one request (POST /admin|seller/products/import) */
+  async importProducts(list, retailerId) {
+    const rows = list.map((p) => ({
+      sku: p.sku, name: p.name, department: p.department, category: p.subcategoryName || p.category, material: p.material,
+      size: p.size, brand: p.supplierName, price: String(p.price), mrp: String(p.mrp ?? ''), stock: String(p.stock ?? 0),
+      art: p.art, imageUrl: (p.images || [])[0] || null,
+    }));
+    const report = await post(`${base()}/products/import`, { rows, retailerId, source: 'console import' });
+    await afterProducts();
+    return report;
+  },
+  async saveBulkRule(r) {
+    const body = { name: r.name, scopeType: r.scopeType, scopeValue: r.scopeValue, minQty: r.minQty, kind: r.kind, value: r.value, active: r.active !== false, version: r.version };
+    const known = adminStore.get().bulkRules.some((x) => x.id === r.id);
+    if (known) await put(`/admin/bulk-rules/${r.id}`, body);
+    else await post('/admin/bulk-rules', body);
+    return refresh('discounts', 'catalog');
+  },
+};
 
 const ensureShape = (s) => ({
   patch: { ...emptyPatch, ...(s?.patch || {}) },
@@ -51,6 +111,7 @@ const setSection = (k, fn) => adminStore.set((s) => { const x = ensureShape(s); 
    plus admin-added rows on top. */
 let _cache = { patch: null, list: [] };
 export function adminProducts() {
+  if (LIVE) return liveProductsStore.get();
   const { patch } = ensureShape(adminStore.get());
   if (_cache.patch === patch) return _cache.list;
   const removed = new Set(patch.removed);
@@ -70,6 +131,7 @@ function writeStock(id, n) {
 
 /* Move stock and record why. delta < 0 sells, > 0 restocks. */
 export function adjustStock(id, delta, { reason = 'adjustment', ref = null, by = '' } = {}) {
+  if (LIVE) return null; // the server moves stock with the order and logs it
   const p = productById(id);
   if (!p) return null;
   const before = Number(p.stock) || 0;
@@ -85,11 +147,13 @@ export function AdminStoreProvider({ children }) {
 
 export function useAdminStore() {
   const state = useStore(adminStore);
+  const liveList = useStore(liveProductsStore);
   const { patch, coupons, bulkRules } = ensureShape(state);
-  const products = useMemo(() => adminProducts(), [patch]); // eslint-disable-line react-hooks/exhaustive-deps
-  const dirty = patch.added.length + patch.removed.length + Object.keys(patch.overrides).length > 0;
+  const products = useMemo(() => (LIVE ? liveList : adminProducts()), [patch, liveList]); // eslint-disable-line react-hooks/exhaustive-deps
+  const dirty = !LIVE && patch.added.length + patch.removed.length + Object.keys(patch.overrides).length > 0;
 
   const setStock = useCallback((id, stock, meta = {}) => {
+    if (LIVE) return live.setStock(id, Math.max(0, Math.round(Number(stock) || 0)));
     const p = productById(id);
     const n = Math.max(0, Math.round(Number(stock) || 0));
     if (!p) return;
@@ -97,6 +161,7 @@ export function useAdminStore() {
   }, []);
 
   const saveProduct = useCallback((prod, by) => {
+    if (LIVE) return live.saveProduct(prod);
     syncLiveProduct(prod.id, prod);
     const existing = productById(prod.id);
     setSection('patch', (pt) => {
@@ -113,6 +178,7 @@ export function useAdminStore() {
   }, []);
 
   const deleteProduct = useCallback((id) => {
+    if (LIVE) return live.deleteProduct(id);
     const p = productById(id);
     setSection('patch', (pt) => {
       if (pt.added.some((x) => x.id === id)) return { ...pt, added: pt.added.filter((x) => x.id !== id) };
@@ -123,26 +189,37 @@ export function useAdminStore() {
   }, []);
 
   const saveCoupon = useCallback((coupon) => {
+    if (LIVE) return live.saveCoupon(coupon);
     setSection('coupons', (cs) => (cs.some((c) => c.id === coupon.id) ? cs.map((c) => (c.id === coupon.id ? { ...c, ...coupon } : c)) : [{ ...coupon }, ...cs]));
     audit({ action: 'discount.save', entity: 'coupon', entityId: coupon.code, summary: `Saved code ${coupon.code}${coupon.autoApply ? ' (auto-applies)' : ''}`, after: { value: coupon.value, kind: coupon.kind, scope: coupon.scope, active: coupon.active } });
   }, []);
   const deleteCoupon = useCallback((id) => {
+    if (LIVE) return del(`/admin/coupons/${id}`).then(() => refresh('discounts'));
     setSection('coupons', (cs) => cs.filter((c) => c.id !== id));
     audit({ action: 'discount.delete', entity: 'coupon', entityId: id, summary: 'Deleted a discount code' });
   }, []);
 
   const saveBulkRule = useCallback((rule) => {
+    if (LIVE) return live.saveBulkRule(rule);
     setSection('bulkRules', (rs) => (rs.some((r) => r.id === rule.id) ? rs.map((r) => (r.id === rule.id ? { ...r, ...rule } : r)) : [{ ...rule }, ...rs]));
     audit({ action: 'discount.bulk_rule', entity: 'bulk_rule', entityId: rule.id, summary: `Saved bulk rule “${rule.name}”` });
   }, []);
-  const deleteBulkRule = useCallback((id) => setSection('bulkRules', (rs) => rs.filter((r) => r.id !== id)), []);
+  const deleteBulkRule = useCallback((id) => (LIVE ? del(`/admin/bulk-rules/${id}`).then(() => refresh('discounts'))
+    : setSection('bulkRules', (rs) => rs.filter((r) => r.id !== id))), []);
 
   const reset = useCallback(() => {
+    if (LIVE) return;
     adminStore.set(init());
     audit({ action: 'catalog.reset', entity: 'catalog', summary: 'Restored the shipped catalogue' });
   }, []);
 
-  return { products, coupons, bulkRules, dirty, setStock, saveProduct, deleteProduct, saveCoupon, deleteCoupon, saveBulkRule, deleteBulkRule, reset };
+  const importProducts = useCallback(async (list, retailerId, by) => {
+    if (LIVE) return live.importProducts(list, retailerId);
+    list.forEach((p) => saveProduct({ ...p, ...(retailerId ? { retailerId } : {}) }, by));
+    return { created: list.length };
+  }, [saveProduct]);
+
+  return { products, coupons, bulkRules, dirty, setStock, saveProduct, deleteProduct, importProducts, saveCoupon, deleteCoupon, saveBulkRule, deleteBulkRule, reset };
 }
 
 /* Coupon math — used by admin preview and by checkout.

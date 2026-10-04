@@ -1,6 +1,9 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { findProduct } from '../data/catalog';
 import { useNotifications } from './NotificationStore';
+import { useAuth } from './AuthContext';
+import { LIVE } from '../lib/config';
+import { api } from '../lib/api';
 
 const WishlistContext = createContext(null);
 const STORAGE_KEY = 'nasou_wishlist';
@@ -22,9 +25,28 @@ function save(ids) {
 export function WishlistProvider({ children }) {
   const [ids, setIds] = useState(load);
   const { push } = useNotifications();
+  const { user } = useAuth();
+  const synced = LIVE && user?.role === 'CUSTOMER';
 
-  /* Persist any change */
-  useEffect(() => save(ids), [ids]);
+  /* Persist any change (guests, and the browser demo) */
+  useEffect(() => { if (!synced) save(ids); }, [ids, synced]);
+
+  /* LIVE: a signed-in customer's wishlist lives on the server; anything saved
+     as a guest on this device is added to it once. */
+  useEffect(() => {
+    if (!synced) return;
+    (async () => {
+      try {
+        const local = load();
+        let list = await api('/users/me/wishlist');
+        for (const sku of local.filter((x) => !list.some((p) => p.sku === x))) {
+          list = await api('/users/me/wishlist', { method: 'POST', body: JSON.stringify({ productId: sku }) }).catch(() => list);
+        }
+        save([]);
+        setIds(list.map((p) => p.sku));
+      } catch { /* keep what we have */ }
+    })();
+  }, [synced, user?.id]);
 
   const toggle = useCallback((productId) => {
     const saved = ids.includes(productId);
@@ -33,7 +55,14 @@ export function WishlistProvider({ children }) {
     setIds((prev) =>
       prev.includes(productId) ? prev.filter((x) => x !== productId) : [...prev, productId]
     );
-  }, [ids, push]);
+    if (synced) {
+      const sku = p?.sku || productId;
+      (saved ? api(`/users/me/wishlist/${encodeURIComponent(sku)}`, { method: 'DELETE' })
+        : api('/users/me/wishlist', { method: 'POST', body: JSON.stringify({ productId: sku }) }))
+        .then((list) => list && setIds(list.map((x) => x.sku)))
+        .catch(() => {});
+    }
+  }, [ids, push, synced]);
 
   const has = useCallback((productId) => ids.includes(productId), [ids]);
 

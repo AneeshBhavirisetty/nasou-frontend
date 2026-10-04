@@ -21,7 +21,7 @@ const HEADERS = ['SKU', 'Name', 'Category', 'Sub-category', 'Material', 'Size', 
 export default function AdminCatalogImport() {
   const toast = useToast();
   const { can } = useIam();
-  const { products, saveProduct } = useAdminStore();
+  const { products, importProducts } = useAdminStore();
   const retailers = useRetailers().filter((r) => r.status === 'approved' || r.status === 'suspended');
   const [rid, setRid] = useState(retailers[0]?.id || '');
   const [open, setOpen] = useState(false);
@@ -78,10 +78,14 @@ export default function AdminCatalogImport() {
         open={open}
         onClose={() => setOpen(false)}
         existingSkus={new Set(products.map((p) => p.sku))}
-        onImport={(list) => {
-          list.forEach((p) => saveProduct({ ...p, retailerId: rid }, 'bulk import'));
-          audit({ action: 'catalog.import', entity: 'catalog', entityId: rid, summary: `Imported ${list.length} products for ${seller?.name}` });
-          toast.success(`${list.length} products added to ${seller?.name}`);
+        onImport={async (list) => {
+          try {
+            await importProducts(list, rid, 'bulk import');
+            audit({ action: 'catalog.import', entity: 'catalog', entityId: rid, summary: `Imported ${list.length} products for ${seller?.name}` });
+            toast.success(`${list.length} products added to ${seller?.name}`);
+          } catch (x) {
+            toast.error(x.message);
+          }
         }}
       />
     </div>

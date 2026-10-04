@@ -9,6 +9,7 @@ import { STAFF_ROLES, staffRole } from '../../lib/access';
 import { useSeller } from '../../layouts/SellerLayout';
 import { timeAgo } from '../../context/NotificationStore';
 import { cx } from '../../lib/format';
+import { act } from '../../lib/act';
 
 /* Retailer team accounts (requirement 21): the store owner invites staff by
    email with a limited role; the invitee sets their password on the invite
@@ -25,13 +26,13 @@ export default function SellerTeam() {
   const pending = invites.filter((i) => i.retailerId === retailerId && i.status === 'pending');
   const isOwner = user.staffRole === 'owner' && !readOnly;
 
-  const invite = (e) => {
+  const invite = async (e) => {
     e.preventDefault();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return toast.error('Enter a valid email.');
     try {
-      const inv = inviteStaff({ email, retailerId, staffRole: role, invitedBy: user.fullName, retailerName: retailer.name });
-      navigator.clipboard?.writeText(`${window.location.origin}/invite/${inv.token}`);
-      toast.success('Invite created — link copied. In production it is emailed.');
+      const inv = await inviteStaff({ email, retailerId, staffRole: role, invitedBy: user.fullName, retailerName: retailer.name });
+      navigator.clipboard?.writeText(inv.link || `${window.location.origin}/invite/${inv.token}`);
+      toast.success(inv.link ? `Invite emailed to ${inv.email} — link copied too.` : 'Invite created — link copied. In production it is emailed.');
       setEmail('');
     } catch (x) {
       toast.error(x.message);
@@ -49,13 +50,13 @@ export default function SellerTeam() {
                 <Avatar name={a.fullName} size="sm" tone={a.staffRole === 'owner' ? 'dark' : 'sunk'} />
                 <div className="min-w-0 flex-1"><p className="font-bold text-ink">{a.fullName}{a.id === user.id && <span className="ml-1.5 rounded-full bg-emerald-50 px-1.5 text-[10px] text-emerald-700">You</span>}</p><p className="truncate text-[12px] text-ink-50">{a.email}</p></div>
                 {isOwner && a.staffRole !== 'owner' ? (
-                  <select value={a.staffRole} onChange={(e) => { updateAccount(a.id, { staffRole: e.target.value }, `Staff role changed by ${user.fullName}`); toast.success('Role updated'); }} className="h-9 rounded-full border border-line px-3 text-[12.5px] font-bold text-forest">
+                  <select value={a.staffRole} onChange={(e) => { act(toast, () => updateAccount(a.id, { staffRole: e.target.value }, `Staff role changed by ${user.fullName}`), 'Role updated'); }} className="h-9 rounded-full border border-line px-3 text-[12.5px] font-bold text-forest">
                     {STAFF_ROLES.filter((r) => r.key !== 'owner').map((r) => <option key={r.key} value={r.key}>{r.label}</option>)}
                   </select>
                 ) : <span className="rounded-full bg-sunk px-2.5 py-1 text-[12px] font-bold text-forest">{staffRole(a.staffRole).label}</span>}
                 <StatusPill status={a.status} />
                 {isOwner && a.staffRole !== 'owner' && (
-                  <button onClick={() => { updateAccount(a.id, { status: a.status === 'suspended' ? 'active' : 'suspended' }, a.status === 'suspended' ? 'Staff re-activated' : 'Staff access removed'); }} className="text-[12px] font-bold text-clay-600 hover:underline">{a.status === 'suspended' ? 'Restore' : 'Remove access'}</button>
+                  <button onClick={() => { act(toast, () => updateAccount(a.id, { status: a.status === 'suspended' ? 'active' : 'suspended' }, a.status === 'suspended' ? 'Staff re-activated' : 'Staff access removed')); }} className="text-[12px] font-bold text-clay-600 hover:underline">{a.status === 'suspended' ? 'Restore' : 'Remove access'}</button>
                 )}
               </li>
             ))}

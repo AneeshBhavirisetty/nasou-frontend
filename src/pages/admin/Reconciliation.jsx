@@ -6,10 +6,12 @@ import { useAuth } from '../../context/AuthContext';
 import { useIam } from '../../context/IamStore';
 import { useToast } from '../../context/ToastContext';
 import { useOrders, useRefunds } from '../../store/orders';
-import { ourLedger, razorpayReport, reconcile, resolveRecon, useRecon } from '../../store/payouts';
+import { ourLedger, razorpayReport, reconcile, resolveRecon, useRecon, useReconRows } from '../../store/payouts';
+import { LIVE } from '../../lib/config';
 import { useSettlements } from './Payouts';
 import { formatOrderDate } from '../../data/orders';
 import { money } from '../../lib/format';
+import { act } from '../../lib/act';
 
 /* Reconciliation (requirement 20): every payment, transfer, refund and payout
    in our books matched against Razorpay's settlement report; differences are
@@ -21,13 +23,16 @@ export default function AdminReconciliation() {
   const orders = useOrders();
   const refunds = useRefunds();
   const resolved = useRecon();
+  const server = useReconRows();
   const { rows: payoutRows } = useSettlements();
   const [resolving, setResolving] = useState(null);
 
   const rows = useMemo(() => {
+    /* LIVE: matched on the server against the gateway's settlement report */
+    if (LIVE) return (server.rows || []).map((r) => ({ ...r, state: r.resolution ? 'resolved' : r.status }));
     const ledger = ourLedger({ orders, refunds, payoutRows });
     return reconcile(ledger, razorpayReport(ledger)).map((r) => ({ ...r, state: resolved[r.id] ? 'resolved' : r.status, resolution: resolved[r.id] }));
-  }, [orders, refunds, payoutRows, resolved]);
+  }, [orders, refunds, payoutRows, resolved, server]);
 
   const issues = rows.filter((r) => r.state !== 'matched' && r.state !== 'resolved');
 
@@ -74,7 +79,7 @@ export default function AdminReconciliation() {
       {resolving && (
         <ReasonDialog open onClose={() => setResolving(null)} title={`Resolve ${resolving.type.toLowerCase()} ${resolving.ref}`} confirm="Mark resolved" label="What was it, and what did you do?"
           placeholder="e.g. Razorpay deducted a ₹40 transfer fee — booked as a platform expense."
-          onConfirm={(note) => { resolveRecon(resolving.id, note, user?.fullName); toast.success('Marked resolved'); }} />
+          onConfirm={(note) => { act(toast, () => resolveRecon(resolving.id, note, user?.fullName), 'Marked resolved'); }} />
       )}
     </div>
   );

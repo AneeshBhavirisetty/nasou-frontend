@@ -1,4 +1,6 @@
 import { createStore, uid } from '../lib/store';
+import { LIVE } from '../lib/config';
+import { post, refresh } from '../lib/live';
 
 /* ============================================================================
  * Notifications — the bell in every portal (customer review item 4).
@@ -19,6 +21,7 @@ export const notificationsStore = createStore('nivora_notices_v2', () => []);
 const KIND_BY_ICON = { package: 'orders', truck: 'orders', check: 'orders', rupee: 'orders', refresh: 'orders', tag: 'offers', heart: 'activity', cart: 'activity' };
 
 export function notify(n) {
+  if (LIVE) return null; // nasou-api sends every notification itself
   const item = {
     id: uid('n'),
     at: Date.now(),
@@ -44,10 +47,18 @@ export function audiencesOf(user) {
 }
 
 export function markRead(ids, me) {
+  if (LIVE) {
+    notificationsStore.set((list) => list.map((n) => (ids.includes(n.id) ? { ...n, read: true } : n)));
+    return post('/notifications/read', { ids }).catch(() => refresh('notifications'));
+  }
   const set = new Set(ids);
   notificationsStore.set((list) => list.map((n) => (set.has(n.id) && !n.readBy.includes(me) ? { ...n, readBy: [...n.readBy, me] } : n)));
 }
 export function hideFor(ids, me) {
+  if (LIVE) {
+    notificationsStore.set((list) => list.filter((n) => !ids.includes(n.id)));
+    return post('/notifications/hide', { ids }).catch(() => refresh('notifications'));
+  }
   const set = new Set(ids);
   notificationsStore.set((list) => list.map((n) => (set.has(n.id) && !n.hiddenFor.includes(me) ? { ...n, hiddenFor: [...n.hiddenFor, me] } : n)));
 }

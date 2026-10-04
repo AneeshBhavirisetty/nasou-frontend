@@ -21,6 +21,7 @@ import { useAdminStore } from '../../context/AdminStore';
 import { catalogBase as CATALOG, categoryName, suppliers } from '../../data/catalog';
 import { DEPARTMENTS, DEFAULT_DEPARTMENT, departmentMeta } from '../../data/departments';
 import { money, cx } from '../../lib/format';
+import { act } from '../../lib/act';
 
 const PAGE = 20;
 
@@ -61,7 +62,7 @@ export default function AdminProducts() {
    console (seller = true: their own products only, master catalog only). */
 export function ProductsManager({ seller = false }) {
   const toast = useToast();
-  const { dirty, setStock, saveProduct, deleteProduct, reset } = useAdminStore();
+  const { dirty, setStock, saveProduct, deleteProduct, importProducts, reset } = useAdminStore();
   const all = useScopedProducts();
   const actor = useActor();
   const retailers = useRetailers();
@@ -114,14 +115,12 @@ export function ProductsManager({ seller = false }) {
 
   const onSave = (prod) => {
     const isNew = !rows.some((p) => p.id === prod.id);
-    saveProduct(prod, seller ? sellerName(actor.retailerId) : undefined);
-    toast.success(isNew ? `${prod.name} added` : `${prod.name} updated`);
+    act(toast, () => saveProduct(prod, seller ? sellerName(actor.retailerId) : undefined), isNew ? `${prod.name} added` : `${prod.name} updated`);
   };
-  const onBulk = (list) => list.forEach(saveProduct);
+  const onBulk = (list) => act(toast, () => importProducts(list, seller ? actor.retailerId : list[0]?.retailerId), `${list.length} products imported`);
   const onDelete = (p) => {
     if (!window.confirm(`Delist "${p.name}"?`)) return;
-    deleteProduct(p.id);
-    toast.success('Product delisted');
+    act(toast, () => deleteProduct(p.id), 'Product delisted');
   };
 
   return (

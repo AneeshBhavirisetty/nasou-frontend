@@ -1,4 +1,6 @@
 import { createStore, useStore, uid } from './store';
+import { LIVE } from './config';
+import { api } from './api';
 
 /* ============================================================================
  * auditLog.js — append-only audit trail (Super Admin requirement 4).
@@ -47,13 +49,25 @@ function seed() {
   });
 }
 
-const store = createStore('nivora_audit_v1', seed);
+const store = createStore('nivora_audit_v1', seed, () => []);
+/* LIVE: the server's trail (GET /admin/audit) and its own chain check
+   (SHA-256, GET /admin/audit/verify). */
+export const auditStore = store;
+let serverChain = { ok: true };
+export const setServerChain = (v) => { serverChain = v?.ok ? { ok: true } : { ok: false, at: v?.brokenAt }; };
 
 let current = null; // { id, name, role } — set by AuthProvider
 export function setAuditActor(actor) { current = actor; }
 
 /* audit({ action, entity, entityId, summary, before, after, actor? }) */
 export function audit({ action, entity = '', entityId = null, summary = '', before = null, after = null, actor }) {
+  if (LIVE) {
+    /* the server audits every change itself; exports happen in the browser, so report those */
+    if (String(action).startsWith('export.')) {
+      api('/audit/events', { method: 'POST', body: JSON.stringify({ action, entity, entityId, summary }) }).catch(() => {});
+    }
+    return;
+  }
   const who = actor || current || { id: 'system', name: 'System', role: 'system' };
   store.set((list) => {
     const prev = list.length ? list[list.length - 1].hash : '00000000';
@@ -81,6 +95,7 @@ export function audit({ action, entity = '', entityId = null, summary = '', befo
    each bypass is logged once per resource per signed-in session. */
 const bypassed = new Set();
 export function logBypass({ actor, resource, count }) {
+  if (LIVE) return; // the API logs scope bypasses when it serves the rows
   const k = `${actor?.id}:${resource}`;
   if (bypassed.has(k)) return;
   bypassed.add(k);
@@ -90,6 +105,7 @@ export const resetBypassLog = () => bypassed.clear();
 
 /* Is every entry's hash consistent with its content and predecessor? */
 export function verifyChain(list) {
+  if (LIVE) return serverChain;
   for (let i = 1; i < list.length; i += 1) {
     const e = list[i];
     if (e.prev !== list[i - 1].hash) return { ok: false, at: i };

@@ -9,6 +9,8 @@ import { whatsappLink } from '../../data/site';
 import { getOrders } from '../../store/orders';
 import { adminStore } from '../../context/AdminStore';
 import { describeBulk } from '../../lib/pricing';
+import { LIVE } from '../../lib/config';
+import { api } from '../../lib/api';
 
 /* ============================================================================
  * ChatWidget — floating support chat, bottom-right.
@@ -91,7 +93,7 @@ function seedThreads() {
 function useChatStore() {
   const [threads, setThreads] = useState(() => {
     const t = readAll();
-    if (t.length) return t;
+    if (t.length || LIVE) return t;
     const seeded = seedThreads();
     writeAll(seeded);
     return seeded;
@@ -138,6 +140,47 @@ function useChatStore() {
   }, []);
 
   return { threads, send, markRead };
+}
+
+/* LIVE: threads live on nasou-api (GET /chat, /admin/chat). The customer's
+   one thread is keyed 'mine' here; quick questions are answered by the
+   server, which knows the orders. Polls every 15 s while mounted. */
+function useLiveChatStore(enabled, isAdmin) {
+  const [threads, setThreads] = useState([]);
+  const mineOf = (t) => (t?.id ? [{ ...t, serverId: t.id, id: 'mine' }] : [{ id: 'mine', messages: [], unreadUser: 0 }]);
+  const load = useCallback(async () => {
+    if (!enabled) return;
+    try {
+      if (isAdmin) setThreads((await api('/admin/chat')).map((t) => ({ ...t, serverId: t.id })));
+      else setThreads(mineOf(await api('/chat')));
+    } catch { /* offline — keep what we have */ }
+  }, [enabled, isAdmin]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    load();
+    if (!enabled) return undefined;
+    const t = setInterval(load, 15000);
+    return () => clearInterval(t);
+  }, [load, enabled]);
+
+  const send = useCallback(async (threadId, from, text) => {
+    try {
+      if (isAdmin) {
+        const t = threads.find((x) => x.id === threadId);
+        await api(`/admin/chat/${t.serverId}/messages`, { method: 'POST', body: JSON.stringify({ text }) });
+        await load();
+      } else {
+        setThreads(mineOf(await api('/chat/messages', { method: 'POST', body: JSON.stringify({ text }) })));
+      }
+    } catch (e) { window.alert(e.message); }
+  }, [isAdmin, threads, load]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const markRead = useCallback((threadId) => {
+    const t = threads.find((x) => x.id === threadId);
+    setThreads((list) => list.map((x) => (x.id === threadId ? { ...x, unreadAdmin: isAdmin ? 0 : x.unreadAdmin, unreadUser: isAdmin ? x.unreadUser : 0 } : x)));
+    api(isAdmin ? `/admin/chat/${t?.serverId}/read` : '/chat/read', { method: 'POST' }).catch(() => {});
+  }, [isAdmin, threads]);
+
+  return { threads, send, markRead, live: true };
 }
 
 const clock = (ms) => new Date(ms).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' });
@@ -199,8 +242,8 @@ function CustomerChat({ store, threadId, who }) {
 
   const send = (text) => {
     store.send(threadId, 'user', text, who);
-    /* instant answer from live data; the real chat backend takes over from here */
-    setTimeout(() => store.send(threadId, 'agent', autoReply(text, who?.id), who), 900);
+    /* instant answer from live data (LIVE: the server answers in the same call) */
+    if (!store.live) setTimeout(() => store.send(threadId, 'agent', autoReply(text, who?.id), who), 900);
   };
 
   return (
@@ -228,7 +271,9 @@ function CustomerChat({ store, threadId, who }) {
           ))}
         </div>
       )}
-      <Composer onSend={send} />
+      {store.live && !who?.id
+        ? <p className="border-t border-white/70 bg-white p-3 text-center text-[12.5px] text-ink-50"><a href="/login" className="font-bold text-forest">Sign in</a> to chat with Nivora support.</p>
+        : <Composer onSend={send} />}
     </>
   );
 }
@@ -300,11 +345,13 @@ function AdminChat({ store }) {
 /* ── widget shell ──────────────────────────────────────────────────────── */
 export default function ChatWidget() {
   const { isAuthenticated, isAdmin, user } = useAuth();
-  const store = useChatStore();
+  const local = useChatStore();
+  const remote = useLiveChatStore(LIVE && isAuthenticated, isAdmin);
+  const store = LIVE ? remote : local;
   const [open, setOpen] = useState(false);
 
   const threadId = useMemo(
-    () => (isAuthenticated ? `u-${user?.id ?? 'me'}` : 'guest'),
+    () => (LIVE ? 'mine' : isAuthenticated ? `u-${user?.id ?? 'me'}` : 'guest'),
     [isAuthenticated, user?.id]
   );
   const who = { id: user?.id, name: user?.fullName || 'Guest', role: user?.role || 'CUSTOMER' };

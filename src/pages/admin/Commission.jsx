@@ -9,6 +9,7 @@ import { useRetailers } from '../../store/retailers';
 import { saveSetting, useSettings } from '../../store/settings';
 import { categoryName } from '../../data/catalog';
 import { money, cx } from '../../lib/format';
+import { act } from '../../lib/act';
 
 /* Commission settings (requirement 10), subscriptions (18) and the finance
    decisions left open in section 5 of the requirements. */
@@ -52,7 +53,7 @@ export default function AdminCommission() {
         <Panel title="Platform default" note="Applies to any retailer without their own rate.">
           <div className="flex items-end gap-2">
             <label className="flex-1"><span className={LABEL_CLS}>Commission (%)</span><input disabled={!canEdit} value={rate} onChange={(e) => setRate(e.target.value.replace(/[^\d.]/g, ''))} className={SELECT_CLS} /></label>
-            {canEdit && <Button onClick={() => { const n = Math.max(0, Math.min(50, Number(rate) || 0)); saveSetting('commission', { default: n }, `Default commission ${settings.commission.default}% → ${n}%`); toast.success('Default commission saved'); }} icon="check">Save</Button>}
+            {canEdit && <Button onClick={() => { const n = Math.max(0, Math.min(50, Number(rate) || 0)); act(toast, () => saveSetting('commission', { default: n }, `Default commission ${settings.commission.default}% → ${n}%`), 'Default commission saved'); }} icon="check">Save</Button>}
           </div>
           <div className="mt-5 rounded-[16px] bg-[#f6f3ed] p-4 text-[12.5px] text-ink-70">
             <p className="font-bold text-forest">Example from the brief — ₹10,000 cart at 10%</p>
@@ -79,7 +80,7 @@ export default function AdminCommission() {
       </div>
 
       <Panel title="Subscription plans" note={`Monthly recurring revenue from active retailers: ${money(mrr)}. Assign a plan from the retailer’s page.`}
-        action={canEdit && <Button size="sm" icon="check" onClick={() => { saveSetting('plans', plans.map((p) => ({ ...p, monthly: Math.max(0, Number(p.monthly) || 0) })), 'Updated subscription plans'); toast.success('Plans saved'); }}>Save plans</Button>}>
+        action={canEdit && <Button size="sm" icon="check" onClick={() => { act(toast, () => saveSetting('plans', plans.map((p) => ({ ...p, monthly: Math.max(0, Number(p.monthly) || 0) })), 'Updated subscription plans'), 'Plans saved'); }}>Save plans</Button>}>
         <div className="grid gap-3 md:grid-cols-3">
           {plans.map((p, i) => (
             <div key={p.id} className="rounded-[18px] border border-line bg-[#fbfaf7] p-4">
@@ -104,7 +105,7 @@ export default function AdminCommission() {
       </Panel>
 
       <Panel title="Money rules" note="The open decisions from the requirements, set to the recommended defaults. Change them here — no code needed."
-        action={canEdit && <Button size="sm" icon="check" onClick={() => { saveSetting('decisions', { ...dec, refundApprovalAbove: Math.max(0, Number(dec.refundApprovalAbove) || 0) }, 'Updated money rules'); toast.success('Rules saved'); }}>Save rules</Button>}>
+        action={canEdit && <Button size="sm" icon="check" onClick={() => { act(toast, () => saveSetting('decisions', { ...dec, refundApprovalAbove: Math.max(0, Number(dec.refundApprovalAbove) || 0) }, 'Updated money rules'), 'Rules saved'); }}>Save rules</Button>}>
         <div className="grid gap-5 md:grid-cols-2">
           <Choice label="Settlement cycle" value={dec.settlementCycle} disabled={!canEdit} onChange={(v) => setDec((d) => ({ ...d, settlementCycle: v }))} options={[['weekly', 'Weekly'], ['fortnightly', 'Fortnightly']]} note="Payout screens group by week today; fortnightly is recorded for the API." />
           <Choice label="Release held money" value={dec.releaseOn} disabled={!canEdit} onChange={(v) => setDec((d) => ({ ...d, releaseOn: v }))} options={[['delivery', 'On delivery'], ['cycle', 'On settlement']]} note="When a retailer’s Razorpay transfer is released from hold." />

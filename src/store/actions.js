@@ -1,6 +1,7 @@
 import { adminProducts } from '../context/AdminStore';
 import { getOrders, updatePart } from './orders';
 import { setRetailerStatus, getRetailer } from './retailers';
+import { LIVE } from '../lib/config';
 
 /* Actions that touch several stores at once (requirement 11). */
 
@@ -26,6 +27,7 @@ export function retailerFootprint(retailerId) {
    open sub-orders are cancelled and any money taken is refunded. The row
    stays so old orders and payouts keep their link. */
 export function deleteRetailer(retailerId, { by, reason }) {
+  if (LIVE) return setRetailerStatus(retailerId, 'deleted', { by, note: reason });
   const { openParts } = retailerFootprint(retailerId);
   openParts.forEach((p) => updatePart(p.orderId, p.partId, 'Cancelled', { by, note: 'Retailer closed on Nivora' }));
   return setRetailerStatus(retailerId, 'deleted', { by, note: reason });
@@ -37,3 +39,4 @@ export function suspendRetailer(retailerId, { by, reason }) {
   if (!getRetailer(retailerId)) return null;
   return setRetailerStatus(retailerId, 'suspended', { by, note: reason });
 }
+

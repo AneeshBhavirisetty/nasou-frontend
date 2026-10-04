@@ -11,6 +11,7 @@ import { useRetailers } from '../../store/retailers';
 import { useSettings } from '../../store/settings';
 import { addAdjustment, computeSettlements, pendingBalance, setPayoutStatus, usePayoutRecords } from '../../store/payouts';
 import { money } from '../../lib/format';
+import { act } from '../../lib/act';
 
 /* Payouts and settlements (requirement 13). Each retailer, each weekly cycle:
    sales − commission − subscription fee − refunds ± adjustments. Finance
@@ -59,18 +60,18 @@ function PayoutSheet({ row, canEdit, by, onClose }) {
         )}
         {canEdit && row.status !== 'open' && row.status !== 'paid' && (
           <div className="space-y-4 border-t border-line pt-4">
-            <form onSubmit={(e) => { e.preventDefault(); const n = Number(adj.amount); if (!n || adj.note.trim().length < 4) return toast.error('Enter an amount (negative to deduct) and a note.'); addAdjustment(row, n, adj.note.trim(), by); setAdj({ amount: '', note: '' }); toast.success('Adjustment added'); }} className="grid gap-2 sm:grid-cols-[140px_1fr_auto]">
+            <form onSubmit={(e) => { e.preventDefault(); const n = Number(adj.amount); if (!n || adj.note.trim().length < 4) return toast.error('Enter an amount (negative to deduct) and a note.'); act(toast, () => addAdjustment(row, n, adj.note.trim(), by)); setAdj({ amount: '', note: '' }); toast.success('Adjustment added'); }} className="grid gap-2 sm:grid-cols-[140px_1fr_auto]">
               <input value={adj.amount} onChange={(e) => setAdj((s) => ({ ...s, amount: e.target.value.replace(/[^\d-]/g, '') }))} placeholder="± ₹" className={SELECT_CLS} aria-label="Adjustment amount" />
               <input value={adj.note} onChange={(e) => setAdj((s) => ({ ...s, note: e.target.value }))} placeholder="Why (e.g. courier damage credit)" className={SELECT_CLS} aria-label="Adjustment note" />
               <Button type="submit" variant="outline" icon="plus">Adjust</Button>
             </form>
             <div className="flex flex-wrap items-end justify-end gap-2">
-              {row.status !== 'on_hold' && <Button variant="outline" size="sm" onClick={() => { setPayoutStatus(row, 'on_hold', { by }); toast.success('Payout on hold'); onClose(); }}>Hold</Button>}
-              {(row.status === 'pending' || row.status === 'on_hold') && <Button size="sm" icon="check" onClick={() => { setPayoutStatus(row, 'approved', { by }); toast.success('Payout approved'); onClose(); }}>Approve</Button>}
+              {row.status !== 'on_hold' && <Button variant="outline" size="sm" onClick={() => { act(toast, () => setPayoutStatus(row, 'on_hold', { by }), 'Payout on hold'); onClose(); }}>Hold</Button>}
+              {(row.status === 'pending' || row.status === 'on_hold') && <Button size="sm" icon="check" onClick={() => { act(toast, () => setPayoutStatus(row, 'approved', { by }), 'Payout approved'); onClose(); }}>Approve</Button>}
               {row.status === 'approved' && (
                 <>
                   <label className="min-w-[200px]"><span className={LABEL_CLS}>Bank UTR</span><input value={utr} onChange={(e) => setUtr(e.target.value.toUpperCase())} placeholder="e.g. HDFCN52026100412345" className={SELECT_CLS} /></label>
-                  <Button size="sm" icon="rupee" disabled={utr.trim().length < 8} onClick={() => { setPayoutStatus(row, 'paid', { by, utr: utr.trim() }); toast.success('Marked paid — retailer notified'); onClose(); }}>Mark paid</Button>
+                  <Button size="sm" icon="rupee" disabled={utr.trim().length < 8} onClick={() => { act(toast, () => setPayoutStatus(row, 'paid', { by, utr: utr.trim() }), 'Marked paid — retailer notified'); onClose(); }}>Mark paid</Button>
                 </>
               )}
             </div>

@@ -13,6 +13,7 @@ import { useToast } from '../context/ToastContext';
 import { updatePart, useRefunds } from '../store/orders';
 import { useScopedOrders } from '../lib/useScoped';
 import { money, cx } from '../lib/format';
+import { act } from '../lib/act';
 
 /* Your orders: one payment, one order — with each seller's part tracked on
    its own (requirement 15). A part that has not been packed yet can be
@@ -177,7 +178,7 @@ export default function Orders() {
           </select>
           <div className="mt-5 flex justify-end gap-2">
             <Button variant="outline" size="sm" onClick={() => setCancelling(null)}>Keep it</Button>
-            <Button size="sm" className="!border-clay !bg-clay" disabled={!reason} onClick={() => { updatePart(o.id, cancelling.id, 'Cancelled', { by: user.fullName, note: `Cancelled by customer: ${reason}` }); toast.success('Part cancelled'); setCancelling(null); setReason(''); }}>Cancel part</Button>
+            <Button size="sm" className="!border-clay !bg-clay" disabled={!reason} onClick={() => { act(toast, () => updatePart(o.id, cancelling.id, 'Cancelled', { by: user.fullName, note: `Cancelled by customer: ${reason}` }), 'Part cancelled'); setCancelling(null); setReason(''); }}>Cancel part</Button>
           </div>
         </Modal>
       )}

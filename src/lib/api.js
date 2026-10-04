@@ -1,23 +1,54 @@
 /* Single frontend boundary for the Spring API. Components should not call
    fetch directly; this keeps backend errors and auth handling consistent. */
 
-import { getToken } from './auth';
+import { getStoredSession, getToken, setSession } from './auth';
+import { API_BASE_URL, IS_MOCK as MOCK_MODE } from './config';
 import { createAccount, DEMO_2FA_CODE, findAccount, getAccount, passwordMatches, updateAccount } from '../store/accounts';
 import { getRetailer } from '../store/retailers';
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080/api/v1';
-// Flag to enable mock mode when backend is not available
-const MOCK_MODE = import.meta.env.VITE_API_BASE_URL === undefined || import.meta.env.VITE_MOCK_API === 'true';
-/* true while the app runs on the built-in demo backend (no VITE_API_BASE_URL) */
+/* true while the app runs on the built-in demo backend (no API configured) */
 export const IS_MOCK = MOCK_MODE;
+export const API_ORIGIN = API_BASE_URL.replace(/\/api\/v1$/, '');
 
-export async function api(path, options = {}) {
+/* One refresh at a time, shared by every request that hit an expired token. */
+let refreshing = null;
+async function refreshSession() {
+  const stored = getStoredSession();
+  if (!stored?.refreshToken) return false;
+  if (!refreshing) {
+    refreshing = fetch(`${API_BASE_URL}/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({ refreshToken: stored.refreshToken }),
+    })
+      .then(async (r) => {
+        if (!r.ok) return false;
+        const next = await r.json();
+        setSession({ ...stored, ...next });
+        window.dispatchEvent(new CustomEvent('auth:refreshed', { detail: next }));
+        return true;
+      })
+      .catch(() => false)
+      .finally(() => { setTimeout(() => { refreshing = null; }, 0); });
+  }
+  return refreshing;
+}
+
+export class ApiError extends Error {
+  constructor(message, status, body) {
+    super(message);
+    this.status = status;
+    this.body = body;
+  }
+}
+
+export async function api(path, options = {}, retried = false) {
   // Mock auth endpoints for development/testing
   if (MOCK_MODE && path.startsWith('/auth/')) {
     return mockAuthEndpoint(path, options);
   }
 
-  const token = getToken();
+  const token = options.token ?? getToken();
   const headers = {
     Accept: 'application/json',
     ...(options.body && !(options.body instanceof FormData)
@@ -29,19 +60,17 @@ export async function api(path, options = {}) {
 
   let response;
   try {
-    response = await fetch(`${BASE_URL}${path}`, { ...options, headers });
+    response = await fetch(`${API_BASE_URL}${path}`, { ...options, headers });
   } catch {
-    throw new Error('Unable to reach the server. Check your connection.');
+    throw new ApiError('Unable to reach the server. Check your connection.', 0);
   }
 
-  if (response.status === 401) {
+  const isAuthCall = path.startsWith('/auth/') && path !== '/auth/logout-all';
+  if (response.status === 401 && token && !isAuthCall && !options.token) {
+    if (!retried && await refreshSession()) return api(path, options, true);
     /* Broadcast so AuthContext can clear the session and show the dialog */
     window.dispatchEvent(new Event('auth:expired'));
-    throw new Error('Your session has expired. Please log in again.');
-  }
-
-  if (response.status === 403) {
-    throw new Error('You do not have permission to perform this action.');
+    throw new ApiError('Your session has expired. Please log in again.', 401);
   }
 
   if (response.status === 204) return null;
@@ -49,10 +78,28 @@ export async function api(path, options = {}) {
   const body = await response.json().catch(() => null);
 
   if (!response.ok) {
-    throw new Error(body?.message ?? 'We could not complete that request.');
+    const fallback = response.status === 403 ? 'You do not have permission to perform this action.'
+      : response.status === 429 ? 'Too many requests. Please wait a moment and try again.'
+        : 'We could not complete that request.';
+    throw new ApiError(body?.message ?? fallback, response.status, body);
   }
 
   return body;
+}
+
+/* JSON helpers */
+export const get = (path, opts) => api(path, opts);
+export const post = (path, body, opts = {}) => api(path, { ...opts, method: 'POST', body: body instanceof FormData ? body : JSON.stringify(body ?? {}) });
+export const put = (path, body, opts = {}) => api(path, { ...opts, method: 'PUT', body: JSON.stringify(body ?? {}) });
+export const patch = (path, body, opts = {}) => api(path, { ...opts, method: 'PATCH', body: JSON.stringify(body ?? {}) });
+export const del = (path, opts = {}) => api(path, { ...opts, method: 'DELETE' });
+
+/* A protected file (retailer document) as an object URL the browser can open. */
+export async function fileUrl(path) {
+  const rel = path.startsWith('/api/v1') ? path.slice(7) : path;
+  const res = await fetch(`${API_BASE_URL}${rel}`, { headers: { Authorization: `Bearer ${getToken()}` } });
+  if (!res.ok) throw new ApiError(res.status === 403 ? 'You cannot open this document.' : 'The document could not be loaded.', res.status);
+  return URL.createObjectURL(await res.blob());
 }
 
 /* ── Mock auth ──────────────────────────────────────────────────────────────
