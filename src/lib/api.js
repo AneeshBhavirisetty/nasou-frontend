@@ -2,7 +2,7 @@
    fetch directly; this keeps backend errors and auth handling consistent. */
 
 import { getStoredSession, getToken, setSession } from './auth';
-import { API_BASE_URL, IS_MOCK as MOCK_MODE } from './config';
+import { API_BASE_URL, DEMO_TWO_FACTOR, IS_MOCK as MOCK_MODE } from './config';
 import { createAccount, DEMO_2FA_CODE, findAccount, getAccount, passwordMatches, updateAccount } from '../store/accounts';
 import { getRetailer } from '../store/retailers';
 
@@ -171,7 +171,7 @@ function loginBlock(a) {
 function afterPassword(a) {
   const block = loginBlock(a);
   if (block) throw new Error(block);
-  if (a.role === 'ADMIN') {
+  if (a.role === 'ADMIN' && DEMO_TWO_FACTOR) {
     const challengeId = `ch_${Math.random().toString(36).slice(2)}`;
     challenges.set(challengeId, { accountId: a.id, at: Date.now(), tries: 0 });
     return { twoFactorRequired: true, challengeId, maskedPhone: `+91 ••••• ••${String(a.phone).slice(-3)}` };

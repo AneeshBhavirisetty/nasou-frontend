@@ -1,20 +1,30 @@
-# Test, build, point the build at the API (config.js) and publish to Azure
-# Static Web Apps.
+# Branch = environment.
 #
-# One-time setup (nasou-api docs/AZURE.md, "GitHub Actions"):
-#   secrets  AZURE_STATIC_WEB_APPS_API_TOKEN   (az staticwebapp secrets list -n <swa> --query properties.apiKey)
-#   vars     API_BASE_URL                      e.g. https://app-nivora-prod-api-xxxx.azurewebsites.net/api/v1
-#            SHOW_DEMO                         'true' only on staging
+#   push to dev          test → build → publish to the dev Static Web App
+#   pull request → prod  test and build only (the PR shows whether it is safe to merge)
+#   merge / push to prod test → build → publish to the prod Static Web App
+#
+# One build serves every environment: config.js, written at release, says which
+# API to use. Settings live in the GitHub environments "dev" and "prod" (each
+# only accepts its own branch):
+#   secrets  AZURE_STATIC_WEB_APPS_API_TOKEN   az staticwebapp secrets list -n <swa> --query properties.apiKey
+#   vars     API_BASE_URL                      https://<api-app>.azurewebsites.net/api/v1
+#            SHOW_DEMO                         'true' only where demo accounts exist (never prod)
 name: web
 
 on:
   push:
-    branches: [main]
+    branches: [dev, prod]
   pull_request:
+    branches: [dev, prod]
   workflow_dispatch:
 
 permissions:
   contents: read
+
+concurrency:
+  group: web-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -28,12 +38,6 @@ jobs:
       - run: npm ci --no-audit --no-fund
       - run: npm test
       - run: npm run build
-      - name: Runtime config
-        run: |
-          demo=false
-          [ "${{ vars.SHOW_DEMO }}" = "true" ] && demo=true
-          echo "window.__NIVORA__ = { apiBaseUrl: '${{ vars.API_BASE_URL }}', demo: $demo };" > dist/config.js
-          cat dist/config.js
       - uses: actions/upload-artifact@v4
         with:
           name: dist
@@ -41,14 +45,21 @@ jobs:
 
   deploy:
     needs: build
-    if: github.event_name != 'pull_request' && vars.API_BASE_URL != ''
+    if: github.event_name != 'pull_request' && (github.ref_name == 'dev' || github.ref_name == 'prod')
     runs-on: ubuntu-latest
-    environment: production
+    environment:
+      name: ${{ github.ref_name }}
     steps:
       - uses: actions/download-artifact@v4
         with:
           name: dist
           path: dist
+      - name: Runtime config
+        run: |
+          demo=false
+          [ "${{ vars.SHOW_DEMO }}" = "true" ] && demo=true
+          echo "window.__NIVORA__ = { apiBaseUrl: '${{ vars.API_BASE_URL }}', demo: $demo };" > dist/config.js
+          cat dist/config.js
       - uses: Azure/static-web-apps-deploy@v1
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}

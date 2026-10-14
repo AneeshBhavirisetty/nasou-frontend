@@ -18,7 +18,9 @@ export default function AdminMasterCatalog() {
   const toast = useToast();
   const { can } = useIam();
   const canEdit = can('catalog', 'edit');
-  const catalog = useSettings((s) => s.catalog);
+  const stored = useSettings((s) => s.catalog);
+  /* the server's catalog section starts with attributes only; sub-categories are added here */
+  const catalog = useMemo(() => ({ subs: [], attributes: {}, ...(stored || {}) }), [stored]);
   const { products } = useAdminStore();
   const [dept, setDept] = useState(DEPARTMENTS[0].slug);
   const [name, setName] = useState('');

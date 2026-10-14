@@ -19,3 +19,8 @@ export const LIVE = !IS_MOCK;
 /* Show the demo sign-in list (test accounts, 2FA code). Always in the browser
    demo; on a real server only where config.js says so (dev / staging). */
 export const SHOW_DEMO = IS_MOCK || runtime.demo === true;
+
+/* Second factor for team sign-in in the browser demo. With an API the server
+   decides (TWO_FACTOR_ENABLED); this switch only drives the demo backend:
+   config.js `twoFactor: false` or VITE_TWO_FACTOR=false. Testing only. */
+export const DEMO_TWO_FACTOR = runtime.twoFactor ?? env.VITE_TWO_FACTOR !== 'false';

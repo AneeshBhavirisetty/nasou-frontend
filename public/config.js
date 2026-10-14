@@ -6,4 +6,6 @@
    runs the built-in demo backend in the browser. */
 window.__NIVORA__ = window.__NIVORA__ || {
   apiBaseUrl: '',
+  // Browser demo only: false skips the team 2FA step (the API has TWO_FACTOR_ENABLED).
+  twoFactor: true,
 };
