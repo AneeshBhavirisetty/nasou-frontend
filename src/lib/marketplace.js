@@ -66,7 +66,7 @@ export function seedRetailers() {
   return [
     base({
       id: 'r1', name: 'Sri Sai Pipes & Sanitary', legalName: 'Sri Sai Pipes and Sanitary Traders', type: 'Proprietorship',
-      contact: 'Ravi Teja', email: 'retailer@nivora.test', phone: '9000000101', address: '12-4, Ranigunj Main Road', city: 'Hyderabad', state: 'Telangana', pin: '500003',
+      contact: 'Ravi Teja', email: 'retailer@nivora.test', phone: '9000000101', address: '12-4, Gandhi Road', city: 'Tirupati', state: 'Andhra Pradesh', pin: '517501',
       gstin: '36AAPFS1234K1Z2', pan: 'AAPFS1234K', bank: { holder: 'Sri Sai Pipes and Sanitary Traders', account: '50200012345678', ifsc: 'HDFC0001234' },
       razorpayAccount: 'acc_NvR1SriSai01', status: 'approved', plan: 'growth', joinedAt: now - 210 * DAY,
       commission: { rate: 10, byCategory: { 'cpvc-fittings': 8 } },
@@ -74,7 +74,7 @@ export function seedRetailers() {
     }),
     base({
       id: 'r2', name: 'Deccan Hardware Mart', legalName: 'Deccan Hardware Mart LLP', type: 'LLP',
-      contact: 'Lakshmi Narayana', email: 'retailer2@nivora.test', phone: '9000000102', address: 'Plot 7, SD Road', city: 'Secunderabad', state: 'Telangana', pin: '500003',
+      contact: 'Lakshmi Narayana', email: 'retailer2@nivora.test', phone: '9000000102', address: 'Plot 7, Air Bypass Road', city: 'Tirupati', state: 'Andhra Pradesh', pin: '517501',
       gstin: '36AALFD5678M1Z9', pan: 'AALFD5678M', bank: { holder: 'Deccan Hardware Mart LLP', account: '91802004567890', ifsc: 'ICIC0000456' },
       razorpayAccount: 'acc_NvR2Deccan02', status: 'approved', plan: 'pro', joinedAt: now - 160 * DAY,
       commission: { rate: 9, byCategory: {} },
@@ -82,7 +82,7 @@ export function seedRetailers() {
     }),
     base({
       id: 'r3', name: 'Krishna Agro & Plumbing', legalName: 'Krishna Agro and Plumbing Stores', type: 'Partnership',
-      contact: 'Sravani K', email: 'retailer3@nivora.test', phone: '9000000103', address: 'Door 4-21, Eluru Road', city: 'Vijayawada', state: 'Andhra Pradesh', pin: '520002',
+      contact: 'Sravani K', email: 'retailer3@nivora.test', phone: '9000000103', address: 'Door 4-21, Korlagunta Main Road', city: 'Tirupati', state: 'Andhra Pradesh', pin: '517501',
       gstin: '37AAKFK9012P1Z4', pan: 'AAKFK9012P', bank: { holder: 'Krishna Agro and Plumbing Stores', account: '33450011223344', ifsc: 'SBIN0004321' },
       razorpayAccount: 'acc_NvR3Krishna3', status: 'approved', plan: 'starter', joinedAt: now - 95 * DAY,
       commission: { rate: 12, byCategory: { 'pvc-pipes': 10 } },
@@ -90,14 +90,14 @@ export function seedRetailers() {
     }),
     base({
       id: 'r4', name: 'Balaji Electricals', legalName: 'Balaji Electricals and Lighting', type: 'Proprietorship',
-      contact: 'Mahesh Balaji', email: 'pending@nivora.test', phone: '9000000104', address: 'Station Road, Hanamkonda', city: 'Warangal', state: 'Telangana', pin: '506001',
+      contact: 'Mahesh Balaji', email: 'pending@nivora.test', phone: '9000000104', address: 'Station Road, Tirupati', city: 'Tirupati', state: 'Andhra Pradesh', pin: '517501',
       gstin: '36BBEPB3456C1Z1', pan: 'BBEPB3456C', bank: { holder: 'Mahesh Balaji', account: '62110098765432', ifsc: 'UBIN0806110' },
       razorpayAccount: null, status: 'pending', joinedAt: now - 2 * DAY,
       documents: [doc('business', 'udyam-certificate.pdf', 300, 2, 'submitted'), doc('gst', 'gst-reg06.pdf', 190, 2, 'submitted'), doc('pan', 'pan-card.png', 260, 2, 'submitted'), doc('bank', 'cancelled-cheque.jpg', 170, 2, 'submitted')],
     }),
     base({
       id: 'r5', name: 'Coastal Paints & Tools', legalName: 'Coastal Paints and Tools', type: 'Proprietorship',
-      contact: 'Joseph D', email: 'retailer5@nivora.test', phone: '9000000105', address: 'Dwaraka Nagar 3rd Lane', city: 'Visakhapatnam', state: 'Andhra Pradesh', pin: '530016',
+      contact: 'Joseph D', email: 'retailer5@nivora.test', phone: '9000000105', address: 'Srinivasapuram 3rd Lane', city: 'Tirupati', state: 'Andhra Pradesh', pin: '517503',
       gstin: '37CCPPJ7788D1Z6', pan: 'CCPPJ7788D', bank: { holder: 'Joseph D', account: '1201000456', ifsc: 'CNRB0001201' },
       razorpayAccount: null, status: 'needs_changes', joinedAt: now - 6 * DAY,
       statusLog: [{ status: 'pending', at: now - 6 * DAY, by: 'Joseph D', note: 'Application submitted' }, { status: 'needs_changes', at: now - 4 * DAY, by: 'Priya Sharma', note: 'The bank proof is blurred — please upload a clearer cancelled cheque.' }],

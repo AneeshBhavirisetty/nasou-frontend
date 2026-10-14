@@ -318,7 +318,7 @@ export default function ProductDetail() {
           </div>
           <Accordion>
             <AccordionItem title="Delivery & dispatch" defaultOpen>
-              In-stock items ordered before 2 PM are dispatched the same working day from Hyderabad. Metro delivery next day; rest of India 2–5 days.
+              In-stock items ordered before 2 PM are dispatched the same working day and usually arrive the next working day. We deliver within Tirupati only.
             </AccordionItem>
             <AccordionItem title="Returns">
               Unused fittings in original packaging can be returned within 7 days of delivery for a full refund of the item value.

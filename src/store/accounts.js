@@ -37,8 +37,8 @@ function seed() {
     acc({ id: 'u_r3', fullName: 'Sravani K', email: 'retailer3@nivora.test', phone: '9000000103', role: 'RETAILER', retailerId: 'r3', staffRole: 'owner' }),
     acc({ id: 'u_r4', fullName: 'Mahesh Balaji', email: 'pending@nivora.test', phone: '9000000104', role: 'RETAILER', retailerId: 'r4', staffRole: 'owner', createdAt: Date.now() - 2 * DAY }),
     acc({ id: 'u_r5', fullName: 'Joseph D', email: 'retailer5@nivora.test', phone: '9000000105', role: 'RETAILER', retailerId: 'r5', staffRole: 'owner', createdAt: Date.now() - 6 * DAY }),
-    acc({ id: 'u_cust', fullName: 'Aarav Reddy', email: 'customer@nivora.test', phone: '9000000001', role: 'CUSTOMER', aliases: ['customer@nasou.test'], city: 'Hyderabad' }),
-    acc({ id: 'u_cust2', fullName: 'Test User', email: 'test@example.com', phone: '9876543210', role: 'CUSTOMER', legacyPassword: 'password123', city: 'Hyderabad' }),
+    acc({ id: 'u_cust', fullName: 'Aarav Reddy', email: 'customer@nivora.test', phone: '9000000001', role: 'CUSTOMER', aliases: ['customer@nasou.test'], city: 'Tirupati' }),
+    acc({ id: 'u_cust2', fullName: 'Test User', email: 'test@example.com', phone: '9876543210', role: 'CUSTOMER', legacyPassword: 'password123', city: 'Tirupati' }),
   ];
 }
 
@@ -48,8 +48,8 @@ export const accountsStore = createStore('nivora_accounts_v1', seed, () => []);
 export const DEMO_PROFILES = {
   u_cust: {
     addresses: [
-      { id: 'ad_home', label: 'Home', name: 'Aarav Reddy', phone: '9000000001', line1: 'Flat 402, Lake View Residency, Road 3', landmark: 'Near Kondapur bus stop', city: 'Hyderabad', state: 'Telangana', pin: '500084', isDefault: true },
-      { id: 'ad_site', label: 'Site', name: 'Aarav Reddy (site office)', phone: '9000000001', line1: 'Plot 17, Green Meadows layout, Shankarpally Road', landmark: 'Opposite the water tank', city: 'Hyderabad', state: 'Telangana', pin: '501203', isDefault: false },
+      { id: 'ad_home', label: 'Home', name: 'Aarav Reddy', phone: '9000000001', line1: 'Flat 402, Lake View Residency, Balaji Colony', landmark: 'Near Balaji Colony bus stop', city: 'Tirupati', state: 'Andhra Pradesh', pin: '517502', isDefault: true },
+      { id: 'ad_site', label: 'Site', name: 'Aarav Reddy (site office)', phone: '9000000001', line1: 'Plot 17, Green Meadows layout, Renigunta Road', landmark: 'Opposite the water tank', city: 'Tirupati', state: 'Andhra Pradesh', pin: '517520', isDefault: false },
     ],
   },
 };

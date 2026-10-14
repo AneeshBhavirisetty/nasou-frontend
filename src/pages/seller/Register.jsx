@@ -12,6 +12,7 @@ import { readDocument } from '../../lib/files';
 import { cx, isMobile10 } from '../../lib/format';
 import { LIVE } from '../../lib/config';
 import { post } from '../../lib/api';
+import { OUTSIDE_AREA, SERVICE_AREA, inServiceArea } from '../../lib/geo';
 
 /* Retailer signup with document upload (requirement 5). Every new retailer
    starts Pending and cannot sell until the Nivora team approves them.
@@ -19,7 +20,6 @@ import { post } from '../../lib/api';
    arithmetic check — the API adds rate limiting and a captcha provider. */
 
 const STEPS = ['Account', 'Business', 'Tax', 'Bank', 'Documents'];
-const STATES = ['Telangana', 'Andhra Pradesh', 'Karnataka', 'Tamil Nadu', 'Maharashtra', 'Kerala', 'Odisha', 'Gujarat', 'Delhi', 'Other'];
 const GSTIN = /^\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/;
 const PAN = /^[A-Z]{5}\d{4}[A-Z]$/;
 const IFSC = /^[A-Z]{4}0[A-Z0-9]{6}$/;
@@ -37,7 +37,7 @@ export default function SellerRegister() {
   const [busy, setBusy] = useState(false);
   const [f, setF] = useState({
     contact: '', email: '', phone: '', password: '',
-    name: '', legalName: '', type: 'Proprietorship', address: '', city: '', state: 'Telangana', pin: '', categories: ['plumbing'],
+    name: '', legalName: '', type: 'Proprietorship', address: '', city: SERVICE_AREA.city, state: SERVICE_AREA.state, pin: '', categories: ['plumbing'],
     gstin: '', pan: '',
     holder: '', account: '', account2: '', ifsc: '',
     website: '', answer: '', agree: false,
@@ -57,8 +57,9 @@ export default function SellerRegister() {
     if (step === 1) {
       if (f.name.trim().length < 3) return 'Enter your store name.';
       if (f.legalName.trim().length < 3) return 'Enter the registered business name.';
-      if (f.address.trim().length < 6 || !f.city.trim()) return 'Enter the store address and city.';
+      if (f.address.trim().length < 6) return 'Enter the store address.';
       if (!/^\d{6}$/.test(f.pin)) return 'PIN code must be 6 digits.';
+      if (!inServiceArea(f.pin)) return 'Nivora works with stores in Tirupati only — enter a Tirupati PIN code (5175xx).';
       if (!f.categories.length) return 'Pick at least one category you sell.';
     }
     if (step === 2) {
@@ -168,10 +169,10 @@ export default function SellerRegister() {
                 <Field label="Store name (shown to shoppers)" value={f.name} onChange={set('name')} placeholder="e.g. Sri Sai Pipes & Sanitary" />
                 <Field label="Registered business name" value={f.legalName} onChange={set('legalName')} />
                 <label><span className={LABEL}>Business type</span><select value={f.type} onChange={set('type')} className={SELECT}>{['Proprietorship', 'Partnership', 'LLP', 'Private Limited', 'Public Limited'].map((t) => <option key={t}>{t}</option>)}</select></label>
-                <label><span className={LABEL}>State</span><select value={f.state} onChange={set('state')} className={SELECT}>{STATES.map((t) => <option key={t}>{t}</option>)}</select></label>
                 <Field label="Store address" className="sm:col-span-2" value={f.address} onChange={set('address')} autoComplete="street-address" />
-                <Field label="City" value={f.city} onChange={set('city')} />
-                <Field label="PIN code" inputMode="numeric" value={f.pin} onChange={(e) => setF((s) => ({ ...s, pin: e.target.value.replace(/\D/g, '').slice(0, 6) }))} />
+                <Field label="City" value={SERVICE_AREA.city} disabled hint="Stores in Tirupati only" />
+                <Field label="PIN code" inputMode="numeric" value={f.pin} onChange={(e) => setF((s) => ({ ...s, pin: e.target.value.replace(/\D/g, '').slice(0, 6) }))} placeholder="Tirupati PIN, e.g. 517501" error={f.pin.length === 6 && !inServiceArea(f.pin) ? OUTSIDE_AREA : undefined} />
+                <Field label="State" value={SERVICE_AREA.state} disabled />
                 <div className="sm:col-span-2">
                   <span className={LABEL}>What do you sell?</span>
                   <div className="flex flex-wrap gap-2">

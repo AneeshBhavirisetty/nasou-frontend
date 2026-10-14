@@ -34,15 +34,15 @@ const DAY = 86400000;
 const GST_RATE = 0.18;
 
 const CUSTOMERS = [
-  ['u_cust', 'Aarav Reddy', 'customer@nivora.test', '9000000001', 'Flat 402, Lake View Residency, Kondapur', 'Hyderabad', 'Telangana', '500084'],
-  [null, 'Priya Menon', 'priya.menon@example.com', '9876543210', '8-2-293, Road No. 12, Banjara Hills', 'Hyderabad', 'Telangana', '500034'],
-  [null, 'Rahul Kumar', 'rahul@trade.in', '9876543211', '1-8-45, Paradise Circle', 'Secunderabad', 'Telangana', '500003'],
-  [null, 'Amit Patel', 'amit@example.com', '9876543212', '40-1-12, MG Road, Labbipet', 'Vijayawada', 'Andhra Pradesh', '520010'],
-  [null, 'Kavya Reddy', 'kavya@example.com', '9876543213', '5-87, Brodipet 4th Line', 'Guntur', 'Andhra Pradesh', '522002'],
-  [null, 'Imran Ali', 'imran@mepworks.in', '9876543214', 'Plot 23, Madhapur', 'Hyderabad', 'Telangana', '500081'],
-  [null, 'Naveen Rao', 'naveen@example.com', '9876543215', 'Hanamkonda Chowrasta', 'Warangal', 'Telangana', '506001'],
-  [null, 'Sana Begum', 'sana.b@example.com', '9876543216', 'Phulong, Armoor Road', 'Nizamabad', 'Telangana', '503001'],
-  [null, 'Vikram Shetty', 'vikram@buildpro.in', '9876543217', 'Sanathnagar Industrial Estate', 'Hyderabad', 'Telangana', '500018'],
+  ['u_cust', 'Aarav Reddy', 'customer@nivora.test', '9000000001', 'Flat 402, Lake View Residency, Balaji Colony', 'Tirupati', 'Andhra Pradesh', '517502'],
+  [null, 'Priya Menon', 'priya.menon@example.com', '9876543210', '18-2-93, Bairagipatteda', 'Tirupati', 'Andhra Pradesh', '517501'],
+  [null, 'Rahul Kumar', 'rahul@trade.in', '9876543211', '1-8-45, Leela Mahal Circle', 'Tirupati', 'Andhra Pradesh', '517501'],
+  [null, 'Amit Patel', 'amit@example.com', '9876543212', '40-1-12, Tilak Road', 'Tirupati', 'Andhra Pradesh', '517501'],
+  [null, 'Kavya Reddy', 'kavya@example.com', '9876543213', '5-87, Tiruchanur Road', 'Tirupati', 'Andhra Pradesh', '517503'],
+  [null, 'Imran Ali', 'imran@mepworks.in', '9876543214', 'Plot 23, MR Palli', 'Tirupati', 'Andhra Pradesh', '517502'],
+  [null, 'Naveen Rao', 'naveen@example.com', '9876543215', 'KT Road', 'Tirupati', 'Andhra Pradesh', '517501'],
+  [null, 'Sana Begum', 'sana.b@example.com', '9876543216', 'Alipiri Road', 'Tirupati', 'Andhra Pradesh', '517507'],
+  [null, 'Vikram Shetty', 'vikram@buildpro.in', '9876543217', 'Renigunta Industrial Estate', 'Tirupati', 'Andhra Pradesh', '517520'],
 ];
 const PAYMENTS = ['UPI', 'Cards', 'Net banking', 'Cash on delivery', 'UPI', 'Cards'];
 

@@ -10,8 +10,8 @@ export const brand = {
   toll: '1800 120 000 066',
   /* WhatsApp Business number (digits only, with country code) for wa.me links */
   whatsapp: '919705807551',
-  address: 'Plot 14, Industrial Estate, Sanathnagar, Hyderabad 500018',
-  gst: '36ABCDE1234F1Z5',
+  address: 'Tirupati, Andhra Pradesh 517501',
+  gst: '37ABCDE1234F1Z5',
   since: 2016,
 };
 
@@ -21,7 +21,7 @@ export const announcements = [
   'Nivora is now a marketplace — shop verified retailers in one cart',
   'Free delivery on orders above ₹999 · GST invoice on every order',
   'Search by product code, size or supplier — 1,400+ SKUs live',
-  'Ships pan-India · dispatch same day on in-stock items before 2pm',
+  'Delivering across Tirupati · dispatch same day on in-stock items before 2pm',
 ];
 
 export const primaryNav = [
@@ -48,7 +48,7 @@ export const testimonials = [
 
 export const faqs = [
   { q: 'Are the prices inclusive of GST?', a: 'Prices shown are exclusive of GST; 18% GST is added at checkout and itemised on your invoice.' },
-  { q: 'How fast is delivery?', a: 'In-stock items ordered before 2pm are dispatched the same working day. Hyderabad deliveries arrive next day; rest of India in 2–5 days by surface courier.' },
+  { q: 'How fast is delivery?', a: 'In-stock items ordered before 2pm are dispatched the same working day and usually arrive the next working day. We deliver within Tirupati only.' },
   { q: 'Can I order a fitting that shows "out of stock"?', a: 'You can add it to your wishlist and we will email you when it is back. Most fast-moving SKUs restock within a week.' },
   { q: 'Do you supply to trade / bulk buyers?', a: 'Yes. Create an account and contact us for slab pricing on orders above ₹25,000.' },
   { q: 'What is your returns policy?', a: 'Unused fittings in original packaging can be returned within 7 days of delivery for a full refund of the item value.' },

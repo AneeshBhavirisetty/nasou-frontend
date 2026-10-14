@@ -15,7 +15,6 @@ import { act } from '../../lib/act';
 /* Content and settings (requirements 24–27): homepage banners and featured
    categories, tax rules, shipping rules and message templates. */
 
-const STATES = ['All', 'Telangana', 'Andhra Pradesh', 'Karnataka', 'Tamil Nadu', 'Maharashtra', 'Kerala', 'Odisha', 'Delhi', 'Gujarat'];
 const TONES = [['cream', 'Cream'], ['forest', 'Forest'], ['sand', 'Sand']];
 
 function useDraft(section) {
@@ -172,21 +171,19 @@ export default function AdminSettings() {
       {tab === 'home' && <Banners canEdit={canEdit} />}
       {tab === 'tax' && (
         <RuleTable title="Tax rules" section="taxRules" canEdit={canEdit}
-          note="GST by category and delivery state. A state rule beats the All-India rule for the same category. Confirm rates with your accountant."
+          note="GST by category. Nivora delivers in Tirupati only, so every rule applies to every order. Confirm rates with your accountant."
           blank={{ department: 'plumbing', region: 'All', rate: 18 }}
           columns={[
             { key: 'department', label: 'Category', options: DEPARTMENTS.map((d) => [d.slug, d.name]) },
-            { key: 'region', label: 'Delivery state', options: STATES.map((s) => [s, s === 'All' ? 'All India' : s]) },
             { key: 'rate', label: 'GST %', num: true },
           ]} />
       )}
       {tab === 'shipping' && (
         <RuleTable title="Shipping rules" section="shippingRules" canEdit={canEdit}
-          note="Delivery fee per seller’s part. The most specific rule wins (retailer + state, then retailer, then state, then everyone). Set after talking with retailers."
+          note="Delivery fee per seller’s part, within Tirupati. A retailer’s own rule beats the rule for everyone. Set after talking with retailers."
           blank={{ retailerId: 'all', region: 'All', basis: 'price', min: 0, max: 0, fee: 49, freeAbove: 999 }}
           columns={[
             { key: 'retailerId', label: 'Retailer', options: retailerOpts },
-            { key: 'region', label: 'State', options: STATES.map((s) => [s, s === 'All' ? 'All India' : s]) },
             { key: 'basis', label: 'Based on', options: [['price', 'Order value'], ['weight', 'Weight']] },
             { key: 'min', label: 'From ₹/kg', num: true },
             { key: 'max', label: 'To (0 = no cap)', num: true },

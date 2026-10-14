@@ -101,7 +101,7 @@ export default function HomeHero({ banners, stats }) {
           {wide ? <HeroStage active className="absolute inset-0" /> : null}
           <FloatChip className="left-0 top-10" delay={0.3}>
             <p className="flex items-center gap-2 text-[12px] font-bold text-forest"><Icon name="shieldCheck" size={15} /> Sri Sai Pipes · verified</p>
-            <p className="text-[11px] text-ink-50">Hyderabad · ships today</p>
+            <p className="text-[11px] text-ink-50">Tirupati · ships today</p>
           </FloatChip>
           <FloatChip className="right-0 top-24" delay={0.5}>
             <div className="flex items-center gap-2.5">

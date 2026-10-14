@@ -132,7 +132,7 @@ export default function Invoice() {
 
         <footer className="mt-8 border-t border-line pt-5 text-[11.5px] leading-relaxed text-ink-35">
           Marketplace invoice issued by Nivora (a Nasou Hive product) on behalf of the sellers named above. Computer-generated — valid without signature. Goods once sold may be returned within
-          7 days if unused and in original packaging. Subject to Hyderabad jurisdiction.
+          7 days if unused and in original packaging. Subject to Tirupati jurisdiction.
         </footer>
       </article>
     </Container>

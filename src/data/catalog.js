@@ -10,6 +10,7 @@
 import generated from './catalog.generated.json';
 import supplierList from './suppliers.json';
 import { DEPARTMENTS, DEFAULT_DEPARTMENT, departmentMeta } from './departments';
+import { SERVICE_AREA } from '../lib/geo';
 import { canSell, retailerForRow } from '../lib/marketplace';
 import { getRetailer, retailersStore } from '../store/retailers';
 import { settingsStore } from '../store/settings';
@@ -189,7 +190,8 @@ export function searchProducts(query, { limit = Infinity } = {}) {
 
 /* Supplier offers — the primary supplier plus a couple of competing quotes,
    deterministic so the grid card and product page always agree. --------- */
-const CITIES = ['Hyderabad', 'Suryapet', 'Vijayawada', 'Guntur', 'Warangal', 'Nizamabad'];
+/* Every seller is in Tirupati (the only service area). */
+const CITY = SERVICE_AREA.city;
 const ETAS = ['Ships today', 'Ships in 1 day', 'Ships in 2 days'];
 
 export function offersFor(product) {
@@ -203,7 +205,7 @@ export function offersFor(product) {
     id: product.supplier,
     name: product.supplierName,
     tier: product.supplierTier,
-    city: CITIES[product.row % CITIES.length],
+    city: CITY,
     eta: product.stock > 0 ? ETAS[product.row % ETAS.length] : 'Out of stock',
     price: product.price,
     inStock: product.stock > 0,
@@ -213,7 +215,7 @@ export function offersFor(product) {
     id: s.slug,
     name: s.name,
     tier: s.tier,
-    city: CITIES[(product.row + i + 1) % CITIES.length],
+    city: CITY,
     eta: ETAS[(product.row + i) % ETAS.length],
     price: Math.round((product.price * (1.04 + ((product.row + i) % 5) * 0.03)) / 5) * 5,
     inStock: true,

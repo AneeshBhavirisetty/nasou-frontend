@@ -1,24 +1,23 @@
 import { useState } from 'react';
 import Icon from './Icon';
 import { Field } from './ui';
-import { INDIAN_STATES, locate, lookupPin } from '../lib/geo';
+import { OUTSIDE_AREA, SERVICE_AREA, inServiceArea, inTirupati, locate, lookupPin } from '../lib/geo';
 import { cx } from '../lib/format';
 
 /* One address, with "Use my current location" and PIN-code autofill.
-   Controlled: value + onChange(next). Used by checkout and My profile. */
+   Controlled: value + onChange(next). Used by checkout and My profile.
+   Tirupati only: city and state are fixed; the PIN must be a Tirupati one. */
 
 const LABELS = ['Home', 'Work', 'Site', 'Other'];
-const SELECT = 'h-12 w-full rounded-md border border-line bg-white/80 px-4 text-[14px] text-ink outline-none transition focus:border-forest focus:shadow-[0_0_0_2px_rgba(31,92,74,0.18)]';
 
-export const blankAddress = { label: 'Home', name: '', phone: '', line1: '', landmark: '', city: '', state: 'Telangana', pin: '', lat: null, lng: null };
+export const blankAddress = { label: 'Home', name: '', phone: '', line1: '', landmark: '', city: SERVICE_AREA.city, state: SERVICE_AREA.state, pin: '', lat: null, lng: null };
 
 export function addressProblem(a) {
   if (!a.name?.trim()) return 'Enter the name for delivery.';
   if (!/^\d{10}$/.test(a.phone || '')) return 'Enter a 10-digit mobile number.';
   if ((a.line1 || '').trim().length < 6) return 'Enter the flat / building and street.';
-  if (!a.city?.trim()) return 'Enter the city.';
-  if (!a.state) return 'Choose the state.';
   if (!/^\d{6}$/.test(a.pin || '')) return 'Enter a 6-digit PIN code.';
+  if (!inServiceArea(a.pin)) return OUTSIDE_AREA;
   return '';
 }
 
@@ -26,15 +25,19 @@ export default function AddressForm({ value, onChange }) {
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState('');
   const [areas, setAreas] = useState([]);
-  const set = (k, v) => onChange({ ...value, [k]: v });
+  const update = (next) => onChange(inTirupati(next));
+  const set = (k, v) => update({ ...value, [k]: v });
 
   const useLocation = async () => {
     setBusy(true);
     setNote('');
     try {
       const got = await locate();
-      onChange({ ...value, ...Object.fromEntries(Object.entries(got).filter(([, v]) => v !== '' && v != null)) });
-      setNote(got.partial ? 'Pinned your location — we could not read the street, so please type it in.' : 'Filled from your location — check the flat or building number.');
+      const outside = got.pin && !inServiceArea(got.pin);
+      const keep = Object.fromEntries(Object.entries(got).filter(([k, v]) => v !== '' && v != null && k !== 'city' && k !== 'state' && !(k === 'pin' && outside)));
+      update({ ...value, ...keep });
+      setNote(outside ? 'You seem to be outside Tirupati — we deliver only in Tirupati, so enter the delivery address there.'
+        : got.partial ? 'Pinned your location — we could not read the street, so please type it in.' : 'Filled from your location — check the flat or building number.');
     } catch (x) {
       setNote(x.message);
     } finally {
@@ -44,13 +47,11 @@ export default function AddressForm({ value, onChange }) {
 
   const onPin = async (pin) => {
     const clean = pin.replace(/\D/g, '').slice(0, 6);
-    onChange({ ...value, pin: clean });
-    if (clean.length === 6) {
+    update({ ...value, pin: clean });
+    setAreas([]);
+    if (inServiceArea(clean)) {
       const hit = await lookupPin(clean);
-      if (hit) {
-        onChange({ ...value, pin: clean, city: value.city || hit.city, state: hit.state });
-        setAreas(hit.areas);
-      }
+      if (hit) setAreas(hit.areas);
     }
   };
 
@@ -65,7 +66,7 @@ export default function AddressForm({ value, onChange }) {
         <span className={cx('grid h-10 w-10 shrink-0 place-items-center rounded-full bg-forest text-white shadow-btn', busy && 'animate-pulse')}><Icon name={busy ? 'spinner' : 'pin'} size={18} className={busy ? 'animate-spin' : ''} /></span>
         <span className="min-w-0">
           <span className="block text-[14px] font-bold text-forest">{busy ? 'Finding you…' : 'Use my current location'}</span>
-          <span className="block text-[12px] text-ink-50">Fills the street, city, state and PIN — you add the flat number.</span>
+          <span className="block text-[12px] text-ink-50">Fills the street and PIN — you add the flat number.</span>
         </span>
         <Icon name="arrowRight" size={16} className="ml-auto text-forest transition group-hover:translate-x-0.5" />
       </button>
@@ -81,17 +82,12 @@ export default function AddressForm({ value, onChange }) {
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Full name" value={value.name} onChange={(e) => set('name', e.target.value)} autoComplete="name" />
         <Field label="Mobile" type="tel" inputMode="numeric" value={value.phone} onChange={(e) => set('phone', e.target.value.replace(/\D/g, '').slice(0, 10))} autoComplete="tel-national" placeholder="10-digit mobile" />
-        <Field label="Flat, building, street" className="sm:col-span-2" value={value.line1} onChange={(e) => set('line1', e.target.value)} autoComplete="street-address" placeholder="e.g. Flat 402, Lake View Residency, Road 3" />
-        <Field label="Landmark / area (optional)" value={value.landmark} onChange={(e) => set('landmark', e.target.value)} list="pin-areas" placeholder="e.g. Near Kondapur bus stop" />
+        <Field label="Flat, building, street" className="sm:col-span-2" value={value.line1} onChange={(e) => set('line1', e.target.value)} autoComplete="street-address" placeholder="e.g. Flat 402, Lake View Residency, Balaji Colony" />
+        <Field label="Landmark / area (optional)" value={value.landmark} onChange={(e) => set('landmark', e.target.value)} list="pin-areas" placeholder="e.g. Near Leela Mahal circle" />
         <datalist id="pin-areas">{areas.map((a) => <option key={a} value={a} />)}</datalist>
-        <Field label="PIN code" inputMode="numeric" value={value.pin} onChange={(e) => onPin(e.target.value)} autoComplete="postal-code" placeholder="6 digits — fills city & state" />
-        <Field label="City" value={value.city} onChange={(e) => set('city', e.target.value)} autoComplete="address-level2" />
-        <label className="block">
-          <span className="mb-1.5 block text-[11.5px] font-semibold uppercase tracking-[0.16em] text-forest-800">State</span>
-          <select value={value.state} onChange={(e) => set('state', e.target.value)} className={SELECT} autoComplete="address-level1">
-            {INDIAN_STATES.map((s) => <option key={s}>{s}</option>)}
-          </select>
-        </label>
+        <Field label="PIN code" inputMode="numeric" value={value.pin} onChange={(e) => onPin(e.target.value)} autoComplete="postal-code" placeholder="Tirupati PIN, e.g. 517501" error={value.pin?.length === 6 && !inServiceArea(value.pin) ? OUTSIDE_AREA : undefined} />
+        <Field label="City" value={SERVICE_AREA.city} disabled hint="We deliver only in Tirupati" />
+        <Field label="State" value={SERVICE_AREA.state} disabled />
       </div>
     </div>
   );

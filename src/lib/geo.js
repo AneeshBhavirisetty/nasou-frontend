@@ -9,11 +9,14 @@
  * Both fail soft: the form stays editable and says what went wrong.
  * ==========================================================================*/
 
-export const INDIAN_STATES = [
-  'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Delhi', 'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh',
-  'Jammu and Kashmir', 'Jharkhand', 'Karnataka', 'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland',
-  'Odisha', 'Puducherry', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal',
-];
+/* Nivora trades in Tirupati only. City and state are fixed on every address
+   (delivery, checkout, retailer store); the PIN has to be a Tirupati one. The
+   API enforces the same rule (common/ServiceArea.java) — change both together. */
+export const SERVICE_AREA = { city: 'Tirupati', state: 'Andhra Pradesh', pinPrefix: '5175' };
+export const inServiceArea = (pin) => /^\d{6}$/.test(pin || '') && pin.startsWith(SERVICE_AREA.pinPrefix);
+export const OUTSIDE_AREA = 'We deliver only in Tirupati — enter a Tirupati PIN code (5175xx).';
+/* Pins an address to the service area, whatever was typed or detected. */
+export const inTirupati = (a) => ({ ...a, city: SERVICE_AREA.city, state: SERVICE_AREA.state });
 
 const withTimeout = (p, ms, msg) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error(msg)), ms))]);
 
@@ -75,7 +78,7 @@ export async function lookupPin(pin) {
 export function addressBook(profile = {}) {
   if (Array.isArray(profile.addresses)) return profile.addresses;
   if (profile.address) {
-    return [{ id: 'legacy', label: 'Home', name: profile.fullName || '', phone: profile.phone || '', line1: profile.address, landmark: '', city: profile.city || '', state: profile.state || 'Telangana', pin: profile.pin || '', isDefault: true }];
+    return [{ id: 'legacy', label: 'Home', name: profile.fullName || '', phone: profile.phone || '', line1: profile.address, landmark: '', city: SERVICE_AREA.city, state: SERVICE_AREA.state, pin: profile.pin || '', isDefault: true }];
   }
   return [];
 }

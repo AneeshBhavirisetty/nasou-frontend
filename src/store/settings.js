@@ -43,7 +43,7 @@ function seed() {
     ],
     shippingRules: [
       { id: 's1', retailerId: 'all', region: 'All', basis: 'price', min: 0, max: 0, fee: 49, freeAbove: 999 },
-      { id: 's2', retailerId: 'r3', region: 'Telangana', basis: 'price', min: 0, max: 0, fee: 79, freeAbove: 1499 },
+      { id: 's2', retailerId: 'r3', region: 'All', basis: 'price', min: 0, max: 0, fee: 79, freeAbove: 1499 },
     ],
     banners: [
       { id: 'b1', eyebrow: 'Nivora marketplace', title: 'Every fitting, from every trusted counter.', sub: 'Compare verified retailers across plumbing, electrical, hardware and more — one cart, one checkout.', cta: 'Shop the catalogue', to: '/shop', tone: 'cream', active: true },
