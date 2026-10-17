@@ -137,6 +137,9 @@ export function PriceTag({ price, mrp, size = 'md', className = '' }) {
     md: ['text-[19px]', 'text-[13px]', 'text-[11px]'],
     lg: ['text-[26px]', 'text-[15px]', 'text-[12px]'],
   }[size];
+  if (!(Number(price) > 0)) {
+    return <span className={cx('inline-flex font-semibold text-forest', S[1], className)}>Price on request</span>;
+  }
   return (
     <span className={cx('inline-flex flex-wrap items-baseline gap-x-2 gap-y-0.5', className)}>
       <span className={cx('tnum font-semibold text-ink', S[0])}>{money(price)}</span>

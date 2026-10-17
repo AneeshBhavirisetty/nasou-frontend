@@ -11,6 +11,7 @@ import generated from './catalog.generated.json';
 import supplierList from './suppliers.json';
 import { DEPARTMENTS, DEFAULT_DEPARTMENT, departmentMeta } from './departments';
 import { SERVICE_AREA } from '../lib/geo';
+import { brand } from './site';
 import { canSell, retailerForRow } from '../lib/marketplace';
 import { getRetailer, retailersStore } from '../store/retailers';
 import { settingsStore } from '../store/settings';
@@ -66,8 +67,9 @@ let _supplierName = new Map(suppliers.map((s) => [s.slug, s.name]));
 
 /* Listed on the storefront only while its retailer may sell (requirement 11:
    suspending a retailer hides their products). */
-export const isListed = (p) => !!p && canSell(getRetailer(p.retailerId));
-export const sellerName = (p) => getRetailer(p?.retailerId)?.name || '';
+export const isListed = (p) => !!p && (LIVE && !p.retailerId ? true : canSell(getRetailer(p.retailerId)));
+/* No retailer = the store's own catalogue (the master sheet), sold by Nivora itself. */
+export const sellerName = (p) => (p && !p.retailerId ? brand.name : getRetailer(p?.retailerId)?.name || '');
 
 /* Live bindings: rebuilt whenever a retailer's status changes, so the shop
    updates without a reload. */

@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useReducer,
 import { findProduct, isListed, offersFor, sellerName } from '../data/catalog';
 import { useAdminStore } from './AdminStore';
 import { applyBulkRules } from '../lib/pricing';
+import { onRequest } from '../lib/format';
 import { useNotifications } from './NotificationStore';
 
 const CartContext = createContext(null);
@@ -64,6 +65,8 @@ export function CartProvider({ children }) {
   }, [lines]);
 
   const add = useCallback((product, { qty = 1, supplierId, price } = {}) => {
+    /* Price on request (₹0): never into the cart — the product page offers an enquiry instead. */
+    if (onRequest(product)) return;
     const offer = offersFor(product).find((o) => o.id === supplierId) ?? offersFor(product)[0];
     dispatch({
       type: 'add',

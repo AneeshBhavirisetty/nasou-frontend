@@ -14,11 +14,10 @@ import { put, refresh } from '../lib/live';
 const ATTRS = {
   plumbing: ['Size', 'Material', 'Pressure class', 'Brand'],
   electrical: ['Voltage', 'Wattage', 'Phase', 'Brand'],
-  agriculture: ['Size', 'Flow rate', 'Material'],
+  'interior-designing': ['Volume', 'Finish', 'Colour', 'Coverage'],
   hardware: ['Size', 'Material', 'Finish'],
-  paints: ['Volume', 'Finish', 'Colour', 'Coverage'],
-  electronics: ['Power', 'Warranty', 'Brand'],
-  other: ['Size', 'Material'],
+  'bath-kitchen': ['Size', 'Material', 'Finish', 'Brand'],
+  sanitary: ['Size', 'Colour', 'Material', 'Brand'],
 };
 
 function seed() {
@@ -37,9 +36,10 @@ function seed() {
     taxRules: [
       { id: 't1', department: 'plumbing', region: 'All', rate: 18 },
       { id: 't2', department: 'electrical', region: 'All', rate: 18 },
-      { id: 't3', department: 'agriculture', region: 'All', rate: 12 },
-      { id: 't4', department: 'paints', region: 'All', rate: 28 },
-      { id: 't5', department: 'hardware', region: 'All', rate: 18 },
+      { id: 't3', department: 'interior-designing', region: 'All', rate: 18 },
+      { id: 't4', department: 'hardware', region: 'All', rate: 18 },
+      { id: 't5', department: 'bath-kitchen', region: 'All', rate: 18 },
+      { id: 't6', department: 'sanitary', region: 'All', rate: 18 },
     ],
     shippingRules: [
       { id: 's1', retailerId: 'all', region: 'All', basis: 'price', min: 0, max: 0, fee: 49, freeAbove: 999 },
@@ -50,7 +50,7 @@ function seed() {
       { id: 'b2', eyebrow: 'This week', title: 'Up to 30% off fast-moving PVC fittings.', sub: 'Verified prices, GST invoice, same-day dispatch on stock.', cta: 'Shop the deals', to: '/deals', tone: 'forest', active: true },
       { id: 'b3', eyebrow: 'For retailers', title: 'Sell on Nivora. Get paid every week.', sub: 'List your counter in a day. Razorpay settles your share straight to your bank.', cta: 'Start selling', to: '/sell', tone: 'sand', active: true },
     ],
-    featured: ['plumbing', 'electrical', 'agriculture', 'hardware'],
+    featured: ['plumbing', 'electrical', 'interior-designing', 'hardware'],
     templates: [
       { key: 'order_placed', channel: 'email', subject: 'Your Nivora order {{orderId}} is confirmed', body: 'Hi {{name}}, thanks for your order of {{total}}. Each seller ships their part separately — track every part from Orders.' },
       { key: 'part_shipped', channel: 'sms', subject: '', body: 'Nivora: {{retailer}} has shipped part {{partId}} of order {{orderId}}. Track: {{link}}' },

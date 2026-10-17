@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Icon from '../components/Icon';
 import { Badge, Button, Container, Breadcrumbs, Field } from '../components/ui';
@@ -18,9 +18,13 @@ const PURPOSE = [
 
 export default function Enquiry() {
   const toast = useToast();
+  /* "Ask for a price" on a product without one links here with ?item=<SKU>. */
+  const [params] = useSearchParams();
+  const item = (params.get('item') || '').replace(/[^A-Za-z0-9-]/g, '').slice(0, 40);
   const [f, setF] = useState({
     name: '', company: '', phone: '', email: '',
-    purpose: 'bulk', category: '', qty: '', message: '',
+    purpose: item ? 'quote' : 'bulk', category: '', qty: '',
+    message: item ? `Please quote your price for item ${item}.` : '',
   });
   const [err, setErr] = useState('');
   const [sent, setSent] = useState(false);

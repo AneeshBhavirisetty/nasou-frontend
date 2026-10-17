@@ -23,3 +23,8 @@ export const cx = (...parts) => parts.filter(Boolean).join(' ');
 /* Mobile numbers: strip to digits, keep at most 10 (Indian mobile). */
 export const digits10 = (v) => String(v ?? '').replace(/\D/g, '').slice(0, 10);
 export const isMobile10 = (v) => /^\d{10}$/.test(String(v ?? '').replace(/\D/g, ''));
+
+/* No selling price yet (₹0 in the master sheet): shown as "Price on request",
+   not addable to the cart — the shopper asks for a quote instead. */
+export const onRequest = (product) => !(Number(product?.price) > 0);
+export const quoteLink = (product) => `/enquiry?item=${encodeURIComponent(product?.sku || product?.id || '')}`;

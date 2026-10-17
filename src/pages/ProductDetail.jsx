@@ -15,7 +15,7 @@ import { useAdminStore } from '../context/AdminStore';
 import { bulkOffersFor, describeBulk } from '../lib/pricing';
 import { useWishlist } from '../context/WishlistContext';
 import { useToast } from '../context/ToastContext';
-import { money, discount, deliveryBy, cx } from '../lib/format';
+import { money, discount, deliveryBy, cx, onRequest, quoteLink } from '../lib/format';
 import { usePointerTilt } from '../lib/motion';
 
 /* deterministic pseudo-reviews from the product's own numbers */
@@ -73,15 +73,22 @@ export default function ProductDetail() {
     navigate('/checkout');
   };
 
+  /* Master sheet products carry item type, subtypes, colour and unit; older
+     ones may not — empty rows are left out. */
   const specs = [
     ['Product code', product.sku],
+    ['Category', product.subcategoryName || categoryName(product.category)],
+    ['Item type', product.kind && product.kind !== product.art ? product.kind : null],
+    ['Type', product.form ? product.form.replace(/s$/, '') : null],
+    ['Variant', product.subtype],
     ['Material', product.material],
-    ['Type', product.form.replace(/s$/, '')],
     ['Size', product.size || 'Standard'],
-    ['Sold by', sellerName(product) || '—'],
+    ['Colour', product.color],
+    ['Sold in', product.unitMeasure],
+    ['Pack', product.unitPack],
     ['Brand', product.supplierName],
-    ['Category', categoryName(product.category)],
-  ];
+    ['Sold by', sellerName(product) || '—'],
+  ].filter(([, v]) => v != null && String(v).trim() !== '');
 
   return (
     <Container className="pb-12 pt-5">
@@ -198,7 +205,9 @@ export default function ProductDetail() {
             </div>
 
             <div className="mt-6 grid grid-cols-[1fr_auto] gap-3">
-              <Button onClick={addToCart} disabled={out} size="lg" variant="primary" icon="cart">Add to cart</Button>
+              {onRequest(product)
+                ? <Button to={quoteLink(product)} size="lg" variant="primary" icon="chat">Ask for a price</Button>
+                : <Button onClick={addToCart} disabled={out} size="lg" variant="primary" icon="cart">Add to cart</Button>}
               <button
                 onClick={() => wishlist.toggle(product.id)}
                 aria-pressed={saved}
@@ -210,7 +219,9 @@ export default function ProductDetail() {
                 <span className="hidden sm:inline">{saved ? 'Saved' : 'Wishlist'}</span>
               </button>
             </div>
-            <Button onClick={buyNow} disabled={out} size="lg" variant="mint" full className="mt-3" iconRight="arrowRight">Buy now</Button>
+            {onRequest(product)
+              ? <p className="mt-3 text-[12.5px] text-ink-50">No list price yet for this item — send an enquiry and we will quote you.</p>
+              : <Button onClick={buyNow} disabled={out} size="lg" variant="mint" full className="mt-3" iconRight="arrowRight">Buy now</Button>}
 
             {bulkOffers.length > 0 && (
               <div className="mt-6 rounded-[18px] border border-dashed border-forest/40 bg-emerald-50/60 p-4">

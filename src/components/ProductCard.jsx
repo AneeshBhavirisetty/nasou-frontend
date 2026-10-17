@@ -4,7 +4,7 @@ import Icon from './Icon';
 import ProductArt from './ProductArt';
 import { Rating } from './ui';
 import { categoryName, sellerName } from '../data/catalog';
-import { money, discount as pctOff, cx } from '../lib/format';
+import { money, discount as pctOff, cx, onRequest, quoteLink } from '../lib/format';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 
@@ -18,6 +18,7 @@ export default function ProductCard({ product, compact = false }) {
   const out = product.stock <= 0;
   const low = !out && product.stock <= 8;
   const off = pctOff(product.price, product.mrp);
+  const quote = onRequest(product);
   const to = `/product/${product.id}`;
   const badge = product.badges[0];
 
@@ -85,10 +86,12 @@ export default function ProductCard({ product, compact = false }) {
         <div className="mt-auto flex items-end justify-between gap-2 pt-3 sm:gap-3 sm:pt-4">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-x-2">
-              <p className="tnum text-base font-semibold text-ink sm:text-lg">{money(product.price)}</p>
-              {off > 0 && <span className="text-[12px] font-bold text-emerald-700">{off}% off</span>}
+              {quote
+                ? <p className="text-[14px] font-semibold text-forest sm:text-[15px]">Price on request</p>
+                : <p className="tnum text-base font-semibold text-ink sm:text-lg">{money(product.price)}</p>}
+              {!quote && off > 0 && <span className="text-[12px] font-bold text-emerald-700">{off}% off</span>}
             </div>
-            {off > 0
+            {!quote && off > 0
               ? <p className="tnum text-[12px] text-ink-35 line-through">{money(product.mrp)}</p>
               : <p className="truncate text-[12px] capitalize text-ink-50">by {product.supplierName}</p>}
             <p className={cx('mt-1 text-[11.5px] font-semibold', out ? 'text-ink-35' : low ? 'text-amber' : 'text-emerald-700')}>
@@ -100,6 +103,16 @@ export default function ProductCard({ product, compact = false }) {
               </p>
             )}
           </div>
+          {quote ? (
+            <Link
+              to={quoteLink(product)}
+              aria-label={`Ask for a price for ${product.name}`}
+              title="Ask for a price"
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-md border border-forest/30 bg-white text-forest transition hover:-translate-y-0.5 hover:border-forest sm:h-10 sm:w-10"
+            >
+              <Icon name="chat" size={16} />
+            </Link>
+          ) : (
           <button
             onClick={() => !out && add(product, { qty: 1 })}
             disabled={out}
@@ -113,6 +126,7 @@ export default function ProductCard({ product, compact = false }) {
           >
             <Icon name="plus" size={17} strokeWidth={2.2} />
           </button>
+          )}
         </div>
       </div>
     </motion.article>

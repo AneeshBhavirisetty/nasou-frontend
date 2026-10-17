@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import Icon from '../components/Icon';
 import BulkImportDialog from '../components/admin/BulkImportDialog';
+import MasterSheetImport from '../components/admin/MasterSheetImport';
 import { AdminPageHead, Kpi, Panel, ViewOnlyBanner, SELECT_CLS, LABEL_CLS } from '../components/admin/AdminUI';
 import { useIam } from '../context/IamStore';
 import { useAdminStore } from '../context/AdminStore';
@@ -41,6 +42,8 @@ export default function AdminCatalogImport() {
     <div className="space-y-5">
       <AdminPageHead title="Catalog import & export" note="Bring a retailer’s whole price list in from CSV or Excel, or take it out again." />
       {!canEdit && <ViewOnlyBanner what="catalogue imports" />}
+
+      <MasterSheetImport canEdit={canEdit} />
 
       <Panel>
         <div className="grid gap-4 sm:grid-cols-[1fr_auto] sm:items-end">

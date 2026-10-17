@@ -71,6 +71,7 @@ export default function Wishlist() {
   const total = shown.reduce((s, p) => s + p.price, 0);
 
   const moveToCart = (p) => {
+    if (!(Number(p.price) > 0)) return toast.error('No price yet — send an enquiry for a quote from the product page.');
     if (p.stock <= 0) return toast.error('Out of stock — we kept it in your wishlist.');
     add(p, { qty: 1 });
     toggle(p.id);

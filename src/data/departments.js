@@ -1,29 +1,26 @@
 /* ============================================================================
- * departments.js — the top level of the catalogue (client review 2, item 3).
+ * departments.js — the top level of the catalogue.
  *
  *   Department (fixed list below)  →  Sub-category (product.category slug)
  *
- * Every product carries `department` and `category`. The shipped catalogue is
- * all plumbing, so its seven generated categories (PVC fittings, cPVC pipes …)
- * are Plumbing's sub-categories. Other departments start empty; admins create
- * their sub-categories when they add the first product (ProductForm). A
- * product's SKU and department are locked once saved; the sub-category stays
- * editable.
+ * The departments are the six Categories of the client's master product sheet
+ * (October 2026 — see lib/masterSheet.js; nasou-api migration V9 has the same
+ * list). The sheet's Sub category is the sub-category. A product's SKU and
+ * department are locked once saved; the sub-category stays editable.
  * ==========================================================================*/
 
 export const DEPARTMENTS = [
-  { slug: 'plumbing', name: 'Plumbing', icon: 'droplet', blurb: 'PVC, uPVC and cPVC fittings, pipes and valves' },
-  { slug: 'electrical', name: 'Electrical', icon: 'bolt', blurb: 'Wiring, switches, protection and lighting' },
-  { slug: 'agriculture', name: 'Agriculture', icon: 'leaf', blurb: 'Irrigation, sprinklers, hoses and farm supplies' },
-  { slug: 'hardware', name: 'Hardware', icon: 'hammer', blurb: 'Fasteners, tools, locks and fixings' },
-  { slug: 'paints', name: 'Paints', icon: 'roller', blurb: 'Interior, exterior, primers and painting tools' },
-  { slug: 'electronics', name: 'Electronics', icon: 'cpu', blurb: 'Appliances, fans and electronic accessories' },
-  { slug: 'other', name: 'Other', icon: 'boxes', blurb: 'Everything else for the site' },
+  { slug: 'plumbing', name: 'Plumbing', icon: 'droplet', blurb: 'PVC, cPVC and uPVC pipes, fittings and valves' },
+  { slug: 'electrical', name: 'Electrical', icon: 'bolt', blurb: 'Wires, switches, sockets, protection and lighting' },
+  { slug: 'interior-designing', name: 'Interior Designing', icon: 'roller', blurb: 'Paints, home interior and decor improvement' },
+  { slug: 'hardware', name: 'Hardware', icon: 'hammer', blurb: 'Fasteners, tools and fabrication supplies' },
+  { slug: 'bath-kitchen', name: 'Bath & Kitchen Essentials', icon: 'sparkle', blurb: 'Taps, showers, sinks and kitchen fittings' },
+  { slug: 'sanitary', name: 'Sanitary', icon: 'layers', blurb: 'Closets, basins and sanitaryware' },
 ];
 
 export const DEFAULT_DEPARTMENT = 'plumbing';
 const _dept = new Map(DEPARTMENTS.map((d) => [d.slug, d]));
-export const departmentMeta = (slug) => _dept.get(slug) ?? _dept.get('other');
+export const departmentMeta = (slug) => _dept.get(slug) ?? _dept.get(DEFAULT_DEPARTMENT);
 
 /* Sub-category slug from a free-text name ("LED lights" → "led-lights"). */
 export const slugifyCategory = (name) =>
