@@ -54,11 +54,14 @@ test('settlement: sales − commission − fee − refunds ± adjustments', () =
   assert.deepEqual(partMoney(4000, 10), { commission: 400, retailerShare: 3600 });
 });
 
-test('access matrix matches section 4 of the brief', () => {
+test('access matrix: the final roles (Owner, Operations, Management)', () => {
   const p = defaultPresets();
+  assert.deepEqual(Object.keys(p), ['owner', 'operations', 'management']);
   assert.equal(p.operations.retailerStatus, 'request');
-  assert.equal(p.support.refunds, 'start');
-  assert.equal(p.finance.refunds, 'approve');
+  // Operations took over support and finance work
+  assert.equal(p.operations.refunds, 'approve');
+  assert.equal(p.operations.payouts, 'edit');
+  assert.equal(p.operations.customers, 'edit');
   assert.equal(p.management.audit, 'view');
   assert.equal(p.operations.team, 'none');
   assert.ok(allows('approve', 'approve') && !allows('start', 'approve') && allows('approve', 'start'));

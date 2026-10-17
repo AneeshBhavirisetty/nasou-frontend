@@ -28,8 +28,8 @@ function seed() {
   return [
     acc({ id: 'u_owner', fullName: 'Priya Sharma', email: 'owner@nivora.test', phone: '9000000009', role: 'ADMIN', teamRole: 'owner', title: 'Founder & IAM admin', aliases: ['admin@nasou.test'], createdAt: Date.now() - 300 * DAY }),
     acc({ id: 'u_ops', fullName: 'Imran Sheikh', email: 'ops@nivora.test', phone: '9000000002', role: 'ADMIN', teamRole: 'operations', title: 'Operations lead' }),
-    acc({ id: 'u_support', fullName: 'Sana Fatima', email: 'support@nivora.test', phone: '9000000003', role: 'ADMIN', teamRole: 'support', title: 'Customer support' }),
-    acc({ id: 'u_finance', fullName: 'Vikram Das', email: 'finance@nivora.test', phone: '9000000004', role: 'ADMIN', teamRole: 'finance', title: 'Finance & settlements' }),
+    acc({ id: 'u_support', fullName: 'Sana Fatima', email: 'support@nivora.test', phone: '9000000003', role: 'ADMIN', teamRole: 'operations', title: 'Customer support' }),
+    acc({ id: 'u_finance', fullName: 'Vikram Das', email: 'finance@nivora.test', phone: '9000000004', role: 'ADMIN', teamRole: 'operations', title: 'Finance & settlements' }),
     acc({ id: 'u_mgmt', fullName: 'Anita Rao', email: 'management@nivora.test', phone: '9000000005', role: 'ADMIN', teamRole: 'management', title: 'Head of business' }),
     acc({ id: 'u_r1', fullName: 'Ravi Teja', email: 'retailer@nivora.test', phone: '9000000101', role: 'RETAILER', retailerId: 'r1', staffRole: 'owner' }),
     acc({ id: 'u_r1staff', fullName: 'Kiran Goud', email: 'staff@nivora.test', phone: '9000000111', role: 'RETAILER', retailerId: 'r1', staffRole: 'fulfilment' }),

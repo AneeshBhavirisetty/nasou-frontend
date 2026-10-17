@@ -113,8 +113,6 @@ export async function fileUrl(path) {
 export const DEMO_ACCOUNTS = [
   { group: 'Super Admin (Nasou Hive team)', email: 'owner@nivora.test', label: 'Owner · IAM admin' },
   { group: 'Super Admin (Nasou Hive team)', email: 'ops@nivora.test', label: 'Operations' },
-  { group: 'Super Admin (Nasou Hive team)', email: 'support@nivora.test', label: 'Support' },
-  { group: 'Super Admin (Nasou Hive team)', email: 'finance@nivora.test', label: 'Finance' },
   { group: 'Super Admin (Nasou Hive team)', email: 'management@nivora.test', label: 'Management' },
   { group: 'Retailers', email: 'retailer@nivora.test', label: 'Sri Sai Pipes · owner' },
   { group: 'Retailers', email: 'staff@nivora.test', label: 'Sri Sai Pipes · fulfilment staff' },

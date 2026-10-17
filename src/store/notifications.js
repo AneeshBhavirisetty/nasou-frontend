@@ -7,7 +7,7 @@ import { post, refresh } from '../lib/live';
  *
  * `userId` is the audience. It is either one account id, or a group:
  *   role:ADMIN      every Nasou Hive team member
- *   team:finance    team members with that role preset
+ *   team:operations team members with that role preset
  *   retailer:r1     everyone working for that retailer
  * Read / cleared state is kept per person, so a group notice stays unread
  * for colleagues who have not opened it. Newest 300 kept until a

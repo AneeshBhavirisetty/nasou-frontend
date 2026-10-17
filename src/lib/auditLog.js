@@ -35,9 +35,9 @@ function seed() {
   const m = 60000;
   const rows = [
     [now - 9 * 24 * 60 * m, 'Priya Sharma', 'owner', 'retailer.approve', 'retailer', 'r3', 'Approved Krishna Agro & Plumbing', { status: 'pending' }, { status: 'approved' }],
-    [now - 6 * 24 * 60 * m, 'Priya Sharma', 'owner', 'permission.change', 'role', 'support', 'Support can now start refunds', { refunds: 'view' }, { refunds: 'start' }],
+    [now - 6 * 24 * 60 * m, 'Priya Sharma', 'owner', 'permission.change', 'role', 'operations', 'Operations can now approve refunds', { refunds: 'start' }, { refunds: 'approve' }],
     [now - 4 * 24 * 60 * m, 'Priya Sharma', 'owner', 'retailer.request_changes', 'retailer', 'r5', 'Asked Coastal Paints & Tools for a clearer bank proof', { status: 'pending' }, { status: 'needs_changes' }],
-    [now - 2 * 24 * 60 * m, 'Vikram Das', 'finance', 'payout.mark_paid', 'payout', 'r1', 'Payout to Sri Sai Pipes & Sanitary marked paid', { status: 'approved' }, { status: 'paid' }],
+    [now - 2 * 24 * 60 * m, 'Vikram Das', 'operations', 'payout.mark_paid', 'payout', 'r1', 'Payout to Sri Sai Pipes & Sanitary marked paid', { status: 'approved' }, { status: 'paid' }],
     [now - 26 * 60 * m, 'Imran Sheikh', 'operations', 'auth.login', 'session', 'ops', 'Signed in with two-factor code', null, null],
     [now - 20 * 60 * m, 'Imran Sheikh', 'operations', 'export.csv', 'orders', null, 'Exported 26 orders to CSV', null, null],
   ];

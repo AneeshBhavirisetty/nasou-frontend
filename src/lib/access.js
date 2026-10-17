@@ -6,13 +6,14 @@
  *   RETAILER  an onboarded retailer (or one of their staff), using /seller
  *   CUSTOMER  a buyer
  *
- * Team members carry one of five role presets. Levels per module:
+ * Team members carry one of three role presets — Owner, Operations (which
+ * also covers support and finance work) and Management. Levels per module:
  *   none · view · request · start · approve · edit
  * "request" (Operations on retailer suspend/delete) files a request the Owner
- * approves; "start" (Support on refunds) opens a refund that Finance must
- * "approve". Presets are editable by the Owner in Team & access › Roles, so
- * no code change is needed. The server must check the same matrix on every
- * action — this file is the UI half of that contract.
+ * approves; "start" opens a refund and "approve" passes it. Presets are
+ * editable by the Owner in Team & access › Roles, so no code change is
+ * needed. The server must check the same matrix on every action (migration
+ * V8 in nasou-api) — this file is the UI half of that contract.
  * ==========================================================================*/
 
 export const ADMIN_MODULES = [
@@ -39,29 +40,28 @@ export const LEVEL_OPTIONS = {
 };
 export const levelOptions = (module) => LEVEL_OPTIONS[module] || ['none', 'view', 'edit'];
 
-const row = (owner, operations, support, finance, management) => ({ owner, operations, support, finance, management });
+const row = (owner, operations, management) => ({ owner, operations, management });
 
-/* Section 4 of the requirements, verbatim. */
+/* Final roles (October 2026): Support and Finance were folded into
+   Operations, which holds the higher level of the three on every module. */
 const MATRIX = {
-  retailers: row('edit', 'edit', 'view', 'view', 'view'),
-  retailerStatus: row('edit', 'request', 'none', 'none', 'none'),
-  customers: row('edit', 'view', 'edit', 'view', 'view'),
-  orders: row('edit', 'edit', 'edit', 'view', 'view'),
-  catalog: row('edit', 'edit', 'view', 'none', 'view'),
-  commission: row('edit', 'view', 'none', 'edit', 'view'),
-  payouts: row('edit', 'none', 'none', 'edit', 'view'),
-  refunds: row('edit', 'none', 'start', 'approve', 'view'),
-  dashboards: row('view', 'view', 'view', 'view', 'view'),
-  audit: row('view', 'none', 'none', 'view', 'view'),
-  content: row('edit', 'edit', 'none', 'none', 'none'),
-  team: row('edit', 'none', 'none', 'none', 'none'),
+  retailers: row('edit', 'edit', 'view'),
+  retailerStatus: row('edit', 'request', 'none'),
+  customers: row('edit', 'edit', 'view'),
+  orders: row('edit', 'edit', 'view'),
+  catalog: row('edit', 'edit', 'view'),
+  commission: row('edit', 'edit', 'view'),
+  payouts: row('edit', 'edit', 'view'),
+  refunds: row('edit', 'approve', 'view'),
+  dashboards: row('view', 'view', 'view'),
+  audit: row('view', 'view', 'view'),
+  content: row('edit', 'edit', 'none'),
+  team: row('edit', 'none', 'none'),
 };
 
 export const TEAM_ROLES = [
   { key: 'owner', label: 'Owner', blurb: 'IAM admin — full control. There is exactly one.' },
-  { key: 'operations', label: 'Operations', blurb: 'Retailers, orders, catalog and content' },
-  { key: 'support', label: 'Support', blurb: 'Customers and orders; can start refunds' },
-  { key: 'finance', label: 'Finance', blurb: 'Commission, payouts, refund approval, audit' },
+  { key: 'operations', label: 'Operations', blurb: 'Retailers, customers, orders, catalog, content, commission, payouts and refunds' },
   { key: 'management', label: 'Management', blurb: 'Read-only view across the business' },
 ];
 export const teamRoleLabel = (k) => TEAM_ROLES.find((r) => r.key === k)?.label || 'Team member';

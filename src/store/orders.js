@@ -298,7 +298,7 @@ export function createRefund({ orderId, partId, amount, reason, by, system = fal
   refundsStore.set((l) => [r, ...l]);
   if (!system) {
     audit({ action: 'refund.start', entity: 'refund', entityId: r.id, summary: `${by} started a ₹${amt.toLocaleString('en-IN')} refund on ${partId}: ${reason}` });
-    if (!autoApprove) notify({ userId: 'team:finance', icon: 'rupee', title: 'Refund waiting for approval', body: `${partId} · ₹${amt.toLocaleString('en-IN')} · ${reason}`, to: '/admin/refunds' });
+    if (!autoApprove) notify({ userId: 'team:operations', icon: 'rupee', title: 'Refund waiting for approval', body: `${partId} · ₹${amt.toLocaleString('en-IN')} · ${reason}`, to: '/admin/refunds' });
   }
   return r;
 }
