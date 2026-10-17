@@ -46,10 +46,13 @@ const withOwnership = generated.products.map((p) => ({
 }));
 
 /* Rows added before departments / retailers existed get defaults. */
+/* The browser demo spreads its bundled products over the demo retailers. From
+   the API, no retailer means the store's own catalogue — it must stay empty,
+   or isListed() looks for a demo retailer that does not exist and hides it. */
 const withDefaults = (p) => ({
   ...p,
   department: p.department || DEFAULT_DEPARTMENT,
-  retailerId: p.retailerId || retailerForRow(p.row || 0),
+  retailerId: p.retailerId || (LIVE ? null : retailerForRow(p.row || 0)),
 });
 
 /* The as-shipped catalogue, before admin edits — AdminStore builds its patch on this. */
