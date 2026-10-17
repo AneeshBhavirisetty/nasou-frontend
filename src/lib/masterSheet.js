@@ -85,7 +85,7 @@ export function summarise(rows) {
    transaction, and stays well inside the gateway timeout). `post(path, body)`
    is the caller's API helper. Returns the combined report. */
 export async function sendMasterRows(rows, { post, dryRun = false, defaultStock = 100, batch = 500, onProgress } = {}) {
-  const total = { dryRun, rows: 0, created: 0, updated: 0, skipped: 0, priceOnRequest: 0, withImage: 0, lines: [] };
+  const total = { dryRun, rows: 0, created: 0, updated: 0, unchanged: 0, skipped: 0, priceOnRequest: 0, withImage: 0, lines: [] };
   for (let from = 0; from < rows.length; from += batch) {
     const part = rows.slice(from, from + batch).map(({ sheet, ...r }) => r);
     /* A dropped connection (a small App Service plan restarting, a flaky
@@ -101,7 +101,7 @@ export async function sendMasterRows(rows, { post, dryRun = false, defaultStock 
         await new Promise((r) => setTimeout(r, 15000 * attempt));
       }
     }
-    for (const k of ['rows', 'created', 'updated', 'skipped', 'priceOnRequest', 'withImage']) total[k] += rep[k] || 0;
+    for (const k of ['rows', 'created', 'updated', 'unchanged', 'skipped', 'priceOnRequest', 'withImage']) total[k] += rep[k] || 0;
     total.lines.push(...(rep.lines || []).filter((l) => l.errors?.length || l.notes?.length));
     onProgress?.(Math.min(from + batch, rows.length), rows.length);
   }

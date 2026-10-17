@@ -73,6 +73,8 @@ export default function ProductDetail() {
     navigate('/checkout');
   };
 
+  /* Sale and pack units are codes (nasou-api V10); shown in words. */
+  const UNIT_LABEL = { piece: 'Piece', meter: 'Meter', number: 'Number', bag: 'Bags', box: 'Boxes', bundle: 'Bundles', coil: 'Coils', 'coil-or-box': 'Coils or boxes' };
   /* Master sheet products carry item type, subtypes, colour and unit; older
      ones may not — empty rows are left out. */
   const specs = [
@@ -80,12 +82,12 @@ export default function ProductDetail() {
     ['Category', product.subcategoryName || categoryName(product.category)],
     ['Item type', product.kind && product.kind !== product.art ? product.kind : null],
     ['Type', product.form ? product.form.replace(/s$/, '') : null],
-    ['Variant', product.subtype],
+    ['Variant', product.itemSubtype2],
     ['Material', product.material],
     ['Size', product.size || 'Standard'],
     ['Colour', product.color],
-    ['Sold in', product.unitMeasure],
-    ['Pack', product.unitPack],
+    ['Price per', UNIT_LABEL[product.saleUnit] || product.saleUnit],
+    ['Packed in', UNIT_LABEL[product.packUnit] || product.packUnit],
     ['Brand', product.supplierName],
     ['Sold by', sellerName(product) || '—'],
   ].filter(([, v]) => v != null && String(v).trim() !== '');

@@ -42,7 +42,8 @@ if (imagesArg) {
   for (const r of sheet.rows) {
     if (!r.imageUrl) continue;            // the sheet gives this row no photo
     const url = photoFor(r, index);
-    if (url) { r.imageUrl = url; matched++; } else missing.add(`${r.category} / ${r.subCategory} / ${r.itemName}`);
+    // the sheet's own link is kept as the photo's source (nasou-api media_files.source_url)
+    if (url) { if (r.imageUrl.toLowerCase().startsWith('https://')) r.imageSource = r.imageUrl; r.imageUrl = url; matched++; } else missing.add(`${r.category} / ${r.subCategory} / ${r.itemName}`);
   }
   console.log(`Photos: ${matched} rows matched` + (missing.size ? ` · no photo found for ${[...missing].join('; ')}` : ''));
 }
@@ -88,7 +89,7 @@ const report = await sendMasterRows(sheet.rows, {
   onProgress: (done, all) => process.stdout.write(`\r  ${flag('dry-run') ? 'checked' : 'imported'} ${done}/${all}`),
 });
 console.log(`\n${report.dryRun ? 'Dry run' : 'Imported'} in ${Math.round((Date.now() - started) / 1000)} s: `
-  + `created ${report.created} · updated ${report.updated} · skipped ${report.skipped} · `
+  + `created ${report.created} · updated ${report.updated} · unchanged ${report.unchanged} · skipped ${report.skipped} · `
   + `price on request ${report.priceOnRequest} · with photo ${report.withImage}`);
 
 const errors = report.lines.filter((l) => l.errors.length);

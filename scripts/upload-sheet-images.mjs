@@ -7,7 +7,9 @@
 //     -s <container> -d C:\nvimg --pattern "Nivora Products/*"
 // (use a short folder — the paths are long). Then:
 //   npm i --no-save sharp            (or SHARP=<path to a sharp install>)
-//   API_URL=… EMAIL=… PASSWORD=… node scripts/upload-sheet-images.mjs C:\nvimg [map.json]
+//   API_URL=… EMAIL=… PASSWORD=… SOURCE_BASE=https://<account>.blob.core.windows.net/<container>/ \
+//     node scripts/upload-sheet-images.mjs C:\nvimg [map.json]
+// SOURCE_BASE (optional) keeps each photo's original address on its media file.
 //
 // Each photo becomes a WebP of at most 1000 px on the long side (a few dozen
 // KB instead of ~600 KB). Re-running skips photos already in the map, so an
@@ -62,6 +64,9 @@ for (const f of files) {
       .webp({ quality: 80 }).toBuffer();
     const form = new FormData();
     form.append('file', new Blob([webp], { type: 'image/webp' }), path.basename(f).replace(/\.[^.]+$/, '.webp'));
+    if (process.env.SOURCE_BASE) {
+      form.append('source', process.env.SOURCE_BASE.replace(/\/?$/, '/') + key.split('/').map(encodeURIComponent).join('/'));
+    }
     const media = await call('/admin/media', { method: 'POST', headers: { Authorization: `Bearer ${session.accessToken}` }, body: form });
     map[key] = media.url;
     before += original.length; after += webp.length;

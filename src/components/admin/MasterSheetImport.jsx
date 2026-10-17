@@ -115,7 +115,7 @@ export default function MasterSheetImport({ canEdit }) {
         {report && (
           <div className="space-y-2 rounded-[18px] border border-line bg-sunk/40 p-3 text-[13px]">
             <p className="font-bold text-forest">
-              {report.dryRun ? 'Check: ' : 'Done: '}{fmt(report.created)} new · {fmt(report.updated)} updated · {fmt(report.skipped)} skipped · {fmt(report.priceOnRequest)} price on request · {fmt(report.withImage)} with a photo
+              {report.dryRun ? 'Check: ' : 'Done: '}{fmt(report.created)} new · {fmt(report.updated)} updated · {fmt(report.unchanged)} unchanged · {fmt(report.skipped)} skipped · {fmt(report.priceOnRequest)} price on request · {fmt(report.withImage)} with a photo
               {report.retire && ` · ${report.retire.dryRun ? 'would remove' : 'removed'} ${fmt(report.retire.retired)} not in the sheet`}
             </p>
             {problems.length > 0 && (
