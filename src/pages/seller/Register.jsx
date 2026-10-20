@@ -19,7 +19,8 @@ import { OUTSIDE_AREA, SERVICE_AREA, inServiceArea } from '../../lib/geo';
    Spam protection: a hidden honeypot field, a minimum fill time and a small
    arithmetic check — the API adds rate limiting and a captcha provider. */
 
-const STEPS = ['Account', 'Business', 'Tax', 'Bank', 'Documents'];
+const STEPS = ['Account', 'Business', 'GST & PAN', 'Bank', 'Submit'];
+const docType = (key) => DOC_TYPES.find((d) => d.key === key);
 const GSTIN = /^\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/;
 const PAN = /^[A-Z]{5}\d{4}[A-Z]$/;
 const IFSC = /^[A-Z]{4}0[A-Z0-9]{6}$/;
@@ -66,16 +67,17 @@ export default function SellerRegister() {
       if (!GSTIN.test(f.gstin)) return 'That GSTIN does not look right — it has 15 characters, e.g. 36AAPFS1234K1Z2.';
       if (!PAN.test(f.pan)) return 'That PAN does not look right, e.g. AAPFS1234K.';
       if (f.gstin.slice(2, 12) !== f.pan) return 'The PAN should match characters 3–12 of the GSTIN.';
+      if (!docs.gst) return 'Upload your GST certificate.';
+      if (!docs.pan) return 'Upload your PAN card.';
     }
     if (step === 3) {
       if (f.holder.trim().length < 3) return 'Enter the account holder name.';
       if (!/^\d{9,18}$/.test(f.account)) return 'Account number should be 9–18 digits.';
       if (f.account !== f.account2) return 'The two account numbers do not match.';
       if (!IFSC.test(f.ifsc)) return 'That IFSC does not look right, e.g. HDFC0001234.';
+      if (!docs.bank) return 'Upload a cancelled cheque for this account.';
     }
     if (step === 4) {
-      const missing = DOC_TYPES.filter((d) => !docs[d.key]);
-      if (missing.length) return `Upload: ${missing.map((d) => d.label).join(', ')}.`;
       if (Number(f.answer) !== challenge.a + challenge.b) return 'Check the sum in the last box.';
       if (!f.agree) return 'Please accept the seller terms.';
       if (f.website) return 'Something went wrong. Please try again.'; // honeypot filled — a bot
@@ -93,7 +95,7 @@ export default function SellerRegister() {
     setBusy(true);
     try {
       if (LIVE) {
-        /* one multipart request: the application, the four documents and the
+        /* one multipart request: the application, its documents and the
            owner's login — the server creates them together and signs in */
         const form = new FormData();
         const fields = {
@@ -103,7 +105,7 @@ export default function SellerRegister() {
           bankIfsc: f.ifsc, website: f.website, startedAt: String(started.current),
         };
         Object.entries(fields).forEach(([k, v]) => form.append(k, v));
-        DOC_TYPES.forEach((d) => form.append(d.key, docs[d.key].file, docs[d.key].name));
+        DOC_TYPES.filter((d) => docs[d.key]).forEach((d) => form.append(d.key, docs[d.key].file, docs[d.key].name));
         signInAccount(await post('/sellers/apply', form));
         toast.success('Application submitted — we will review it shortly');
         navigate('/seller', { replace: true });
@@ -113,7 +115,7 @@ export default function SellerRegister() {
         name: f.name.trim(), legalName: f.legalName.trim(), type: f.type, contact: f.contact.trim(), email: f.email.trim().toLowerCase(), phone: f.phone,
         address: f.address.trim(), city: f.city.trim(), state: f.state, pin: f.pin, categories: f.categories.map((c) => DEPARTMENTS.find((d) => d.slug === c)?.name),
         gstin: f.gstin, pan: f.pan, bank: { holder: f.holder.trim(), account: f.account, ifsc: f.ifsc },
-        documents: DOC_TYPES.map((d) => docs[d.key]),
+        documents: DOC_TYPES.map((d) => docs[d.key]).filter(Boolean),
       });
       const a = await createAccount({ fullName: f.contact.trim(), email: f.email, phone: f.phone, role: 'RETAILER', retailerId: r.id, staffRole: 'owner' }, { password: f.password });
       signInAccount(a);
@@ -133,6 +135,22 @@ export default function SellerRegister() {
     } catch (x) {
       toast.error(x.message);
     }
+  };
+
+  const upload = (key, className = '') => {
+    const d = docType(key);
+    const doc = docs[key];
+    return (
+      <label className={cx('flex cursor-pointer items-start gap-3 rounded-[18px] border-2 border-dashed p-4 transition', doc ? 'border-emerald/40 bg-emerald-50/40' : 'border-line hover:border-forest/40', className)}>
+        <span className={cx('grid h-10 w-10 shrink-0 place-items-center rounded-[12px]', doc ? 'bg-forest text-white' : 'bg-sunk text-forest')}><Icon name={doc ? 'check' : 'upload'} size={17} /></span>
+        <span className="min-w-0">
+          <span className="block text-[14px] font-bold text-ink">{d.label}{!d.required && <span className="font-medium text-ink-50"> (optional)</span>}</span>
+          <span className="block truncate text-[12px] text-ink-50">{doc ? `${doc.name} · ${Math.round(doc.size / 1024)} KB` : d.hint}</span>
+          <span className="mt-1 block text-[11.5px] font-bold text-forest">{doc ? 'Replace' : 'Choose file'} · PDF / JPG / PNG, max 5 MB</span>
+        </span>
+        <input type="file" accept=".pdf,image/png,image/jpeg,image/webp" className="sr-only" onChange={(e) => attach(key, e.target.files?.[0])} />
+      </label>
+    );
   };
 
   return (
@@ -187,7 +205,9 @@ export default function SellerRegister() {
             {step === 2 && (
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field label="GSTIN" value={f.gstin} onChange={up('gstin')} maxLength={15} placeholder="36AAPFS1234K1Z2" hint="15 characters" />
+                {upload('gst')}
                 <Field label="PAN" value={f.pan} onChange={up('pan')} maxLength={10} placeholder="AAPFS1234K" hint="Business or proprietor PAN" />
+                {upload('pan')}
                 <p className="rounded-[14px] bg-[#f6f3ed] p-3 text-[12.5px] text-ink-70 sm:col-span-2">Nivora collects GST on your behalf as a marketplace and issues tax invoices in your store’s name. Your GSTIN appears on every invoice.</p>
               </div>
             )}
@@ -197,29 +217,13 @@ export default function SellerRegister() {
                 <Field label="Account number" inputMode="numeric" value={f.account} onChange={(e) => setF((s) => ({ ...s, account: e.target.value.replace(/\D/g, '').slice(0, 18) }))} />
                 <Field label="Re-enter account number" inputMode="numeric" value={f.account2} onChange={(e) => setF((s) => ({ ...s, account2: e.target.value.replace(/\D/g, '').slice(0, 18) }))} />
                 <Field label="IFSC" value={f.ifsc} onChange={up('ifsc')} maxLength={11} placeholder="HDFC0001234" />
-                <p className="self-end rounded-[14px] bg-[#f6f3ed] p-3 text-[12.5px] text-ink-70">Razorpay pays your share here every week once you are approved.</p>
+                <p className="self-end rounded-[14px] bg-[#f6f3ed] p-3 text-[12.5px] text-ink-70">Your payouts are sent here every week once you are approved.</p>
+                {upload('bank', 'sm:col-span-2')}
               </div>
             )}
             {step === 4 && (
               <div className="space-y-4">
-                <ul className="grid gap-3 sm:grid-cols-2">
-                  {DOC_TYPES.map((d) => {
-                    const doc = docs[d.key];
-                    return (
-                      <li key={d.key}>
-                        <label className={cx('flex h-full cursor-pointer items-start gap-3 rounded-[18px] border-2 border-dashed p-4 transition', doc ? 'border-emerald/40 bg-emerald-50/40' : 'border-line hover:border-forest/40')}>
-                          <span className={cx('grid h-10 w-10 shrink-0 place-items-center rounded-[12px]', doc ? 'bg-forest text-white' : 'bg-sunk text-forest')}><Icon name={doc ? 'check' : 'upload'} size={17} /></span>
-                          <span className="min-w-0">
-                            <span className="block text-[14px] font-bold text-ink">{d.label}</span>
-                            <span className="block truncate text-[12px] text-ink-50">{doc ? `${doc.name} · ${Math.round(doc.size / 1024)} KB` : d.hint}</span>
-                            <span className="mt-1 block text-[11.5px] font-bold text-forest">{doc ? 'Replace' : 'Choose file'} · PDF / JPG / PNG, max 5 MB</span>
-                          </span>
-                          <input type="file" accept=".pdf,image/png,image/jpeg,image/webp" className="sr-only" onChange={(e) => attach(d.key, e.target.files?.[0])} />
-                        </label>
-                      </li>
-                    );
-                  })}
-                </ul>
+                {upload('business')}
                 <div className="grid gap-4 sm:grid-cols-[200px_1fr] sm:items-end">
                   <Field label={`What is ${challenge.a} + ${challenge.b}?`} inputMode="numeric" value={f.answer} onChange={(e) => setF((s) => ({ ...s, answer: e.target.value.replace(/\D/g, '').slice(0, 2) }))} hint="Helps us keep bots out" />
                   <label className="flex items-start gap-2.5 text-[13px] text-ink-70"><input type="checkbox" checked={f.agree} onChange={(e) => setF((s) => ({ ...s, agree: e.target.checked }))} className="mt-0.5 accent-[#095143]" /> I confirm these details are correct and accept the Nivora seller terms and commission schedule.</label>

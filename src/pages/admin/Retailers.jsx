@@ -25,7 +25,6 @@ export default function AdminRetailers() {
   const retailers = useRetailers();
   const { products } = useAdminStore();
   const orders = useOrders();
-  const plans = useSettings((s) => s.plans);
   const commissionDefault = useSettings((s) => s.commission.default);
   const { can } = useIam();
   const [messaging, setMessaging] = useState(null);
@@ -46,9 +45,8 @@ export default function AdminRetailers() {
       orders: parts.get(r.id) || 0,
       sales: sales.get(r.id) || 0,
       rate: r.commission?.rate ?? commissionDefault,
-      planName: plans.find((p) => p.id === r.plan)?.name || r.plan,
     }));
-  }, [retailers, products, orders, plans, commissionDefault]);
+  }, [retailers, products, orders, commissionDefault]);
 
   const live = rows.filter((r) => r.status === 'approved');
   const queue = rows.filter((r) => r.status === 'pending' || r.status === 'needs_changes').length;
@@ -64,7 +62,6 @@ export default function AdminRetailers() {
       </span>
     ) },
     { key: 'status', label: 'Status', render: (r) => <StatusPill status={r.status} /> },
-    { key: 'planName', label: 'Plan' },
     { key: 'rate', label: 'Commission', align: 'right', render: (r) => `${r.rate}%` },
     { key: 'products', label: 'Products', align: 'right' },
     { key: 'orders', label: 'Sub-orders', align: 'right' },
@@ -109,7 +106,6 @@ export default function AdminRetailers() {
         searchPlaceholder="Search name, city, GSTIN, contact"
         filters={[
           { key: 'status', label: 'Status', options: Object.entries(RETAILER_STATUS).map(([value, v]) => ({ value, label: v.label })), test: (r, v) => r.status === v },
-          { key: 'plan', label: 'Plan', options: plans.map((p) => ({ value: p.id, label: p.name })), test: (r, v) => r.plan === v },
           { key: 'state', label: 'State', options: [...new Set(rows.map((r) => r.state))].map((s) => ({ value: s, label: s })), test: (r, v) => r.state === v },
         ]}
         date={(r) => r.joinedAt}

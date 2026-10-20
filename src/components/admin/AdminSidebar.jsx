@@ -12,30 +12,35 @@ import { cx } from '../../lib/format';
 /* Super Admin navigation: a grouped full-height sidebar on desktop, a bottom
    bar with a "More" sheet on phones. `module` ties each entry to the access
    matrix (lib/access.js); an array means "any of these". Hidden entries only
-   name detail pages for the header title and the access check. */
+   name detail pages for the header title and the access check.
+   `off: true` switches a page off (client decision, Oct 2026): it leaves the
+   menu and its route goes to the dashboard. Delete the flag to bring it back. */
 
 export const ADMIN_NAV = [
   { group: 'Overview', to: '/admin/dashboard', label: 'Dashboard', short: 'Home', icon: 'gauge', module: 'dashboards' },
   { group: 'Marketplace', to: '/admin/retailers', label: 'Retailers', short: 'Retailers', icon: 'store', module: 'retailers' },
   { group: 'Marketplace', to: '/admin/approvals', label: 'Approvals', short: 'Approvals', icon: 'shieldCheck', module: ['retailers', 'retailerStatus'], badge: 'approvals' },
-  { group: 'Marketplace', to: '/admin/commission', label: 'Commission & plans', short: 'Commission', icon: 'percent', module: 'commission' },
+  { group: 'Marketplace', to: '/admin/commission', label: 'Commission', short: 'Commission', icon: 'percent', module: 'commission' },
   { group: 'Commerce', to: '/admin/orders', label: 'Orders', short: 'Orders', icon: 'truck', module: 'orders' },
   { group: 'Commerce', to: '/admin/refunds', label: 'Refunds', short: 'Refunds', icon: 'refresh', module: 'refunds', badge: 'refunds' },
   { group: 'Commerce', to: '/admin/products', label: 'Products', short: 'Products', icon: 'package', module: 'catalog' },
-  { group: 'Commerce', to: '/admin/catalog', label: 'Master catalog', short: 'Catalog', icon: 'layers', module: 'catalog', exact: true },
+  { group: 'Commerce', to: '/admin/catalog', label: 'Master catalog', short: 'Catalog', icon: 'layers', module: 'catalog', exact: true, off: true },
   { group: 'Commerce', to: '/admin/discounts', label: 'Discounts', short: 'Discounts', icon: 'tag', module: 'catalog' },
   { group: 'Finance', to: '/admin/payouts', label: 'Payouts', short: 'Payouts', icon: 'rupee', module: 'payouts' },
   { group: 'Finance', to: '/admin/reconciliation', label: 'Reconciliation', short: 'Recon', icon: 'check', module: 'payouts' },
   { group: 'Finance', to: '/admin/billing', label: 'Billing & payments', short: 'Billing', icon: 'card', module: 'payouts' },
   { group: 'Finance', to: '/admin/reports', label: 'Reports & analytics', short: 'Reports', icon: 'barChart', module: 'dashboards' },
   { group: 'People & settings', to: '/admin/users', label: 'Team & customers', short: 'Users', icon: 'users', module: ['team', 'customers'] },
-  { group: 'People & settings', to: '/admin/audit', label: 'Audit log', short: 'Audit', icon: 'fileText', module: 'audit' },
-  { group: 'People & settings', to: '/admin/settings', label: 'Content & settings', short: 'Settings', icon: 'wrench', module: 'content' },
+  { group: 'People & settings', to: '/admin/audit', label: 'Audit log', short: 'Audit', icon: 'fileText', module: 'audit', off: true },
+  { group: 'People & settings', to: '/admin/settings', label: 'Content & settings', short: 'Settings', icon: 'wrench', module: 'content', off: true },
   { group: 'People & settings', to: '/admin/catalog/import', label: 'Catalog import / export', short: 'Import', icon: 'upload', module: 'catalog' },
   { to: '/admin/customers', label: 'Customer', icon: 'user', module: 'customers', hidden: true },
 ];
 
 const allowed = (can, m) => (Array.isArray(m) ? m.some((x) => can(x)) : can(m));
+
+/* is this admin page switched on? (see `off` above) */
+export const pageOn = (to) => !ADMIN_NAV.some((n) => n.to === to && n.off);
 
 /* the nav entry for a path — the longest matching prefix wins */
 export function navFor(pathname) {
@@ -46,7 +51,7 @@ export const navAllowed = (can, n) => !n || allowed(can, n.module);
 /* entries the signed-in person may open */
 export function useAdminNav() {
   const { can } = useIam();
-  return ADMIN_NAV.filter((n) => !n.hidden && allowed(can, n.module));
+  return ADMIN_NAV.filter((n) => !n.hidden && !n.off && allowed(can, n.module));
 }
 
 /* counts that want attention */

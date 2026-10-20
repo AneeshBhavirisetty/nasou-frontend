@@ -1,14 +1,12 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import Icon from '../../components/Icon';
 import { AdminPageHead, Panel, LABEL_CLS, SELECT_CLS } from '../../components/admin/AdminUI';
 import { Button } from '../../components/ui';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { proposeChanges, updateRetailer } from '../../store/retailers';
-import { useSettings } from '../../store/settings';
 import { useSeller } from '../../layouts/SellerLayout';
-import { money, cx } from '../../lib/format';
+import { money } from '../../lib/format';
 import { act } from '../../lib/act';
 
 /* Store profile (requirement 14). Contact details change straight away;
@@ -23,7 +21,6 @@ export default function SellerProfile() {
   const toast = useToast();
   const { user } = useAuth();
   const { retailer: r, readOnly } = useSeller();
-  const plans = useSettings((s) => s.plans);
   const [c, setC] = useState({ name: r.name, contact: r.contact, phone: r.phone, email: r.email, address: r.address, city: r.city, pin: r.pin });
   const [s, setS] = useState({ legalName: r.legalName, type: r.type, gstin: r.gstin, pan: r.pan, holder: r.bank?.holder || '', account: r.bank?.account || '', ifsc: r.bank?.ifsc || '' });
   const pending = r.pendingChanges?.fields;
@@ -88,18 +85,6 @@ export default function SellerProfile() {
           </form>
         </Panel>
       </div>
-      <Panel title="Plan & commission">
-        <div className="grid gap-3 md:grid-cols-3">
-          {plans.map((p) => (
-            <div key={p.id} className={cx('rounded-[16px] border p-4', p.id === r.plan ? 'border-forest bg-emerald-50/50' : 'border-line')}>
-              <p className="flex justify-between text-[15px] font-bold text-ink">{p.name}{p.id === r.plan && <span className="rounded-full bg-forest px-2 py-0.5 text-[10.5px] text-white">Your plan</span>}</p>
-              <p className="tnum mt-1 text-[18px] font-semibold text-forest">{p.monthly ? `${money(p.monthly)}/mo` : 'Free'}</p>
-              <p className="mt-1 text-[12px] text-ink-50">{p.perks}</p>
-            </div>
-          ))}
-        </div>
-        <p className="mt-3 text-[12.5px] text-ink-50">To change plan, write to sellers@nivora.in. Commission on your orders: {r.commission?.rate ?? 10}%. <Link to="/seller/team" className="font-bold text-forest">Manage your team →</Link></p>
-      </Panel>
     </div>
   );
 }

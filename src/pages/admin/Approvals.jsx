@@ -33,9 +33,10 @@ function Application({ r, canEdit, by }) {
   const toast = useToast();
   const [dialog, setDialog] = useState(null);
   const docs = DOC_TYPES.map((t) => ({ ...t, doc: r.documents.find((d) => d.type === t.key) }));
-  const missing = docs.filter((d) => !d.doc).length;
+  const missing = docs.filter((d) => d.required && !d.doc).length;
   const rejected = docs.filter((d) => d.doc?.status === 'rejected');
   const verified = docs.filter((d) => d.doc?.status === 'verified').length;
+  const uploaded = docs.filter((d) => d.doc).length;
 
   return (
     <div className="space-y-4">
@@ -54,15 +55,15 @@ function Application({ r, canEdit, by }) {
         {r.statusLog?.length > 1 && <p className="mt-3 rounded-[12px] bg-[#f6f3ed] px-3 py-2 text-[12.5px] text-ink-70"><b>Last note:</b> {r.statusLog[r.statusLog.length - 1].note}</p>}
       </Panel>
 
-      <Panel title="Documents" note={`${verified} of ${DOC_TYPES.length} verified${missing ? ` · ${missing} missing` : ''}. Mark each one before deciding.`}>
+      <Panel title="Documents" note={`${verified} of ${uploaded} verified${missing ? ` · ${missing} required missing` : ''}. GST certificate, PAN card and cancelled cheque are required; business registration is optional.`}>
         <ul className="grid gap-3 sm:grid-cols-2">
-          {docs.map(({ key, label, hint, doc }) => (
+          {docs.map(({ key, label, hint, required, doc }) => (
             <li key={key} className={cx('rounded-[16px] border p-3.5', doc?.status === 'rejected' ? 'border-clay/30 bg-clay-50/40' : doc?.status === 'verified' ? 'border-emerald/30 bg-emerald-50/40' : 'border-line')}>
               <div className="flex items-start gap-3">
                 <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[12px] bg-white text-forest shadow-sm"><Icon name={doc?.mime?.startsWith('image/') ? 'image' : 'fileText'} size={17} /></span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[13.5px] font-bold text-ink">{label}</p>
-                  <p className="truncate text-[12px] text-ink-50">{doc ? `${doc.name} · ${Math.round(doc.size / 1024)} KB` : hint}</p>
+                  <p className="text-[13.5px] font-bold text-ink">{label}{!required && <span className="font-medium text-ink-50"> (optional)</span>}</p>
+                  <p className="truncate text-[12px] text-ink-50">{doc ? `${doc.name} · ${Math.round(doc.size / 1024)} KB` : required ? hint : 'Not uploaded'}</p>
                 </div>
               </div>
               <DocLink doc={doc} label={label} />
@@ -82,10 +83,10 @@ function Application({ r, canEdit, by }) {
 
       {canEdit && (
         <div className="sticky bottom-[calc(var(--tabbar-h,0px)+12px)] z-10 flex flex-wrap items-center justify-end gap-2 rounded-[20px] border border-line bg-white/95 p-3 shadow-lift backdrop-blur sm:pr-24">
-          <span className="mr-auto text-[12.5px] text-ink-50">{rejected.length ? `${rejected.length} document(s) marked with a problem` : missing ? 'Some documents are missing' : 'Ready to decide'}</span>
+          <span className="mr-auto text-[12.5px] text-ink-50">{rejected.length ? `${rejected.length} document(s) marked with a problem` : missing ? 'A required document is missing' : 'Ready to decide'}</span>
           <Button variant="outline" size="sm" icon="close" onClick={() => setDialog('reject')}>Reject</Button>
           <Button variant="outline" size="sm" icon="pencil" onClick={() => setDialog('changes')}>Ask for corrections</Button>
-          <Button size="sm" icon="check" disabled={missing > 0 || rejected.length > 0} onClick={() => { act(toast, () => setRetailerStatus(r.id, 'approved', { by, note: 'Documents verified' }), `${r.name} approved — Razorpay linked account created`); }}>Approve</Button>
+          <Button size="sm" icon="check" disabled={missing > 0 || rejected.length > 0} onClick={() => { act(toast, () => setRetailerStatus(r.id, 'approved', { by, note: 'Documents verified' }), `${r.name} approved`); }}>Approve</Button>
         </div>
       )}
 

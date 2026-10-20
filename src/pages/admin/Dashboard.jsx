@@ -235,10 +235,9 @@ export default function AdminDashboard() {
 
         {tab === 'fin' && (
           <>
-            <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
               <Kpi label="Commission (30 d)" value={rupeesCompact(d.commission30)} icon="percent" />
-              <Kpi label="Subscription revenue" value={`${money(d.mrr)}/mo`} note="Active plans" icon="card" />
-              <Kpi label="Payouts to review" value={rupeesCompact(d.payouts.filter((p) => p.status === 'pending').reduce((s, p) => s + p.net, 0))} icon="clock" tone="amber" />
+              <Kpi label="To settle" value={rupeesCompact(d.payouts.filter((p) => p.status === 'ready').reduce((s, p) => s + p.net, 0))} note="Closed weeks not paid" icon="clock" tone="amber" />
               <Kpi label="Paid to retailers" value={rupeesCompact(settled)} note="All time" icon="rupee" />
               <Kpi label="Refunds (30 d)" value={rupeesCompact(d.refunds30.reduce((s, r) => s + r.amount, 0))} note={`${d.refunds30.length} refunds`} icon="refresh" />
             </div>

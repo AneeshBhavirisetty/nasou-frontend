@@ -97,12 +97,12 @@ export default function SellerStatus() {
             return (
               <li key={t.key} className="flex flex-wrap items-center justify-between gap-3 py-3">
                 <div className="min-w-0">
-                  <p className="text-[14px] font-bold text-ink">{t.label}</p>
-                  <p className="truncate text-[12.5px] text-ink-50">{d ? d.name : 'Missing'}</p>
+                  <p className="text-[14px] font-bold text-ink">{t.label}{!t.required && <span className="font-medium text-ink-50"> (optional)</span>}</p>
+                  <p className="truncate text-[12.5px] text-ink-50">{d ? d.name : t.required ? 'Missing' : 'Not uploaded'}</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className={cx('rounded-full px-2.5 py-1 text-[11.5px] font-bold', d?.status === 'verified' ? 'bg-emerald-50 text-emerald-700' : d?.status === 'rejected' ? 'bg-clay-50 text-clay-600' : 'bg-sunk text-ink-70')}>
-                    {d?.status === 'verified' ? 'Verified' : d?.status === 'rejected' ? 'Please re-upload' : d ? 'Waiting for review' : 'Missing'}
+                    {d?.status === 'verified' ? 'Verified' : d?.status === 'rejected' ? 'Please re-upload' : d ? 'Waiting for review' : t.required ? 'Missing' : 'Optional'}
                   </span>
                   {r.status === 'needs_changes' && !readOnly && d?.status !== 'verified' && (
                     <label className="flex h-9 cursor-pointer items-center gap-1.5 rounded-full border border-line px-3 text-[12.5px] font-bold text-forest hover:border-forest">

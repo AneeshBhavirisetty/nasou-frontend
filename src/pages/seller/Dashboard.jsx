@@ -8,7 +8,6 @@ import { useScopedOrders, useScopedProducts } from '../../lib/useScoped';
 import { useSeller } from '../../layouts/SellerLayout';
 import { useSettlements } from '../admin/Payouts';
 import { pendingBalance } from '../../store/payouts';
-import { useSettings } from '../../store/settings';
 import { dailySeries, rupeesCompact } from '../../lib/analytics';
 import { money } from '../../lib/format';
 
@@ -20,7 +19,6 @@ export default function SellerDashboard() {
   const orders = useScopedOrders();
   const products = useScopedProducts();
   const { rows, held } = useSettlements();
-  const plans = useSettings((s) => s.plans);
 
   const d = useMemo(() => {
     const parts = orders.flatMap((o) => o.parts.map((p) => ({ ...p, orderId: o.id, createdAt: o.createdAt, customer: o.customer, city: o.city })));
@@ -50,7 +48,7 @@ export default function SellerDashboard() {
         <div className="field-dots-dark pointer-events-none absolute inset-0 opacity-25" />
         <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-100">{retailer.name} · {plans.find((p) => p.id === retailer.plan)?.name} plan</p>
+            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-100">{retailer.name}</p>
             <h1 className="font-hero mt-3 text-[clamp(1.6rem,4vw,2.5rem)] font-semibold text-white">Hello {user.fullName.split(' ')[0]} — {d.toAct.length ? `${d.toAct.length} order${d.toAct.length > 1 ? 's' : ''} to pack.` : 'you’re all caught up.'}</h1>
             <p className="mt-2 text-[14px] text-emerald-100">Your share lands in your bank every week through Razorpay. Commission: {retailer.commission?.rate ?? 10}% of each order.</p>
           </div>

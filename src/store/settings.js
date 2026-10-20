@@ -26,7 +26,7 @@ function seed() {
     commission: { default: DEFAULT_COMMISSION },
     plans: DEFAULT_PLANS,
     decisions: {
-      subscriptionBilling: 'deduct', // deduct monthly fees from the first payout of the month
+      subscriptionBilling: 'none', // no plan fees — retailers pay commission only ('deduct' takes them from payouts)
       refundApprovalAbove: 0, // every refund needs Finance approval
       retailerDelete: 'soft',
       sensitiveFields: ['bank', 'gstin', 'pan', 'legalName'],

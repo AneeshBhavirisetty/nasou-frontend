@@ -37,13 +37,15 @@ export const DEFAULT_PLANS = [
   { id: 'pro', name: 'Pro', monthly: 3999, perks: 'Everything in Growth · priority payouts · 10 staff seats' },
 ];
 
-/* Documents a retailer uploads at signup (req. 5). */
+/* Documents a retailer uploads at signup (req. 5): GST, PAN and a cancelled
+   cheque are required, each next to its number; business registration is optional. */
 export const DOC_TYPES = [
-  { key: 'business', label: 'Business registration', hint: 'Shop & Establishment, Udyam or incorporation certificate' },
-  { key: 'gst', label: 'GST certificate', hint: 'GST registration certificate (REG-06)' },
-  { key: 'pan', label: 'PAN card', hint: 'Business or proprietor PAN' },
-  { key: 'bank', label: 'Bank proof', hint: 'Cancelled cheque or bank statement page' },
+  { key: 'gst', label: 'GST certificate', hint: 'GST registration certificate (REG-06)', required: true },
+  { key: 'pan', label: 'PAN card', hint: 'Business or proprietor PAN card', required: true },
+  { key: 'bank', label: 'Cancelled cheque', hint: 'A blank cheque leaf with CANCELLED written across it', required: true },
+  { key: 'business', label: 'Business registration', hint: 'Optional — Shop & Establishment, Udyam or incorporation certificate', required: false },
 ];
+export const REQUIRED_DOCS = DOC_TYPES.filter((d) => d.required);
 
 const DAY = 86400000;
 const doc = (type, name, kb, daysAgo, status = 'verified') => ({ type, name, size: kb * 1024, uploadedAt: Date.now() - daysAgo * DAY, status });

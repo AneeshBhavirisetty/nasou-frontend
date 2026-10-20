@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom';
 import CartDrawer from './components/CartDrawer';
 import DemoSwitch from './components/admin/RoleSwitch';
+import { pageOn } from './components/admin/AdminSidebar';
 import ChatWidget from './components/chat/ChatWidget';
 import Home from './pages/Home';
 import Shop from './pages/Shop';
@@ -132,9 +133,9 @@ export default function App() {
           <Route path="/admin/refunds" element={<AdminRefunds />} />
           <Route path="/admin/payouts" element={<AdminPayouts />} />
           <Route path="/admin/reconciliation" element={<AdminReconciliation />} />
-          <Route path="/admin/audit" element={<AdminAudit />} />
-          <Route path="/admin/settings" element={<AdminSettings />} />
-          <Route path="/admin/catalog" element={<AdminMasterCatalog />} />
+          <Route path="/admin/audit" element={pageOn('/admin/audit') ? <AdminAudit /> : <Navigate to="/admin/dashboard" replace />} />
+          <Route path="/admin/settings" element={pageOn('/admin/settings') ? <AdminSettings /> : <Navigate to="/admin/dashboard" replace />} />
+          <Route path="/admin/catalog" element={pageOn('/admin/catalog') ? <AdminMasterCatalog /> : <Navigate to="/admin/dashboard" replace />} />
           <Route path="/admin/customers/:id" element={<AdminCustomerDetail />} />
           <Route path="/admin/billing" element={<AdminBilling />} />
           <Route path="/admin/reports" element={<AdminReports />} />

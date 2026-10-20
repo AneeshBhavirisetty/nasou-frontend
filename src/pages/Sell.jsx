@@ -3,18 +3,16 @@ import Icon from '../components/Icon';
 import { Button, Container } from '../components/ui';
 import { useSettings } from '../store/settings';
 import { useRetailers } from '../store/retailers';
-import { money } from '../lib/format';
 
 /* "Sell on Nivora" — the retailer acquisition page that leads to signup. */
 const STEPS = [
-  ['userPlus', 'Apply in 10 minutes', 'Store, GST, PAN and bank details plus four documents.'],
+  ['userPlus', 'Apply in 10 minutes', 'Store details, GST and PAN with their certificates, and a cancelled cheque.'],
   ['shieldCheck', 'Get verified', 'The Nivora team checks your documents — usually within a working day.'],
   ['package', 'List from the master catalog', 'Pick categories, add stock and prices. Products go live straight away.'],
   ['rupee', 'Get paid every week', 'Razorpay splits each payment and settles your share to your bank.'],
 ];
 
 export default function Sell() {
-  const plans = useSettings((s) => s.plans);
   const commission = useSettings((s) => s.commission.default);
   const live = useRetailers().filter((r) => r.status === 'approved').length;
   return (
@@ -48,18 +46,6 @@ export default function Sell() {
         </div>
       </section>
 
-      <section>
-        <p className="section-label">Plans</p>
-        <div className="mt-5 grid gap-4 md:grid-cols-3">
-          {plans.map((p, i) => (
-            <div key={p.id} className={i === 1 ? 'rounded-[26px] bg-forest p-7 text-white shadow-pop' : 'rounded-[26px] bg-white p-7 shadow-card'}>
-              <p className={i === 1 ? 'text-[13px] font-bold uppercase tracking-[0.16em] text-emerald-100' : 'text-[13px] font-bold uppercase tracking-[0.16em] text-ink-50'}>{p.name}</p>
-              <p className={i === 1 ? 'font-hero mt-3 text-[36px] font-semibold text-white' : 'font-hero mt-3 text-[36px] font-semibold text-forest'}>{p.monthly ? money(p.monthly) : 'Free'}<span className="text-[14px] font-medium opacity-70">{p.monthly ? ' / month' : ''}</span></p>
-              <p className={i === 1 ? 'mt-3 text-[14px] text-emerald-100' : 'mt-3 text-[14px] text-ink-50'}>{p.perks}</p>
-            </div>
-          ))}
-        </div>
-      </section>
     </Container>
   );
 }
