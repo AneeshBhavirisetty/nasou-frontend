@@ -222,7 +222,7 @@ export default function SellerRegister() {
                 </ul>
                 <div className="grid gap-4 sm:grid-cols-[200px_1fr] sm:items-end">
                   <Field label={`What is ${challenge.a} + ${challenge.b}?`} inputMode="numeric" value={f.answer} onChange={(e) => setF((s) => ({ ...s, answer: e.target.value.replace(/\D/g, '').slice(0, 2) }))} hint="Helps us keep bots out" />
-                  <label className="flex items-start gap-2.5 text-[13px] text-ink-70"><input type="checkbox" checked={f.agree} onChange={(e) => setF((s) => ({ ...s, agree: e.target.checked }))} className="mt-0.5 accent-[#1f5c4a]" /> I confirm these details are correct and accept the Nivora seller terms and commission schedule.</label>
+                  <label className="flex items-start gap-2.5 text-[13px] text-ink-70"><input type="checkbox" checked={f.agree} onChange={(e) => setF((s) => ({ ...s, agree: e.target.checked }))} className="mt-0.5 accent-[#095143]" /> I confirm these details are correct and accept the Nivora seller terms and commission schedule.</label>
                 </div>
               </div>
             )}

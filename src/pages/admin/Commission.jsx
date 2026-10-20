@@ -107,8 +107,10 @@ export default function AdminCommission() {
       <Panel title="Money rules" note="The open decisions from the requirements, set to the recommended defaults. Change them here — no code needed."
         action={canEdit && <Button size="sm" icon="check" onClick={() => { act(toast, () => saveSetting('decisions', { ...dec, refundApprovalAbove: Math.max(0, Number(dec.refundApprovalAbove) || 0) }, 'Updated money rules'), 'Rules saved'); }}>Save rules</Button>}>
         <div className="grid gap-5 md:grid-cols-2">
-          <Choice label="Settlement cycle" value={dec.settlementCycle} disabled={!canEdit} onChange={(v) => setDec((d) => ({ ...d, settlementCycle: v }))} options={[['weekly', 'Weekly'], ['fortnightly', 'Fortnightly']]} note="Payout screens group by week today; fortnightly is recorded for the API." />
-          <Choice label="Release held money" value={dec.releaseOn} disabled={!canEdit} onChange={(v) => setDec((d) => ({ ...d, releaseOn: v }))} options={[['delivery', 'On delivery'], ['cycle', 'On settlement']]} note="When a retailer’s Razorpay transfer is released from hold." />
+          <div>
+            <span className={LABEL_CLS}>Retailer payouts</span>
+            <p className="text-[13px] leading-5 text-ink-70">Weekly, Monday to Sunday. Delivered orders count; Finance presses Settle on the Payouts page and RazorpayX sends the money to the retailer’s bank.</p>
+          </div>
           <Choice label="Subscription fees" value={dec.subscriptionBilling} disabled={!canEdit} onChange={(v) => setDec((d) => ({ ...d, subscriptionBilling: v }))} options={[['deduct', 'Deduct from payouts'], ['separate', 'Bill separately']]} />
           <Choice label="Deleting a retailer" value={dec.retailerDelete} disabled={!canEdit} onChange={(v) => setDec((d) => ({ ...d, retailerDelete: v }))} options={[['soft', 'Soft delete (recommended)'], ['hard', 'Permanent']]} note="Soft delete keeps old orders and payouts linked." />
           <label>

@@ -246,8 +246,8 @@ export default function AdminDashboard() {
               <ChartCard title="Commission per day" note="Last 30 days" table={{ headers: ['Day', 'Commission'], rows: d.commissionSeries.filter((p) => p.value).map((p) => [p.label, money(p.value)]) }}>
                 <LineChart points={d.commissionSeries} format={money} tick={rupeesCompact} label="Commission per day" color={SERIES[0]} />
               </ChartCard>
-              <ChartCard title="Payout status" note="Retailer × cycle" table={{ headers: ['Status', 'Amount'], rows: ['open', 'pending', 'approved', 'on_hold', 'paid'].map((s) => [s, money(d.payouts.filter((p) => p.status === s).reduce((n, p) => n + p.net, 0))]) }}>
-                <Donut slices={[['Paid', 'paid'], ['To review', 'pending'], ['Approved', 'approved'], ['Open cycle', 'open']].map(([label, s]) => ({ label, value: Math.max(0, d.payouts.filter((p) => p.status === s).reduce((n, p) => n + p.net, 0)) }))} format={rupeesCompact} center={{ value: rupeesCompact(Object.values(d.held).reduce((s, v) => s + v, 0)), label: 'held' }} />
+              <ChartCard title="Payout status" note="Retailer × week" table={{ headers: ['Status', 'Amount'], rows: ['open', 'ready', 'processing', 'paid'].map((s) => [s, money(d.payouts.filter((p) => p.status === s).reduce((n, p) => n + p.net, 0))]) }}>
+                <Donut slices={[['Paid', 'paid'], ['To settle', 'ready'], ['On its way', 'processing'], ['This week', 'open']].map(([label, s]) => ({ label, value: Math.max(0, d.payouts.filter((p) => p.status === s).reduce((n, p) => n + p.net, 0)) }))} format={rupeesCompact} center={{ value: rupeesCompact(Object.values(d.held).reduce((s, v) => s + v, 0)), label: 'awaiting delivery' }} />
               </ChartCard>
             </div>
             <p className="text-[12.5px] text-ink-50"><Link to="/admin/reconciliation" className="font-bold text-forest hover:underline">Reconciliation</Link> lists anything Razorpay and our books disagree on.</p>

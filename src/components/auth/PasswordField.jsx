@@ -42,7 +42,7 @@ export default function PasswordField({
           autoComplete={autoComplete}
           className={cx(
             'h-12 w-full rounded-md border bg-white/80 px-4 pr-16 text-[14px] text-ink outline-none transition placeholder:text-ink-35',
-            error ? 'border-clay focus:border-clay focus:shadow-[0_0_0_2px_rgba(225,29,72,0.15)]' : 'border-line focus:border-forest focus:shadow-[0_8px_25px_rgba(37,88,73,0.14),0_0_0_2px_rgba(31,92,74,0.18)]'
+            error ? 'border-clay focus:border-clay focus:shadow-[0_0_0_2px_rgba(225,29,72,0.15)]' : 'border-line focus:border-forest focus:shadow-[0_8px_25px_rgba(9, 81, 67,0.14),0_0_0_2px_rgba(9, 81, 67,0.18)]'
           )}
         />
         <button

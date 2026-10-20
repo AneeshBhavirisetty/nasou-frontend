@@ -297,7 +297,7 @@ export default function Checkout() {
   };
 
   const Radio = ({ on }) => (
-    <span className={cx('grid h-5 w-5 shrink-0 place-items-center rounded-full border-2', on ? 'border-forest' : 'border-[#cad8d2]')}>{on && <span className="h-2.5 w-2.5 rounded-full bg-forest" />}</span>
+    <span className={cx('grid h-5 w-5 shrink-0 place-items-center rounded-full border-2', on ? 'border-forest' : 'border-[#c7ded9]')}>{on && <span className="h-2.5 w-2.5 rounded-full bg-forest" />}</span>
   );
 
   return (
@@ -341,7 +341,7 @@ export default function Checkout() {
                 {addrId === 'new' && (
                   <div className="mt-5">
                     <AddressForm value={draft} onChange={setDraft} />
-                    <label className="mt-4 flex items-center gap-2 text-[13px] font-semibold text-ink-70"><input type="checkbox" checked={saveNew} onChange={(e) => setSaveNew(e.target.checked)} className="accent-[#1f5c4a]" /> Save to my address book</label>
+                    <label className="mt-4 flex items-center gap-2 text-[13px] font-semibold text-ink-70"><input type="checkbox" checked={saveNew} onChange={(e) => setSaveNew(e.target.checked)} className="accent-[#095143]" /> Save to my address book</label>
                   </div>
                 )}
                 {addrErr && <p role="alert" className="mt-4 rounded-md bg-clay-50 px-3 py-2.5 text-[13px] text-clay-600">{addrErr}</p>}

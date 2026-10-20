@@ -5,8 +5,8 @@ export default function HeroFallbackArt({ className = '' }) {
     <svg viewBox="0 0 420 420" className={className} role="img" aria-label="PVC pipe fitting illustration">
       <defs>
         <radialGradient id="hf-glow" cx="50%" cy="42%" r="60%">
-          <stop offset="0" stopColor="#cad8d2" />
-          <stop offset="1" stopColor="#cad8d2" stopOpacity="0" />
+          <stop offset="0" stopColor="#c7ded9" />
+          <stop offset="1" stopColor="#c7ded9" stopOpacity="0" />
         </radialGradient>
         <linearGradient id="hf-body" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" stopColor="#ffffff" />
@@ -49,8 +49,8 @@ export default function HeroFallbackArt({ className = '' }) {
 
       {/* floating detail ring */}
       <g className="animate-float">
-        <circle cx="332" cy="300" r="26" fill="none" stroke="#287052" strokeWidth="6" opacity="0.9" />
-        <circle cx="332" cy="300" r="14" fill="#287052" opacity="0.12" />
+        <circle cx="332" cy="300" r="26" fill="none" stroke="#0f6e5e" strokeWidth="6" opacity="0.9" />
+        <circle cx="332" cy="300" r="14" fill="#0f6e5e" opacity="0.12" />
       </g>
     </svg>
   );

@@ -98,7 +98,7 @@ export default function HeroCarousel({ slides }) {
             exit={{ opacity: 0, y: -14 }}
             transition={{ duration: 0.48, delay: 0.08 }}
           >
-            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#d5e5df] sm:text-xs">{s.label}</p>
+            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#d3e8e3] sm:text-xs">{s.label}</p>
             <h1 className="font-hero mt-5 max-w-[640px] text-[clamp(2.1rem,6vw,3.6rem)] font-semibold leading-[1.03] text-white">{s.heading}</h1>
             <p className="mt-5 max-w-xl text-sm leading-6 text-sunk sm:text-base">{s.sub}</p>
             <div className="mt-7 flex flex-wrap gap-3">
@@ -110,7 +110,7 @@ export default function HeroCarousel({ slides }) {
               </Link>
             </div>
             {s.points && (
-              <div className="mt-7 flex flex-wrap gap-x-5 gap-y-2 text-[12.5px] font-semibold text-[#d5e5df]">
+              <div className="mt-7 flex flex-wrap gap-x-5 gap-y-2 text-[12.5px] font-semibold text-[#d3e8e3]">
                 {s.points.map((p) => (
                   <span key={p.label} className="flex items-center gap-1.5"><Icon name={p.icon} size={15} /> {p.label}</span>
                 ))}
@@ -124,7 +124,7 @@ export default function HeroCarousel({ slides }) {
         type="button"
         onClick={() => show(active - 1, -1)}
         aria-label="Previous slide"
-        className="absolute left-3 top-1/2 z-20 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/25 bg-[#173d33]/45 text-white backdrop-blur-lg transition hover:bg-[#173d33]/75 sm:left-5 lg:opacity-0 lg:group-hover:opacity-100"
+        className="absolute left-3 top-1/2 z-20 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/25 bg-[#063a30]/45 text-white backdrop-blur-lg transition hover:bg-[#063a30]/75 sm:left-5 lg:opacity-0 lg:group-hover:opacity-100"
       >
         <Icon name="chevronLeft" size={20} />
       </button>
@@ -132,12 +132,12 @@ export default function HeroCarousel({ slides }) {
         type="button"
         onClick={() => show(active + 1, 1)}
         aria-label="Next slide"
-        className="absolute right-3 top-1/2 z-20 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/25 bg-[#173d33]/45 text-white backdrop-blur-lg transition hover:bg-[#173d33]/75 sm:right-5 lg:opacity-0 lg:group-hover:opacity-100"
+        className="absolute right-3 top-1/2 z-20 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/25 bg-[#063a30]/45 text-white backdrop-blur-lg transition hover:bg-[#063a30]/75 sm:right-5 lg:opacity-0 lg:group-hover:opacity-100"
       >
         <Icon name="chevronRight" size={20} />
       </button>
 
-      <div className="absolute bottom-6 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/15 bg-[#173d33]/35 px-3 py-2 backdrop-blur-lg">
+      <div className="absolute bottom-6 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/15 bg-[#063a30]/35 px-3 py-2 backdrop-blur-lg">
         {slides.map((x, i) => (
           <button
             key={x.id}

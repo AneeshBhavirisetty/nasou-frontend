@@ -52,7 +52,7 @@ export default function Deals() {
               className="mb-4 [&_a]:!text-white/70 [&_a:hover]:!text-white [&_span]:text-white/50 [&_.font-semibold]:!text-white"
               items={[{ label: 'Home', to: '/' }, { label: 'Deals' }]}
             />
-            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#d5e5df]">Live offers</p>
+            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#d3e8e3]">Live offers</p>
             <h1 className="font-hero mt-3 text-[clamp(2rem,6vw,3.4rem)] font-semibold leading-[1.05] text-white">
               Up to {maxOff}% off<br className="hidden sm:block" /> plumbing fittings
             </h1>
@@ -98,7 +98,7 @@ export default function Deals() {
         </p>
 
         {filtered.length === 0 ? (
-          <div className="rounded-[18px] border border-dashed border-[#cad8d2] bg-[#f4f7f5] py-16 text-center">
+          <div className="rounded-[18px] border border-dashed border-[#c7ded9] bg-[#f4f7f5] py-16 text-center">
             <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-white text-forest shadow-card"><Icon name="tag" size={22} /></span>
             <p className="mt-4 text-[18px] font-semibold text-ink">No deals match that filter</p>
             <div className="mt-5"><Button onClick={() => { setTier('all'); setCat(''); }} variant="outline">Show all offers</Button></div>

@@ -3,7 +3,7 @@
 /* ============================================================
    NASOU HIVE — DESIGN TOKENS
    Visual language follows the NasouHive demo templates: linen
-   paper (#EFEAE1), forest #1F5C4A, sage ink, Manrope throughout
+   paper (#EFEAE1), forest #095143, sage ink, Manrope throughout
    (Sora for the big hero voice), soft white cards with green-
    tinted shadows. Rose / amber / sky are kept for status only.
    ============================================================ */
@@ -25,13 +25,15 @@
   --color-sand: #e5d8c7;
   --color-sand-50: #f4ede2;
 
-  /* Brand — forest */
-  --color-forest: #1f5c4a;
-  --color-forest-800: #255849;
-  --color-emerald: #287052;
-  --color-emerald-600: #255849;
-  --color-emerald-100: #cad8d2;
-  --color-emerald-50: #eaf4ee;
+  /* Brand — the Nivora logo's two greens, exactly: forest #095143 (the
+     N's body) and emerald #0f6e5e (its two side strokes and the wordmark).
+     The rest of the ramp is darker or lighter steps of those two. */
+  --color-forest: #095143;
+  --color-forest-800: #07473b;
+  --color-emerald: #0f6e5e;
+  --color-emerald-600: #07473b;
+  --color-emerald-100: #c7ded9;
+  --color-emerald-50: #e8f3f0;
 
   /* Alert accent — errors, deals, destructive actions (Tailwind rose) */
   --color-clay: oklch(58.6% 0.253 17.585);
@@ -52,10 +54,10 @@
   --font-hero: "Sora", "Manrope", ui-sans-serif, system-ui, sans-serif;
 
   /* Elevation — soft and warm, never a hard grey drop */
-  --shadow-card: 0 16px 38px rgba(37, 88, 73, 0.09);
-  --shadow-lift: 0 24px 48px rgba(37, 88, 73, 0.12);
+  --shadow-card: 0 16px 38px rgba(9, 81, 67, 0.09);
+  --shadow-lift: 0 24px 48px rgba(9, 81, 67, 0.12);
   --shadow-pop: 0 28px 70px rgba(31, 59, 52, 0.18);
-  --shadow-btn: 0 10px 24px rgba(31, 92, 74, 0.18);
+  --shadow-btn: 0 10px 24px rgba(9, 81, 67, 0.18);
 
   --radius-xs: 6px;
   --radius-sm: 8px;
@@ -150,7 +152,7 @@
 
   /* Faint dotted field used behind the hero and dark bands. */
   .field-dots {
-    background-image: radial-gradient(rgba(37, 88, 73, 0.1) 1px, transparent 1px);
+    background-image: radial-gradient(rgba(9, 81, 67, 0.1) 1px, transparent 1px);
     background-size: 22px 22px;
   }
   .field-dots-dark {
@@ -160,14 +162,14 @@
 
   .no-bar { scrollbar-width: none; -ms-overflow-style: none; }
   /* Slim, quiet scrollbar for tall side panels (filters). */
-  .thin-bar { scrollbar-width: thin; scrollbar-color: #cad8d2 transparent; }
+  .thin-bar { scrollbar-width: thin; scrollbar-color: #c7ded9 transparent; }
   .thin-bar::-webkit-scrollbar { width: 6px; }
-  .thin-bar::-webkit-scrollbar-thumb { background: #cad8d2; border-radius: 999px; }
+  .thin-bar::-webkit-scrollbar-thumb { background: #c7ded9; border-radius: 999px; }
   .no-bar::-webkit-scrollbar { display: none; }
 
   /* Product imagery bed under transparent / blown-out art. */
   .photo-bed { background: linear-gradient(155deg, #f4f7f5 0%, #e6ecea 100%); }
-  .photo-bed-dark { background: linear-gradient(155deg, #173f35 0%, #12251f 100%); }
+  .photo-bed-dark { background: linear-gradient(155deg, #063a30 0%, #04241e 100%); }
 
   /* Hover sheen sweep for premium buttons / cards. */
   .sheen { position: relative; overflow: hidden; }
@@ -187,7 +189,7 @@
   .glass-panel {
     border: 1px solid rgba(229, 216, 199, 0.72);
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(239, 234, 225, 0.74));
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72), 0 24px 70px rgba(37, 88, 73, 0.18);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72), 0 24px 70px rgba(9, 81, 67, 0.18);
     backdrop-filter: blur(24px);
   }
   /* White product / content card (demo ProductCard + ThemeCard) */
@@ -206,19 +208,19 @@
     font-weight: 700;
     letter-spacing: 0.32em;
     text-transform: uppercase;
-    color: rgba(37, 88, 73, 0.76);
+    color: rgba(9, 81, 67, 0.76);
   }
   .section-label::before {
     content: "";
     width: 2.5rem;
     height: 1px;
-    background: linear-gradient(90deg, rgba(37, 88, 73, 0), rgba(37, 88, 73, 0.72));
+    background: linear-gradient(90deg, rgba(9, 81, 67, 0), rgba(9, 81, 67, 0.72));
   }
   /* Deep forest campaign band (demo hero carousel / flash deals) */
   .forest-band {
     background:
       radial-gradient(circle at 85% 10%, rgba(72, 132, 112, 0.35), transparent 40%),
-      linear-gradient(120deg, #173d33 0%, #1f5c4a 100%);
+      linear-gradient(120deg, #063a30 0%, #095143 100%);
   }
 
   /* Review 5 refresh: warm mesh grounds, film grain, glass chips. */
@@ -233,7 +235,7 @@
     background:
       radial-gradient(55% 70% at 90% 0%, rgba(110, 168, 145, 0.35), transparent 60%),
       radial-gradient(45% 60% at 0% 100%, rgba(229, 216, 199, 0.18), transparent 60%),
-      linear-gradient(125deg, #143a30 0%, #1f5c4a 70%, #2b6b55 100%);
+      linear-gradient(125deg, #063a30 0%, #095143 70%, #0f6e5e 100%);
   }
   .grain::before {
     content: "";
@@ -252,7 +254,7 @@
     background: var(--color-sand);
     color: var(--color-forest);
     font-weight: 700;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 10px 24px rgba(37, 88, 73, 0.12);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 10px 24px rgba(9, 81, 67, 0.12);
     transition: transform 0.2s var(--ease-out-quint), background 0.2s;
   }
   .pill-sand:hover { transform: translateY(-2px); background: #ddcdb8; }

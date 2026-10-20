@@ -24,15 +24,15 @@ export default function AdminReconciliation() {
   const refunds = useRefunds();
   const resolved = useRecon();
   const server = useReconRows();
-  const { rows: payoutRows } = useSettlements();
+  const { rows: payoutRows, settlements } = useSettlements();
   const [resolving, setResolving] = useState(null);
 
   const rows = useMemo(() => {
     /* LIVE: matched on the server against the gateway's settlement report */
     if (LIVE) return (server.rows || []).map((r) => ({ ...r, state: r.resolution ? 'resolved' : r.status }));
-    const ledger = ourLedger({ orders, refunds, payoutRows });
+    const ledger = ourLedger({ orders, refunds, payoutRows, settlements });
     return reconcile(ledger, razorpayReport(ledger)).map((r) => ({ ...r, state: resolved[r.id] ? 'resolved' : r.status, resolution: resolved[r.id] }));
-  }, [orders, refunds, payoutRows, resolved, server]);
+  }, [orders, refunds, payoutRows, settlements, resolved, server]);
 
   const issues = rows.filter((r) => r.state !== 'matched' && r.state !== 'resolved');
 

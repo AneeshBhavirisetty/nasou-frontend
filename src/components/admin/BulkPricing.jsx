@@ -16,7 +16,7 @@ import { act } from '../../lib/act';
    A rule: "N+ units of <category | sub-category | brand | product> → X% or
    ₹X per unit off". How rules combine is documented in lib/pricing.js. */
 
-const SELECT = 'h-12 w-full rounded-md border border-line bg-white/80 px-4 text-[14px] text-ink outline-none transition focus:border-forest focus:shadow-[0_0_0_2px_rgba(31,92,74,0.18)]';
+const SELECT = 'h-12 w-full rounded-md border border-line bg-white/80 px-4 text-[14px] text-ink outline-none transition focus:border-forest focus:shadow-[0_0_0_2px_rgba(9, 81, 67,0.18)]';
 const LABEL = 'mb-1.5 block text-[11.5px] font-semibold uppercase tracking-[0.16em] text-forest-800';
 
 const blank = { name: '', scopeType: 'category', scopeValue: 'pvc-fittings', minQty: 50, kind: 'percent', value: 5, active: true };

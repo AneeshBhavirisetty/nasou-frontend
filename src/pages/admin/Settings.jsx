@@ -54,7 +54,7 @@ function Banners({ canEdit }) {
                 <div className="flex flex-wrap gap-1.5">
                   {TONES.map(([v, l]) => <button key={v} type="button" disabled={!canEdit} onClick={() => set(i, 'tone', v)} className={cx('rounded-full border px-3 py-1.5 text-[12px] font-bold', b.tone === v ? 'border-forest bg-forest text-white' : 'border-line text-ink-70')}>{l}</button>)}
                 </div>
-                <label className="flex items-center gap-2 text-[13px] font-semibold text-ink-70"><input type="checkbox" disabled={!canEdit} checked={b.active} onChange={(e) => set(i, 'active', e.target.checked)} className="accent-[#1f5c4a]" /> Active on the homepage</label>
+                <label className="flex items-center gap-2 text-[13px] font-semibold text-ink-70"><input type="checkbox" disabled={!canEdit} checked={b.active} onChange={(e) => set(i, 'active', e.target.checked)} className="accent-[#095143]" /> Active on the homepage</label>
               </div>
               {canEdit && (
                 <div className="flex gap-1.5 lg:flex-col">

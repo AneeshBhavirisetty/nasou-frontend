@@ -96,7 +96,7 @@ export default function Wishlist() {
       </motion.section>
 
       {/* default filters — always shown */}
-      <div className="mt-6 space-y-2.5 rounded-[22px] border border-white/70 bg-white/55 p-3 shadow-[0_10px_30px_rgba(37,88,73,0.06)] backdrop-blur">
+      <div className="mt-6 space-y-2.5 rounded-[22px] border border-white/70 bg-white/55 p-3 shadow-[0_10px_30px_rgba(9, 81, 67,0.06)] backdrop-blur">
         <div role="tablist" aria-label="Category" className="no-bar -mx-1 flex gap-2 overflow-x-auto px-1 py-0.5">
           <Chip on={!dept} onClick={() => { setDept(''); setSub(''); }}>All <Count n={items.length} on={!dept} /></Chip>
           {DEPARTMENTS.map((d) => {
@@ -143,7 +143,7 @@ export default function Wishlist() {
       </div>
 
       {items.length === 0 ? (
-        <div className="rounded-[24px] border border-dashed border-[#cad8d2] bg-[#f6f3ed] py-16 text-center">
+        <div className="rounded-[24px] border border-dashed border-[#c7ded9] bg-[#f6f3ed] py-16 text-center">
           <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-white text-forest shadow-card"><Icon name="heart" size={24} /></span>
           <p className="mt-4 text-[18px] font-semibold text-forest">Nothing saved yet</p>
           <p className="mt-1.5 text-[13px] text-ink-50">Tap the heart on any product to keep it here.</p>

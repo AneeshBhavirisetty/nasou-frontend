@@ -74,11 +74,11 @@ export default function SellerLayout() {
   return (
     <div className="min-h-dvh overflow-x-hidden bg-canvas">
       {view && <ViewBanner />}
-      <div className="min-h-dvh bg-[radial-gradient(circle_at_top_right,rgba(31,92,74,0.12),transparent_30%),linear-gradient(180deg,#efeae1_0%,#f5f1ea_50%,#efeae1_100%)]">
+      <div className="min-h-dvh bg-[radial-gradient(circle_at_top_right,rgba(9, 81, 67,0.12),transparent_30%),linear-gradient(180deg,#efeae1_0%,#f5f1ea_50%,#efeae1_100%)]">
         <header className="sticky top-0 z-40 border-b border-white/70 bg-canvas/85 backdrop-blur-2xl">
           <div className="mx-auto flex min-h-[68px] max-w-[1500px] items-center gap-3 px-4 sm:px-6 lg:px-8">
             <Link to="/seller" className="flex min-w-0 items-center gap-3">
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[14px] bg-forest text-white shadow-btn"><Logo size={22} className="[&>span]:hidden" /></span>
+              <Logo variant="mark" size={40} />
               <span className="min-w-0">
                 <span className="block truncate text-[15px] font-bold text-forest">{retailer?.name || 'Seller console'}</span>
                 <span className="block text-[10.5px] font-extrabold uppercase tracking-[0.14em] text-forest-800/70">Nivora seller · {readOnly ? 'view only' : staffRole(user.staffRole).label}</span>
@@ -131,7 +131,7 @@ export default function SellerLayout() {
         </main>
 
         {live && (
-          <nav aria-label="Seller quick navigation" className="fixed inset-x-0 bottom-0 z-40 border-t border-white/70 bg-white/92 px-3 pb-[calc(8px+env(safe-area-inset-bottom))] pt-2 shadow-[0_-14px_34px_rgba(37,88,73,0.14)] backdrop-blur-2xl lg:hidden">
+          <nav aria-label="Seller quick navigation" className="fixed inset-x-0 bottom-0 z-40 border-t border-white/70 bg-white/92 px-3 pb-[calc(8px+env(safe-area-inset-bottom))] pt-2 shadow-[0_-14px_34px_rgba(9, 81, 67,0.14)] backdrop-blur-2xl lg:hidden">
             <div className="mx-auto grid max-w-lg gap-1" style={{ gridTemplateColumns: `repeat(${Math.min(5, nav.length)}, minmax(0,1fr))` }}>
               {nav.slice(0, 5).map((n) => (
                 <NavLink key={n.to} to={n.to} end={n.end} className={({ isActive }) => cx('flex min-h-[54px] flex-col items-center justify-center gap-1 rounded-[14px] text-[10.5px] font-bold', isActive ? 'bg-forest text-white shadow-btn' : 'text-ink-50')}>

@@ -79,7 +79,7 @@ export default function Enquiry() {
               className="mb-4 [&_a]:!text-white/70 [&_span]:text-white/50 [&_.font-semibold]:!text-white"
               items={[{ label: 'Home', to: '/' }, { label: 'Enquiry' }]}
             />
-            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#d5e5df]">Trade desk</p>
+            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#d3e8e3]">Trade desk</p>
             <h1 className="font-hero mt-3 text-[clamp(2rem,6vw,3.2rem)] font-semibold text-white">Enquire now</h1>
             <p className="mt-3 max-w-lg text-[14px] leading-relaxed text-sunk">
               Bulk orders, dealer tie-ups, or a quote on specific SKUs — tell us what you need and we
@@ -122,7 +122,7 @@ export default function Enquiry() {
                 <select
                   value={f.category}
                   onChange={(e) => set('category', e.target.value)}
-                  className="h-12 w-full rounded-md border border-line bg-white/80 px-4 text-[14px] text-ink outline-none transition focus:border-forest focus:shadow-[0_0_0_2px_rgba(31,92,74,0.18)]"
+                  className="h-12 w-full rounded-md border border-line bg-white/80 px-4 text-[14px] text-ink outline-none transition focus:border-forest focus:shadow-[0_0_0_2px_rgba(9, 81, 67,0.18)]"
                 >
                   <option value="">Any / not sure</option>
                   {departments.map((d) => (
@@ -155,7 +155,7 @@ export default function Enquiry() {
                 value={f.message}
                 onChange={(e) => set('message', e.target.value)}
                 placeholder="Sizes, materials, site location, timeline…"
-                className="w-full rounded-md border border-line bg-white/80 px-4 py-3 text-[14px] text-ink outline-none transition placeholder:text-ink-35 focus:border-forest focus:shadow-[0_8px_25px_rgba(37,88,73,0.14),0_0_0_2px_rgba(31,92,74,0.18)]"
+                className="w-full rounded-md border border-line bg-white/80 px-4 py-3 text-[14px] text-ink outline-none transition placeholder:text-ink-35 focus:border-forest focus:shadow-[0_8px_25px_rgba(9, 81, 67,0.14),0_0_0_2px_rgba(9, 81, 67,0.18)]"
                 required
               />
             </label>
@@ -208,7 +208,7 @@ export default function Enquiry() {
             </div>
 
             <div className="forest-band rounded-[24px] p-5 text-white sm:p-6">
-              <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.18em] text-[#c9d7d2]">Why buy trade on Nivora</p>
+              <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.18em] text-[#c7ded9]">Why buy trade on Nivora</p>
               <ul className="space-y-2.5 text-[13.5px] text-white/85">
                 {[
                   ['tag', 'Slab pricing above ₹25,000'],

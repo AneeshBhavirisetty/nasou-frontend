@@ -64,7 +64,7 @@ function useBadges() {
 const link = ({ isActive }) =>
   cx(
     'flex min-h-[42px] items-center gap-3 rounded-[14px] px-3.5 text-[13.5px] font-bold transition',
-    isActive ? 'bg-forest text-white shadow-[0_12px_28px_rgba(31,92,74,0.22)]' : 'text-forest-800 hover:bg-white hover:text-forest'
+    isActive ? 'bg-forest text-white shadow-[0_12px_28px_rgba(9, 81, 67,0.22)]' : 'text-forest-800 hover:bg-white hover:text-forest'
   );
 
 function NavItem({ n, badges }) {
@@ -90,18 +90,16 @@ export function AdminSideRail({ open, onClose }) {
   return (
     <aside
       className={cx(
-        'fixed inset-y-0 left-0 z-40 hidden w-[272px] flex-col gap-3 border-r border-white/70 bg-white/72 px-4 pb-6 pt-[calc(14px+env(safe-area-inset-top))] shadow-[18px_0_42px_rgba(37,88,73,0.08)] backdrop-blur-2xl transition-transform duration-200 lg:flex',
+        'fixed inset-y-0 left-0 z-40 hidden w-[272px] flex-col gap-3 border-r border-white/70 bg-white/72 px-4 pb-6 pt-[calc(14px+env(safe-area-inset-top))] shadow-[18px_0_42px_rgba(9, 81, 67,0.08)] backdrop-blur-2xl transition-transform duration-200 lg:flex',
         !open && '-translate-x-[105%]'
       )}
       aria-label="Super Admin"
     >
       <div className="flex items-center justify-between gap-2">
         <Link to="/admin/dashboard" className="flex min-w-0 items-center gap-3 rounded-[20px] px-1 py-1">
-          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-[16px] bg-forest text-white shadow-btn">
-            <Logo size={24} className="[&>span]:hidden" />
-          </span>
-          <span className="grid min-w-0 gap-0.5">
-            <span className="font-hero text-[17px] font-semibold text-forest">Nivora</span>
+          <Logo variant="mark" size={42} />
+          <span className="grid min-w-0 gap-1">
+            <Logo variant="name" size={16} />
             <span className="truncate text-[10px] font-extrabold uppercase tracking-[0.12em] text-forest-800/70">Super Admin</span>
           </span>
         </Link>
@@ -176,7 +174,7 @@ export function AdminBottomNav() {
         )}
       </AnimatePresence>
 
-      <nav aria-label="Admin quick navigation" className="fixed inset-x-0 bottom-0 z-[45] border-t border-white/70 bg-white/92 px-3 pb-[calc(8px+env(safe-area-inset-bottom))] pt-2 shadow-[0_-14px_34px_rgba(37,88,73,0.14)] backdrop-blur-2xl lg:hidden">
+      <nav aria-label="Admin quick navigation" className="fixed inset-x-0 bottom-0 z-[45] border-t border-white/70 bg-white/92 px-3 pb-[calc(8px+env(safe-area-inset-bottom))] pt-2 shadow-[0_-14px_34px_rgba(9, 81, 67,0.14)] backdrop-blur-2xl lg:hidden">
         <div className="mx-auto grid max-w-lg grid-cols-5 gap-1">
           {primary.map((n) => (
             <NavLink key={n.to} to={n.to} end={n.exact} className={({ isActive }) => tab(isActive && !more)}>

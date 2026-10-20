@@ -44,11 +44,10 @@ export default function Footer() {
           <div className="relative px-5 py-8 sm:px-10 sm:py-12">
             <div className="grid gap-10 lg:grid-cols-[1.15fr_2fr]">
               <div>
-                <Link to="/" className="inline-flex items-center gap-3 text-white">
-                  <span className="grid h-11 w-11 place-items-center rounded-[14px] bg-white text-forest"><Logo size={24} className="[&>span]:hidden" /></span>
-                  <span className="font-hero text-[22px] font-semibold tracking-[-0.03em]">Nivora</span>
+                <Link to="/" className="inline-block rounded-[18px] bg-white px-5 py-4 shadow-btn" aria-label="Nivora home">
+                  <Logo variant="wordmark" size={220} />
                 </Link>
-                <p className="mt-4 max-w-xs text-[13.5px] leading-relaxed text-[#c9d7d2]">{brand.promise}</p>
+                <p className="mt-4 max-w-xs text-[13.5px] leading-relaxed text-[#c7ded9]">{brand.promise}</p>
                 <div className="mt-5 flex flex-col gap-1.5 text-[13px] text-white/70">
                   <a href={`tel:${brand.phone.replace(/\s/g, '')}`} className="flex items-center gap-2 transition hover:text-white">
                     <Icon name="phone" size={13} /> {brand.phone}
@@ -74,7 +73,7 @@ export default function Footer() {
               <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
                 {footerColumns.map((col) => (
                   <div key={col.title}>
-                    <h3 className="mb-3.5 text-[11px] font-bold uppercase tracking-[0.18em] text-[#c9d7d2]">{col.title}</h3>
+                    <h3 className="mb-3.5 text-[11px] font-bold uppercase tracking-[0.18em] text-[#c7ded9]">{col.title}</h3>
                     <ul className="space-y-1">
                       {col.links.map((l) => (
                         <li key={l.label}>

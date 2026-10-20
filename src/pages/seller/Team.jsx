@@ -72,7 +72,7 @@ export default function SellerTeam() {
                   <div className="grid gap-2">
                     {STAFF_ROLES.filter((r) => r.key !== 'owner').map((r) => (
                       <label key={r.key} className={cx('flex cursor-pointer items-start gap-2.5 rounded-[12px] border p-2.5', role === r.key ? 'border-forest bg-emerald-50/50' : 'border-line')}>
-                        <input type="radio" checked={role === r.key} onChange={() => setRole(r.key)} className="mt-1 accent-[#1f5c4a]" />
+                        <input type="radio" checked={role === r.key} onChange={() => setRole(r.key)} className="mt-1 accent-[#095143]" />
                         <span><b className="text-[13px] text-ink">{r.label}</b><span className="block text-[11.5px] text-ink-50">Can use: {r.sections.join(', ')}</span></span>
                       </label>
                     ))}

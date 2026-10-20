@@ -17,7 +17,7 @@ export default function AuthCard({ title, subtitle, children, footer, back }) {
       transition={{ duration: 0.7, ease: [0.23, 1, 0.32, 1] }}
       className="w-full max-w-md"
     >
-      <div className="relative overflow-hidden rounded-[22px] bg-white p-6 shadow-[0_24px_48px_rgba(37,88,73,0.12)] sm:p-8">
+      <div className="relative overflow-hidden rounded-[22px] bg-white p-6 shadow-[0_24px_48px_rgba(9, 81, 67,0.12)] sm:p-8">
         {back && (
           <Link to={back.to} className="mb-4 inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-forest-800 transition hover:-translate-x-1">
             <Icon name="arrowLeft" size={14} /> {back.label}
@@ -34,7 +34,7 @@ export default function AuthCard({ title, subtitle, children, footer, back }) {
           </div>
         </div>
 
-        <div className="mb-7 flex gap-1 rounded-md bg-sunk p-1 shadow-[inset_0_0_0_1px_rgba(37,88,73,0.08)]">
+        <div className="mb-7 flex gap-1 rounded-md bg-sunk p-1 shadow-[inset_0_0_0_1px_rgba(9, 81, 67,0.08)]">
           {[
             ['Sign In', '/login', !signup],
             ['Sign Up', '/register', signup],
@@ -52,7 +52,7 @@ export default function AuthCard({ title, subtitle, children, footer, back }) {
                 <motion.span
                   layoutId="auth-mode"
                   transition={{ type: 'spring', stiffness: 380, damping: 32 }}
-                  className="absolute inset-0 rounded-sm bg-forest shadow-[0_10px_24px_rgba(31,92,74,0.18)]"
+                  className="absolute inset-0 rounded-sm bg-forest shadow-[0_10px_24px_rgba(9, 81, 67,0.18)]"
                 />
               )}
               <span className="relative">{label}</span>

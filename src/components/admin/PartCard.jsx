@@ -77,8 +77,8 @@ export default function PartCard({ order, part, by, canAdvance, canCancel, canRe
             <div><dt className="text-ink-50">Retailer share</dt><dd className="tnum font-bold text-ink">{money(part.retailerShare)}</dd></div>
             <div><dt className="text-ink-50">Refunded</dt><dd className="tnum font-bold text-ink">{money(part.refunded || 0)}</dd></div>
             <div className="col-span-2 sm:col-span-4">
-              <dt className="text-ink-50">Razorpay transfer</dt>
-              <dd className="font-semibold text-ink">{part.transfer ? <><span className="font-mono">{part.transfer.id}</span> → <span className="font-mono">{part.transfer.account || 'linked account'}</span> · {TRANSFER[part.transfer.status]}{part.transfer.reversed ? ` · ${money(part.transfer.reversed)} reversed` : ''}</> : 'Cash on delivery — settled through the weekly payout'}</dd>
+              <dt className="text-ink-50">Retailer payout</dt>
+              <dd className="font-semibold text-ink">{part.transfer ? <><span className="font-mono">{part.transfer.id}</span> → <span className="font-mono">{part.transfer.account || 'linked account'}</span> · {TRANSFER[part.transfer.status]}{part.transfer.reversed ? ` · ${money(part.transfer.reversed)} reversed` : ''}</> : part.status === 'Delivered' ? 'In the weekly settlement for the week it was delivered' : 'Counts towards the weekly settlement once delivered'}</dd>
             </div>
           </dl>
         )}

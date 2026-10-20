@@ -20,7 +20,7 @@ export default function Sell() {
   return (
     <Container className="space-y-12 pb-14 pt-5 sm:space-y-16">
       <section className="relative overflow-hidden rounded-[32px] bg-[#f4ede2] px-6 py-12 shadow-card sm:px-12 sm:py-16">
-        <div className="pointer-events-none absolute -right-16 -top-24 h-96 w-96 rounded-full bg-[radial-gradient(circle,rgba(31,92,74,0.18),transparent_65%)]" />
+        <div className="pointer-events-none absolute -right-16 -top-24 h-96 w-96 rounded-full bg-[radial-gradient(circle,rgba(9, 81, 67,0.18),transparent_65%)]" />
         <div className="field-dots pointer-events-none absolute inset-0 opacity-40" />
         <div className="relative max-w-2xl">
           <p className="section-label">Sell on Nivora</p>

@@ -92,7 +92,7 @@ function CommissionEditor({ retailer, canEdit, plans, fallback }) {
         <div className="grid gap-2">
           {plans.map((p) => (
             <label key={p.id} className={cx('flex cursor-pointer items-start gap-3 rounded-[14px] border p-3.5 transition', plan === p.id ? 'border-forest bg-emerald-50/50' : 'border-line hover:border-forest/40', !canEdit && 'pointer-events-none')}>
-              <input type="radio" name="plan" checked={plan === p.id} onChange={() => setPlan(p.id)} className="mt-1 accent-[#1f5c4a]" />
+              <input type="radio" name="plan" checked={plan === p.id} onChange={() => setPlan(p.id)} className="mt-1 accent-[#095143]" />
               <span className="min-w-0 flex-1">
                 <span className="flex justify-between gap-2 text-[14px] font-bold text-ink">{p.name}<span className="tnum">{p.monthly ? `${money(p.monthly)}/mo` : 'Free'}</span></span>
                 <span className="block text-[12px] text-ink-50">{p.perks}</span>

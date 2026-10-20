@@ -78,7 +78,7 @@ function SearchBox({ onDone }) {
   return (
     <div ref={boxRef} className="relative w-full">
       <form onSubmit={submit}>
-        <label className="flex min-h-12 w-full items-center gap-3 rounded-[16px] border border-white/80 bg-white px-4 shadow-[0_10px_24px_rgba(37,88,73,0.07)] transition focus-within:border-forest/40 focus-within:shadow-[0_12px_28px_rgba(37,88,73,0.12)]">
+        <label className="flex min-h-12 w-full items-center gap-3 rounded-[16px] border border-white/80 bg-white px-4 shadow-[0_10px_24px_rgba(9, 81, 67,0.07)] transition focus-within:border-forest/40 focus-within:shadow-[0_12px_28px_rgba(9, 81, 67,0.12)]">
           <Icon name="search" size={19} className="shrink-0 text-ink-50" />
           <input
             value={q}
@@ -294,7 +294,7 @@ function MegaMenu({ onClose }) {
               ))}
             </div>
           ) : (
-            <div className="mt-4 rounded-[18px] border border-dashed border-[#cad8d2] bg-[#f4f7f5] px-5 py-8 text-center">
+            <div className="mt-4 rounded-[18px] border border-dashed border-[#c7ded9] bg-[#f4f7f5] px-5 py-8 text-center">
               <span className="mx-auto grid h-11 w-11 place-items-center rounded-full bg-white text-forest shadow-card"><Icon name={d.icon} size={18} /></span>
               <p className="mt-3 text-[14px] font-bold text-forest">{d.name} is coming soon</p>
               <p className="mt-1 text-[12.5px] text-ink-50">We are adding products to this department. Send an enquiry for anything you need now.</p>
@@ -354,7 +354,7 @@ export default function Header() {
     <header className="sticky top-0 z-50 border-b border-white/70 bg-canvas/90 backdrop-blur-2xl">
       <div className="mx-auto flex min-h-[72px] max-w-[1440px] items-center gap-3 px-4 sm:min-h-[76px] sm:gap-4 sm:px-6 lg:px-8">
         <button
-          className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white text-forest shadow-[0_6px_16px_rgba(37,88,73,0.08)] lg:hidden"
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white text-forest shadow-[0_6px_16px_rgba(9, 81, 67,0.08)] lg:hidden"
           onClick={() => setMobile((v) => !v)}
           aria-label="Menu"
           aria-expanded={mobile}
@@ -363,7 +363,7 @@ export default function Header() {
         </button>
 
         <Link to="/" className="shrink-0" aria-label="Nivora home">
-          <Logo variant="tile" className="[&>span:last-child]:hidden sm:[&>span:last-child]:inline" />
+          <Logo size={38} />
         </Link>
 
         <DeliverTo className="hidden xl:block" />

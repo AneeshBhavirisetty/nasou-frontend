@@ -26,7 +26,7 @@ export default function StatTile({ value, decimals, prefix, suffix, label, note,
         <Counter value={value} decimals={decimals} prefix={prefix} suffix={suffix} />
       </div>
       <p className={cx('mt-1 text-[13px] font-bold', dark ? 'text-white' : 'text-ink')}>{label}</p>
-      {note && <p className={cx('mt-1 text-[12px] leading-5', dark ? 'text-[#c9d7d2]' : 'text-ink-50')}>{note}</p>}
+      {note && <p className={cx('mt-1 text-[12px] leading-5', dark ? 'text-[#c7ded9]' : 'text-ink-50')}>{note}</p>}
     </div>
   );
 }

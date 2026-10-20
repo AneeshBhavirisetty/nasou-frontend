@@ -135,7 +135,7 @@ export default function Login() {
       </div>
 
       {SHOW_DEMO && (
-        <details className="mt-5 rounded-[16px] border border-dashed border-[#cad8d2] bg-[#f6f3ed] px-3.5 py-3 text-[12px] text-ink-50" open>
+        <details className="mt-5 rounded-[16px] border border-dashed border-[#c7ded9] bg-[#f6f3ed] px-3.5 py-3 text-[12px] text-ink-50" open>
           <summary className="cursor-pointer font-bold text-forest">Demo accounts — password <span className="font-mono">nivora123</span></summary>
           {groups.map((g) => (
             <div key={g} className="mt-2.5">

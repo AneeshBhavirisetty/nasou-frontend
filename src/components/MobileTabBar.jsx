@@ -36,7 +36,7 @@ export default function MobileTabBar() {
   return (
     <nav
       aria-label="Quick navigation"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-white/70 bg-white/92 px-3 pb-[calc(8px+env(safe-area-inset-bottom))] pt-2 shadow-[0_-14px_34px_rgba(37,88,73,0.14)] backdrop-blur-2xl lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-white/70 bg-white/92 px-3 pb-[calc(8px+env(safe-area-inset-bottom))] pt-2 shadow-[0_-14px_34px_rgba(9, 81, 67,0.14)] backdrop-blur-2xl lg:hidden"
     >
       <div className="mx-auto grid max-w-lg grid-cols-5 gap-1">
         <NavLink to="/" end className={({ isActive }) => tab(isActive && !open)}>

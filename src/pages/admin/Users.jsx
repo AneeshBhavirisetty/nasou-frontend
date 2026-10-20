@@ -96,7 +96,7 @@ function MemberForm({ member, team, onClose }) {
             <div className="grid gap-2 sm:grid-cols-2">
               {TEAM_ROLES.filter((r) => r.key !== 'owner').map((r) => (
                 <label key={r.key} className={cx('flex cursor-pointer items-start gap-3 rounded-[14px] border p-3 transition', f.teamRole === r.key ? 'border-forest bg-emerald-50/50' : 'border-line hover:border-forest/40')}>
-                  <input type="radio" name="teamRole" checked={f.teamRole === r.key} onChange={() => setF((s) => ({ ...s, teamRole: r.key }))} className="mt-1 accent-[#1f5c4a]" />
+                  <input type="radio" name="teamRole" checked={f.teamRole === r.key} onChange={() => setF((s) => ({ ...s, teamRole: r.key }))} className="mt-1 accent-[#095143]" />
                   <span><span className="block text-[14px] font-bold text-ink">{r.label}</span><span className="block text-[12px] text-ink-50">{r.blurb}</span></span>
                 </label>
               ))}

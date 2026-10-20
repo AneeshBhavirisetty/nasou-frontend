@@ -16,11 +16,11 @@ import { cx } from '../../lib/format';
  * Every chart has a hover/focus tooltip and its ChartCard a Table view.
  * ==========================================================================*/
 
-export const SERIES = ['#059669', '#0284c7', '#d97706', '#e11d48', '#7c3aed'];
-export const DONUT = ['#059669', '#0284c7', '#d97706', '#7c3aed'];
-export const OTHER = '#cad8d2';
-export const FOREST = '#1f5c4a';
-export const STATUS = { good: '#059669', warning: '#d97706', critical: '#e11d48', info: '#0284c7', neutral: '#82938d' };
+export const SERIES = ['#0f6e5e', '#0284c7', '#d97706', '#e11d48', '#7c3aed'];
+export const DONUT = ['#0f6e5e', '#0284c7', '#d97706', '#7c3aed'];
+export const OTHER = '#c7ded9';
+export const FOREST = '#095143';
+export const STATUS = { good: '#0f6e5e', warning: '#d97706', critical: '#e11d48', info: '#0284c7', neutral: '#82938d' };
 
 const INK = { primary: '#1f3b34', secondary: '#61756e', muted: '#82938d', grid: '#e6ecea' };
 

@@ -12,7 +12,7 @@ export default function Tabs({ tabs = [], initial, onChange, className = '' }) {
   const current = tabs.find((t) => t.key === active);
   return (
     <div className={className}>
-      <div className="no-bar flex gap-1 overflow-x-auto rounded-md bg-sunk p-1 shadow-[inset_0_0_0_1px_rgba(37,88,73,0.08)]">
+      <div className="no-bar flex gap-1 overflow-x-auto rounded-md bg-sunk p-1 shadow-[inset_0_0_0_1px_rgba(9, 81, 67,0.08)]">
         {tabs.map((t) => (
           <button
             key={t.key}
@@ -26,7 +26,7 @@ export default function Tabs({ tabs = [], initial, onChange, className = '' }) {
               <motion.span
                 layoutId="tab-pill"
                 transition={{ type: 'spring', stiffness: 380, damping: 32 }}
-                className="absolute inset-0 rounded-sm bg-forest shadow-[0_10px_24px_rgba(31,92,74,0.18)]"
+                className="absolute inset-0 rounded-sm bg-forest shadow-[0_10px_24px_rgba(9, 81, 67,0.18)]"
               />
             )}
             <span className="relative">{t.label}</span>

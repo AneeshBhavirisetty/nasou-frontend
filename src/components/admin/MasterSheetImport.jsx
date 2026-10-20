@@ -98,7 +98,7 @@ export default function MasterSheetImport({ canEdit }) {
                 <span className="mt-1 block text-[11.5px] text-ink-50">The sheet’s Quantity column is empty. Existing items keep their stock.</span>
               </label>
               <label className="flex items-start gap-2.5 rounded-[14px] border border-line px-3 py-2.5">
-                <input type="checkbox" checked={retire} onChange={(e) => setRetire(e.target.checked)} className="mt-1 h-4 w-4 accent-[#1f5c4a]" />
+                <input type="checkbox" checked={retire} onChange={(e) => setRetire(e.target.checked)} className="mt-1 h-4 w-4 accent-[#095143]" />
                 <span>
                   <span className="block text-[13px] font-bold text-ink">Remove items not in the sheet</span>
                   <span className="block text-[11.5px] text-ink-50">The house catalogue then matches the sheet exactly. Retailers’ own products are never touched.</span>

@@ -80,7 +80,7 @@ function Check({ checked, onChange, label, count, note }) {
   const empty = count === 0 && !checked;
   return (
     <label className={cx('group flex cursor-pointer items-center gap-3 rounded-[10px] px-1 py-2 transition hover:bg-sunk/50', empty && 'opacity-45')}>
-      <span className={cx('grid h-5 w-5 shrink-0 place-items-center rounded-[6px] border transition', checked ? 'border-forest bg-forest text-white' : 'border-[#cad8d2] bg-white group-hover:border-forest/50')}>
+      <span className={cx('grid h-5 w-5 shrink-0 place-items-center rounded-[6px] border transition', checked ? 'border-forest bg-forest text-white' : 'border-[#c7ded9] bg-white group-hover:border-forest/50')}>
         {checked && <Icon name="check" size={12} strokeWidth={3} />}
       </span>
       <input type="checkbox" checked={checked} onChange={onChange} className="sr-only" />
@@ -104,7 +104,7 @@ function Pick({ checked, onChange, label, count }) {
       onClick={onChange}
       className={cx('group flex w-full items-center gap-3 rounded-[10px] px-1 py-2 text-left transition hover:bg-sunk/50', empty && 'opacity-45')}
     >
-      <span className={cx('grid h-5 w-5 shrink-0 place-items-center rounded-full border-2 transition', checked ? 'border-forest' : 'border-[#cad8d2] group-hover:border-forest/50')}>
+      <span className={cx('grid h-5 w-5 shrink-0 place-items-center rounded-full border-2 transition', checked ? 'border-forest' : 'border-[#c7ded9] group-hover:border-forest/50')}>
         {checked && <span className="h-2.5 w-2.5 rounded-full bg-forest" />}
       </span>
       <span className="flex-1 text-[14px] text-ink-70 group-hover:text-ink">{label}</span>
@@ -325,7 +325,7 @@ export default function Shop() {
             <input inputMode="numeric" value={maxPrice < PRICE_MAX ? maxPrice : ''} placeholder="Any" onChange={(e) => setMaxPrice(priceInput(e.target.value, PRICE_MAX) || PRICE_MAX)} aria-label="Maximum price" className="tnum h-10 w-full rounded-[12px] border border-line bg-white px-3 text-[13px] font-semibold outline-none focus:border-forest/40" />
           </label>
         </div>
-        <input type="range" min={50} max={PRICE_MAX} step={50} value={maxPrice} onChange={(e) => setMaxPrice(Number(e.target.value))} aria-label="Maximum price slider" className="mt-3 w-full accent-[#1f5c4a]" />
+        <input type="range" min={50} max={PRICE_MAX} step={50} value={maxPrice} onChange={(e) => setMaxPrice(Number(e.target.value))} aria-label="Maximum price slider" className="mt-3 w-full accent-[#095143]" />
         <div className="mt-1 flex justify-between text-[12px] text-ink-50">
           <span className="tnum">{money(minPrice)}</span>
           <span className="tnum font-semibold text-ink">up to {money(maxPrice)}{maxPrice === PRICE_MAX ? '+' : ''}</span>
@@ -531,7 +531,7 @@ export default function Shop() {
               ))}
             </div>
           ) : results.length === 0 ? (
-            <div className="rounded-[18px] border border-dashed border-[#cad8d2] bg-[#f4f7f5] py-20 text-center">
+            <div className="rounded-[18px] border border-dashed border-[#c7ded9] bg-[#f4f7f5] py-20 text-center">
               <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-white text-forest shadow-card"><Icon name="search" size={22} /></span>
               {depts.length === 1 && !departments.find((d) => d.slug === depts[0])?.count ? (
                 <>

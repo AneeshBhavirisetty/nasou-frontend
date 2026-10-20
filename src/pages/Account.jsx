@@ -215,7 +215,7 @@ export default function Account() {
       {editing && (
         <Modal open onClose={() => setEditing(null)} title={editing.id ? `Edit ${editing.label} address` : 'Add an address'} size="lg">
           <AddressForm value={editing} onChange={setEditing} />
-          <label className="mt-4 flex items-center gap-2 text-[13px] font-semibold text-ink-70"><input type="checkbox" checked={!!editing.isDefault} onChange={(e) => setEditing((s) => ({ ...s, isDefault: e.target.checked }))} className="accent-[#1f5c4a]" /> Use as my default address</label>
+          <label className="mt-4 flex items-center gap-2 text-[13px] font-semibold text-ink-70"><input type="checkbox" checked={!!editing.isDefault} onChange={(e) => setEditing((s) => ({ ...s, isDefault: e.target.checked }))} className="accent-[#095143]" /> Use as my default address</label>
           <div className="mt-5 flex justify-end gap-2 border-t border-line pt-4">
             <Button variant="outline" onClick={() => setEditing(null)}>Cancel</Button>
             <Button icon="check" onClick={saveAddress}>Save address</Button>

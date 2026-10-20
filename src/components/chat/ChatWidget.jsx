@@ -191,7 +191,7 @@ function Bubble({ m, mine }) {
       <div
         className={cx(
           'max-w-[78%] rounded-[14px] px-3.5 py-2.5 text-[13px] leading-snug',
-          mine ? 'rounded-br-[4px] bg-forest text-white shadow-[0_8px_20px_rgba(31,92,74,0.22)]' : 'rounded-bl-[4px] border border-white/80 bg-white text-ink shadow-[0_6px_16px_rgba(37,88,73,0.08)]'
+          mine ? 'rounded-br-[4px] bg-forest text-white shadow-[0_8px_20px_rgba(9, 81, 67,0.22)]' : 'rounded-bl-[4px] border border-white/80 bg-white text-ink shadow-[0_6px_16px_rgba(9, 81, 67,0.08)]'
         )}
       >
         {m.text}
@@ -250,7 +250,7 @@ function CustomerChat({ store, threadId, who }) {
     <>
       <div className="thin-bar flex-1 space-y-3 overflow-y-auto bg-[#f4ede2] p-4">
         {msgs.length === 0 && (
-          <div className="rounded-[18px] border border-white/80 bg-white p-4 text-[13px] leading-relaxed text-ink-70 shadow-[0_6px_16px_rgba(37,88,73,0.08)]">
+          <div className="rounded-[18px] border border-white/80 bg-white p-4 text-[13px] leading-relaxed text-ink-70 shadow-[0_6px_16px_rgba(9, 81, 67,0.08)]">
             <p className="font-hero text-[16px] font-semibold text-forest">Hi{who?.name && who.name !== 'Guest' ? ` ${who.name.split(' ')[0]}` : ''} 👋</p>
             <p className="mt-1">Ask about stock, sizes, bulk pricing or an order — the quick questions below answer instantly.</p>
           </div>
@@ -415,7 +415,7 @@ export default function ChatWidget() {
         onClick={() => setOpen((v) => !v)}
         whileTap={{ scale: 0.92 }}
         aria-label={open ? 'Close chat' : 'Open chat'}
-        className="fixed bottom-[calc(var(--tabbar-h,0px)+0.75rem)] right-3 z-[190] grid h-12 w-12 place-items-center sm:h-14 sm:w-14 rounded-full bg-forest text-white shadow-[0_18px_40px_rgba(31,92,74,0.35)] ring-4 ring-white/70 transition hover:-translate-y-0.5 hover:bg-forest-800 sm:bottom-[calc(var(--tabbar-h,0px)+1.5rem)] sm:right-6"
+        className="fixed bottom-[calc(var(--tabbar-h,0px)+0.75rem)] right-3 z-[190] grid h-12 w-12 place-items-center sm:h-14 sm:w-14 rounded-full bg-forest text-white shadow-[0_18px_40px_rgba(9, 81, 67,0.35)] ring-4 ring-white/70 transition hover:-translate-y-0.5 hover:bg-forest-800 sm:bottom-[calc(var(--tabbar-h,0px)+1.5rem)] sm:right-6"
       >
         <AnimatePresence mode="wait" initial={false}>
           <motion.span

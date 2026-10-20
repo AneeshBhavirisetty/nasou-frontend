@@ -41,7 +41,7 @@ export default function Invoice() {
       <article className="mx-auto max-w-3xl rounded-[24px] border border-white/80 bg-white p-6 shadow-card sm:p-10 print:rounded-none print:border-0 print:shadow-none">
         <header className="flex flex-wrap items-start justify-between gap-4 border-b border-line pb-6">
           <div>
-            <span className="text-forest"><Logo /></span>
+            <Logo variant="wordmark" size={190} />
             <p className="mt-3 max-w-[16rem] text-[12px] leading-relaxed text-ink-50">{brand.address}</p>
             <p className="mt-1 text-[12px] text-ink-50">GSTIN {brand.gst}</p>
             <p className="text-[12px] text-ink-50">{brand.phone} · {brand.email}</p>

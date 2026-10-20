@@ -52,7 +52,7 @@ export default function HomeHero({ banners, stats }) {
 
   return (
     <section
-      className="mesh-cream grain relative isolate overflow-hidden rounded-[28px] border border-white/70 shadow-[0_30px_80px_rgba(37,88,73,0.14)] sm:rounded-[36px]"
+      className="mesh-cream grain relative isolate overflow-hidden rounded-[28px] border border-white/70 shadow-[0_30px_80px_rgba(9, 81, 67,0.14)] sm:rounded-[36px]"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       aria-roledescription="carousel"

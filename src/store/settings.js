@@ -26,8 +26,6 @@ function seed() {
     commission: { default: DEFAULT_COMMISSION },
     plans: DEFAULT_PLANS,
     decisions: {
-      settlementCycle: 'weekly',
-      releaseOn: 'delivery', // hold each retailer's share until the part is delivered
       subscriptionBilling: 'deduct', // deduct monthly fees from the first payout of the month
       refundApprovalAbove: 0, // every refund needs Finance approval
       retailerDelete: 'soft',

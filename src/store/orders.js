@@ -13,9 +13,9 @@ import { api, patch as apiPatch, post, refresh, who } from '../lib/live';
  * Order book (requirements 8, 9, 12, 15, 19).
  *
  * One customer order = one payment, split into one part per retailer. Each
- * part has its own status, status history, Razorpay Route transfer (the
- * retailer's share, held until delivery) and refunds. The order-level status
- * is derived from its parts (lib/marketplace aggregateStatus).
+ * part has its own status, status history and refunds. The payment stays
+ * with Nivora; each retailer is paid in the weekly settlement (store/payouts).
+ * The order-level status is derived from its parts (lib/marketplace aggregateStatus).
  *
  *   order { id, createdAt, userId, customer, email, phone, address, city,
  *           state, pin, lines[], parts[], items, subtotal, discount, gst,
@@ -88,9 +88,7 @@ function seed() {
       const reached = status === 'Cancelled' ? 0 : ORDER_FLOW.indexOf(status);
       pt.statusLog = ORDER_FLOW.slice(0, reached + 1).map((s, n) => ({ status: s, at: createdAt + n * 0.9 * DAY, by: n ? pt.retailerName : customer }));
       if (status === 'Cancelled') pt.statusLog.push({ status: 'Cancelled', at: createdAt + 0.4 * DAY, by: pt.retailerName, note: 'Out of stock at the counter' });
-      pt.transfer = online
-        ? { id: rzp('trf'), account: getRetailer(pt.retailerId)?.razorpayAccount, amount: pt.retailerShare, status: status === 'Delivered' ? 'released' : status === 'Cancelled' ? 'reversed' : 'on_hold', reversed: status === 'Cancelled' ? pt.retailerShare : 0 }
-        : null;
+      pt.transfer = null; // payment stays with Nivora; the retailer is paid in the weekly settlement
       if (status === 'Cancelled' && online) pt.refunded = pt.total;
     });
     const status = aggregateStatus(parts);
@@ -195,7 +193,7 @@ export function placeOrder(draft) {
   }).map((p) => ({
     ...p,
     statusLog: [{ status: 'Pending', at: createdAt, by: draft.customer }],
-    transfer: online ? { id: rzp('trf'), account: getRetailer(p.retailerId)?.razorpayAccount, amount: p.retailerShare, status: 'on_hold', reversed: 0 } : null,
+    transfer: null,
   }));
   const order = settleOrder({
     ...draft,
@@ -234,9 +232,6 @@ export function updatePart(orderId, partId, status, { by = '', note = '', byReta
     parts: o.parts.map((p) => {
       if (p.id !== partId) return p;
       const next = { ...p, status, statusLog: [...(p.statusLog || []), { status, at: Date.now(), by, note }] };
-      if (status === 'Delivered' && p.transfer?.status === 'on_hold' && getSettings().decisions.releaseOn === 'delivery') {
-        next.transfer = { ...p.transfer, status: 'released', releasedAt: Date.now() };
-      }
       if (status === 'Cancelled' && p.transfer) next.transfer = { ...p.transfer, status: 'reversed', reversed: p.transfer.amount };
       return next;
     }),
@@ -303,7 +298,7 @@ export function createRefund({ orderId, partId, amount, reason, by, system = fal
   return r;
 }
 
-/* approve → Razorpay refund on the payment, reversal on that part's transfer */
+/* approve → Razorpay refund on the payment; the retailer's portion comes off their next settlement */
 export function processRefund(r, by) {
   if (!r) return;
   const rf = { ...r, status: 'processed', decidedBy: r.decidedBy || by, decidedAt: r.decidedAt || Date.now(), razorpayRefundId: rzp('rfnd'), processedAt: Date.now() };
