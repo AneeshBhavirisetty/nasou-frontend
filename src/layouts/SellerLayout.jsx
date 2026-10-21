@@ -54,14 +54,15 @@ function ViewBanner() {
 }
 
 export default function SellerLayout() {
-  const { user, view, logout, isAuthenticated } = useAuth();
+  const { user, view, logout, isAuthenticated, signedOut } = useAuth();
   const { canSection } = useIam();
   const { retailer, readOnly } = useSeller();
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const [menu, setMenu] = useState(false);
   useEffect(() => setMenu(false), [pathname]);
 
-  if (!isAuthenticated) return <Navigate to={`/login?redirect=${encodeURIComponent(pathname)}`} replace />;
+  if (!isAuthenticated) return <Navigate to={signedOut ? '/login' : `/login?redirect=${encodeURIComponent(pathname)}`} replace />;
   if (user.role === 'ADMIN' && !view) return <Navigate to="/admin/retailers" replace />;
   if (user.role !== 'RETAILER' && user.role !== 'ADMIN') return <Navigate to="/unauthorized" replace />;
 
@@ -101,7 +102,7 @@ export default function SellerLayout() {
                     <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 6 }} className="absolute right-0 top-full z-50 mt-2 w-60 rounded-[18px] border border-white/80 bg-white p-1.5 shadow-lift">
                       <div className="rounded-[12px] bg-forest px-3 py-3 text-white"><p className="truncate text-[13.5px] font-bold">{user.fullName}</p><p className="text-[11.5px] text-emerald-100">{readOnly ? 'Nasou Hive team · viewing' : `${staffRole(user.staffRole).label} · ${retailer?.name || ''}`}</p></div>
                       <Link to="/" className="mt-1 flex items-center gap-2.5 rounded-[12px] px-3 py-2.5 text-[13px] font-semibold text-ink-70 hover:bg-sunk/70"><Icon name="store" size={15} /> View storefront</Link>
-                      {!readOnly && <button onClick={() => logout()} className="flex w-full items-center gap-2.5 rounded-[12px] px-3 py-2.5 text-[13px] font-bold text-clay-600 hover:bg-clay-50"><Icon name="logout" size={15} /> Sign out</button>}
+                      {!readOnly && <button onClick={() => { logout(); navigate('/login', { replace: true }); }} className="flex w-full items-center gap-2.5 rounded-[12px] px-3 py-2.5 text-[13px] font-bold text-clay-600 hover:bg-clay-50"><Icon name="logout" size={15} /> Sign out</button>}
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -118,6 +119,10 @@ export default function SellerLayout() {
             <p className="text-ink-50">This account is not linked to a store.</p>
           ) : !live ? (
             <SellerStatus />
+          ) : current && !allowed(current) && nav.length ? (
+            /* e.g. the owner signed out on Team and an employee signed in on the
+               same device: take them to the first page their role has */
+            <Navigate to={nav[0].to} replace />
           ) : current && !allowed(current) ? (
             <div className="mx-auto mt-8 max-w-md rounded-[24px] bg-white p-8 text-center shadow-card">
               <Icon name="key" size={26} className="mx-auto text-forest" />

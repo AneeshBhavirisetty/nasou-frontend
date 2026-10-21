@@ -15,7 +15,7 @@ import { useEffect } from 'react';
      - Wrong role → /unauthorized
    ───────────────────────────────────────────────────────────── */
 export default function ProtectedRoute({ allowedRoles, children, redirectAfterLogin }) {
-  const { isAuthenticated, role } = useAuth();
+  const { isAuthenticated, role, signedOut } = useAuth();
   const location = useLocation();
 
   // Handle redirect after login if specified
@@ -29,7 +29,7 @@ export default function ProtectedRoute({ allowedRoles, children, redirectAfterLo
   if (!isAuthenticated) {
     return (
       <Navigate
-        to={`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`}
+        to={signedOut ? '/login' : `/login?redirect=${encodeURIComponent(location.pathname + location.search)}`}
         replace
       />
     );

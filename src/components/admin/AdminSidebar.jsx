@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, NavLink, useLocation } from 'react-router-dom';
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import Icon from '../Icon';
 import Logo from '../Logo';
@@ -89,6 +89,7 @@ function NavItem({ n, badges }) {
 
 export function AdminSideRail({ open, onClose }) {
   const { logout } = useAuth();
+  const navigate = useNavigate();
   const nav = useAdminNav();
   const badges = useBadges();
   const groups = [...new Set(nav.map((n) => n.group))];
@@ -128,7 +129,7 @@ export function AdminSideRail({ open, onClose }) {
         <Link to="/" className="flex min-h-10 items-center gap-3 rounded-[14px] px-3.5 text-[13px] font-bold text-forest-800 transition hover:bg-white hover:text-forest">
           <Icon name="store" size={16} /> View storefront
         </Link>
-        <button onClick={() => logout()} className="flex min-h-10 items-center gap-3 rounded-[14px] px-3.5 text-left text-[13px] font-bold text-clay-600 transition hover:bg-clay-50">
+        <button onClick={() => { logout(); navigate('/login', { replace: true }); }} className="flex min-h-10 items-center gap-3 rounded-[14px] px-3.5 text-left text-[13px] font-bold text-clay-600 transition hover:bg-clay-50">
           <Icon name="logout" size={16} /> Sign out
         </button>
       </div>
@@ -140,6 +141,7 @@ export function AdminBottomNav() {
   const [more, setMore] = useState(false);
   const { pathname } = useLocation();
   const { logout } = useAuth();
+  const navigate = useNavigate();
   const nav = useAdminNav();
   const badges = useBadges();
   const primary = nav.slice(0, 4);
@@ -170,7 +172,7 @@ export function AdminBottomNav() {
               <div className="grid grid-cols-2 gap-1.5">
                 {rest.map((n) => <NavItem key={n.to} n={n} badges={badges} />)}
                 <Link to="/" className={link({ isActive: false })}><Icon name="store" size={17} /> Storefront</Link>
-                <button onClick={() => logout()} className="flex min-h-[42px] items-center gap-3 rounded-[14px] px-3.5 text-[13.5px] font-bold text-clay-600 hover:bg-clay-50">
+                <button onClick={() => { logout(); navigate('/login', { replace: true }); }} className="flex min-h-[42px] items-center gap-3 rounded-[14px] px-3.5 text-[13.5px] font-bold text-clay-600 hover:bg-clay-50">
                   <Icon name="logout" size={17} /> Sign out
                 </button>
               </div>

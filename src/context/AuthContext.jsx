@@ -53,6 +53,7 @@ function initialSession() {
 
 export function AuthProvider({ children }) {
   const [session, setSessionState] = useState(initialSession);
+  const [signedOut, setSignedOut] = useState(false);
   const [view, setView] = useState(readView);
 
   /* Profile details the customer can edit (name, email, phone, address
@@ -132,6 +133,7 @@ export function AuthProvider({ children }) {
   }, [session]);
 
   const _apply = useCallback((data) => {
+    setSignedOut(false);
     resetBypassLog();
     setSession(data);
     setSessionState(data);
@@ -192,6 +194,7 @@ export function AuthProvider({ children }) {
       }
     }
     if (readView()) endView('signed out');
+    setSignedOut(true);
     clearSession();
     setSessionState(null);
     stopPolling();
@@ -276,11 +279,13 @@ export function AuthProvider({ children }) {
       isCustomer: user?.role === 'CUSTOMER',
       isAdmin: user?.role === 'ADMIN',
       isRetailer: user?.role === 'RETAILER',
+      /* true after a deliberate sign-out: the login page then starts fresh (no ?redirect) */
+      signedOut,
       login, verify2fa, logout, register, sendOtp, verifyOtp, signInAccount, quickLogin,
       profile, updateProfile, changePassword, deactivateAccount, deleteAccount,
       view, endView,
     }),
-    [user, login, verify2fa, logout, register, sendOtp, verifyOtp, signInAccount, quickLogin, profile, updateProfile, changePassword, deactivateAccount, deleteAccount, view, endView]
+    [user, login, verify2fa, logout, register, sendOtp, verifyOtp, signInAccount, quickLogin, profile, updateProfile, changePassword, deactivateAccount, deleteAccount, view, endView, signedOut]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
