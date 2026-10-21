@@ -210,7 +210,11 @@ async function mockAuthEndpoint(path, options) {
     if (a.role === 'ADMIN') throw new Error('Team accounts sign in with password and a two-factor code.');
     return { ...afterPassword(a), isNewUser: false };
   }
-  if (path === '/auth/forgot-password') return { message: 'Password reset link sent to your email' };
+  if (path === '/auth/forgot-password') return { message: 'If an account uses that number, a code is on its way.' };
+  if (path === '/auth/forgot-password/verify') {
+    if (body.otp !== '123456') throw new Error('That code is not correct.');
+    return { resetToken: 'demo-reset-token' };
+  }
   if (path === '/auth/reset-password') return { message: 'Password reset successfully' };
   if (path === '/auth/logout' || path === '/auth/logout-all') return null;
   throw new Error(`Mock not implemented for ${path}`);
@@ -240,8 +244,11 @@ export const authApi = {
     api('/auth/otp/verify', { method: 'POST', body: JSON.stringify({ phone, otp }) }),
   verify2fa: (challengeId, code) =>
     api('/auth/2fa/verify', { method: 'POST', body: JSON.stringify({ challengeId, code }) }),
-  forgotPassword: (identifier) =>
-    api('/auth/forgot-password', { method: 'POST', body: JSON.stringify({ identifier }) }),
+  /* Forgot password: a code to the account's mobile → a reset token → the new password. */
+  forgotPassword: (phone) =>
+    api('/auth/forgot-password', { method: 'POST', body: JSON.stringify({ phone }) }),
+  verifyResetCode: (phone, otp) =>
+    api('/auth/forgot-password/verify', { method: 'POST', body: JSON.stringify({ phone, otp }) }),
   resetPassword: (token, password) =>
     api('/auth/reset-password', { method: 'POST', body: JSON.stringify({ token, password }) }),
 };

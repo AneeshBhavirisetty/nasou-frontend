@@ -28,6 +28,7 @@ export default function OtpLogin() {
   const [step, setStep] = useState(0);
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
+  const [phoneToken, setPhoneToken] = useState('');
   const [otpErr, setOtpErr] = useState(false);
   const [form, setForm] = useState({ fullName: '', email: '', password: '' });
   const [loading, setLoading] = useState(false);
@@ -60,6 +61,7 @@ export default function OtpLogin() {
         toast.success('Welcome back!');
         navigate(landingFor(data, explicit), { replace: true });
       } else {
+        setPhoneToken(data?.phoneToken || '');
         setStep(2);
         toast.info('One more step — create your account.');
       }
@@ -84,7 +86,7 @@ export default function OtpLogin() {
     if (form.password.length < 8) return setError('Use at least 8 characters for your password.');
     setLoading(true);
     try {
-      await register({ phone: phone.trim(), email: form.email.trim(), fullName: form.fullName.trim(), password: form.password });
+      await register({ phone: phone.trim(), email: form.email.trim(), fullName: form.fullName.trim(), password: form.password, phoneToken });
       toast.success('Account created — welcome to Nivora!');
       navigate(redirect, { replace: true });
     } catch (err) {

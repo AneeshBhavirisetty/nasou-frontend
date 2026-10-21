@@ -9,8 +9,10 @@ import { useRetailers, useRequests } from '../../store/retailers';
 import { useRefunds } from '../../store/orders';
 import { cx } from '../../lib/format';
 
-/* Super Admin navigation: a grouped full-height sidebar on desktop, a bottom
-   bar with a "More" sheet on phones. `module` ties each entry to the access
+/* Console navigation: a grouped full-height sidebar on desktop, a bottom bar
+   with a "More" sheet on phones. `SideRail` and `BottomNav` draw it for any
+   console (the seller console uses them too); the Admin* wrappers feed them
+   the Super Admin menu. `module` ties each entry to the access
    matrix (lib/access.js); an array means "any of these". Hidden entries only
    name detail pages for the header title and the access check.
    `off: true` switches a page off (client decision, Oct 2026): it leaves the
@@ -73,7 +75,7 @@ const link = ({ isActive }) =>
   );
 
 function NavItem({ n, badges }) {
-  const count = n.badge ? badges[n.badge] : 0;
+  const count = n.badge ? badges[n.badge] || 0 : 0;
   return (
     <NavLink to={n.to} end={n.exact} className={link}>
       {({ isActive }) => (
@@ -87,26 +89,26 @@ function NavItem({ n, badges }) {
   );
 }
 
-export function AdminSideRail({ open, onClose }) {
+/* `home` is where the logo links; `subtitle` sits under the Nivora name.
+   Entries with a `group` are listed under it; the rest come first, untitled. */
+export function SideRail({ open, onClose, nav, badges = {}, home, subtitle, label }) {
   const { logout } = useAuth();
   const navigate = useNavigate();
-  const nav = useAdminNav();
-  const badges = useBadges();
-  const groups = [...new Set(nav.map((n) => n.group))];
+  const groups = [...new Set(nav.map((n) => n.group || ''))];
   return (
     <aside
       className={cx(
         'fixed inset-y-0 left-0 z-40 hidden w-[272px] flex-col gap-3 border-r border-white/70 bg-white/72 px-4 pb-6 pt-[calc(14px+env(safe-area-inset-top))] shadow-[18px_0_42px_rgba(9, 81, 67,0.08)] backdrop-blur-2xl transition-transform duration-200 lg:flex',
         !open && '-translate-x-[105%]'
       )}
-      aria-label="Super Admin"
+      aria-label={label}
     >
       <div className="flex items-center justify-between gap-2">
-        <Link to="/admin/dashboard" className="flex min-w-0 items-center gap-3 rounded-[20px] px-1 py-1">
+        <Link to={home} className="flex min-w-0 items-center gap-3 rounded-[20px] px-1 py-1">
           <Logo variant="mark" size={42} />
           <span className="grid min-w-0 gap-1">
             <Logo variant="name" size={16} />
-            <span className="truncate text-[10px] font-extrabold uppercase tracking-[0.12em] text-forest-800/70">Super Admin</span>
+            <span className="truncate text-[10px] font-extrabold uppercase tracking-[0.12em] text-forest-800/70">{subtitle}</span>
           </span>
         </Link>
         <button onClick={onClose} aria-label="Hide sidebar" className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-forest/10 bg-white/76 text-forest transition hover:bg-white">
@@ -116,10 +118,10 @@ export function AdminSideRail({ open, onClose }) {
 
       <nav className="thin-bar -mr-2 grid content-start gap-4 overflow-y-auto pr-2">
         {groups.map((g) => (
-          <div key={g}>
-            <p className="mb-1.5 px-3.5 text-[10px] font-extrabold uppercase tracking-[0.18em] text-ink-35">{g}</p>
+          <div key={g || 'main'}>
+            {g && <p className="mb-1.5 px-3.5 text-[10px] font-extrabold uppercase tracking-[0.18em] text-ink-35">{g}</p>}
             <div className="grid gap-1">
-              {nav.filter((n) => n.group === g).map((n) => <NavItem key={n.to} n={n} badges={badges} />)}
+              {nav.filter((n) => (n.group || '') === g).map((n) => <NavItem key={n.to} n={n} badges={badges} />)}
             </div>
           </div>
         ))}
@@ -137,15 +139,18 @@ export function AdminSideRail({ open, onClose }) {
   );
 }
 
-export function AdminBottomNav() {
+export function AdminSideRail({ open, onClose }) {
+  return <SideRail open={open} onClose={onClose} nav={useAdminNav()} badges={useBadges()} home="/admin/dashboard" subtitle="Super Admin" label="Super Admin" />;
+}
+
+/* Phone bottom bar: the first four entries, then "More" for the rest. */
+export function BottomNav({ nav, badges = {}, label }) {
   const [more, setMore] = useState(false);
   const { pathname } = useLocation();
   const { logout } = useAuth();
   const navigate = useNavigate();
-  const nav = useAdminNav();
-  const badges = useBadges();
-  const primary = nav.slice(0, 4);
-  const rest = nav.slice(4);
+  const primary = nav.length <= 5 ? nav : nav.slice(0, 4);
+  const rest = nav.length <= 5 ? [] : nav.slice(4);
   const inRest = rest.some((n) => pathname.startsWith(n.to));
 
   useEffect(() => { setMore(false); }, [pathname]);
@@ -181,21 +186,27 @@ export function AdminBottomNav() {
         )}
       </AnimatePresence>
 
-      <nav aria-label="Admin quick navigation" className="fixed inset-x-0 bottom-0 z-[45] border-t border-white/70 bg-white/92 px-3 pb-[calc(8px+env(safe-area-inset-bottom))] pt-2 shadow-[0_-14px_34px_rgba(9, 81, 67,0.14)] backdrop-blur-2xl lg:hidden">
-        <div className="mx-auto grid max-w-lg grid-cols-5 gap-1">
+      <nav aria-label={label} className="fixed inset-x-0 bottom-0 z-[45] border-t border-white/70 bg-white/92 px-3 pb-[calc(8px+env(safe-area-inset-bottom))] pt-2 shadow-[0_-14px_34px_rgba(9, 81, 67,0.14)] backdrop-blur-2xl lg:hidden">
+        <div className="mx-auto grid max-w-lg gap-1" style={{ gridTemplateColumns: `repeat(${primary.length + (rest.length ? 1 : 0)}, minmax(0, 1fr))` }}>
           {primary.map((n) => (
             <NavLink key={n.to} to={n.to} end={n.exact} className={({ isActive }) => tab(isActive && !more)}>
               <Icon name={n.icon} size={19} /><span>{n.short}</span>
               {n.badge && badges[n.badge] > 0 && <span className="absolute right-[18%] top-1.5 h-2 w-2 rounded-full bg-clay" />}
             </NavLink>
           ))}
-          <button type="button" onClick={() => setMore((v) => !v)} aria-expanded={more} className={tab(more || inRest)}>
-            <Icon name="grid" size={19} /><span>More</span>
-          </button>
+          {rest.length > 0 && (
+            <button type="button" onClick={() => setMore((v) => !v)} aria-expanded={more} className={tab(more || inRest)}>
+              <Icon name="grid" size={19} /><span>More</span>
+            </button>
+          )}
         </div>
       </nav>
     </>
   );
+}
+
+export function AdminBottomNav() {
+  return <BottomNav nav={useAdminNav()} badges={useBadges()} label="Admin quick navigation" />;
 }
 
 export default AdminSideRail;

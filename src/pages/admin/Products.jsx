@@ -7,7 +7,7 @@ import ExcelExportButton from '../../components/ExcelExportButton';
 import ProductForm from '../../components/admin/ProductForm';
 import BulkImportDialog from '../../components/admin/BulkImportDialog';
 import CategoryDiscountDialog from '../../components/admin/CategoryDiscountDialog';
-import { AdminPageHead, SearchInput, ViewOnlyBanner } from '../../components/admin/AdminUI';
+import { AdminPageHead, Avatar, SearchInput, StatusPill, ViewOnlyBanner } from '../../components/admin/AdminUI';
 import { useIam } from '../../context/IamStore';
 import DataTable from '../../components/admin/DataTable';
 import { Tabs } from '../../components/admin/AdminUI';
@@ -24,6 +24,62 @@ import { money, cx } from '../../lib/format';
 import { act } from '../../lib/act';
 
 const PAGE = 20;
+/* the Retailer filter's value for products with no retailer (Nivora's own catalogue) */
+const OWN = '__own';
+
+/* Products grouped by who sells them (client review, Oct 2026): one card per
+   retailer, plus Nivora's own catalogue; a card opens that retailer's list. */
+function RetailerBreakdown({ products, retailers, onOpen }) {
+  const groups = useMemo(() => {
+    const m = new Map();
+    for (const p of products) {
+      const key = p.retailerId || '';
+      const g = m.get(key) || { id: key, count: 0, inStock: 0, out: 0, value: 0, low: 0, high: 0 };
+      g.count += 1;
+      if (p.stock > 0) g.inStock += 1; else g.out += 1;
+      g.value += (p.price || 0) * (p.stock || 0);
+      if (p.price > 0) {
+        g.low = g.low ? Math.min(g.low, p.price) : p.price;
+        g.high = Math.max(g.high, p.price);
+      }
+      m.set(key, g);
+    }
+    return [...m.values()].map((g) => ({ ...g, r: retailers.find((r) => r.id === g.id) })).sort((a, b) => b.count - a.count);
+  }, [products, retailers]);
+
+  return (
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      {groups.map((g) => (
+        <button key={g.id || OWN} type="button" onClick={() => onOpen(g.id || OWN)} className="min-w-0 rounded-[22px] border border-line bg-white p-5 text-left shadow-card transition hover:-translate-y-0.5 hover:shadow-lift">
+          <span className="flex items-start justify-between gap-3">
+            <span className="flex min-w-0 items-center gap-3">
+              <Avatar name={g.r?.name || 'Nivora'} tone={g.r ? 'sunk' : 'dark'} />
+              <span className="min-w-0">
+                <span className="block truncate text-[15px] font-bold text-ink">{g.r?.name || (g.id ? 'Removed retailer' : 'Nivora — own catalogue')}</span>
+                <span className="block truncate text-[12px] text-ink-50">{g.r ? [g.r.city, g.r.contact].filter(Boolean).join(' · ') : 'Sold by Nivora'}</span>
+              </span>
+            </span>
+            {g.r && <StatusPill status={g.r.status} />}
+          </span>
+          <span className="mt-4 grid grid-cols-3 gap-2 text-center">
+            {[['Products', g.count], ['In stock', g.inStock], ['Out of stock', g.out]].map(([label, n]) => (
+              <span key={label} className="rounded-[14px] bg-[#f6f3ed] px-2 py-2.5">
+                <span className={cx('tnum block text-[18px] font-bold', label === 'Out of stock' && n ? 'text-clay-600' : 'text-forest')}>{n.toLocaleString('en-IN')}</span>
+                <span className="block text-[11px] font-semibold text-ink-50">{label}</span>
+              </span>
+            ))}
+          </span>
+          <span className="mt-3 flex flex-wrap justify-between gap-x-3 gap-y-1 text-[12.5px] text-ink-70">
+            <span>Stock value <b className="tnum text-ink">{money(g.value)}</b></span>
+            <span>{g.high ? <>Prices <b className="tnum text-ink">{money(g.low)}–{money(g.high)}</b></> : 'Price on request'}</span>
+          </span>
+          <span className="mt-3 inline-flex items-center gap-1 text-[12.5px] font-bold text-forest">View products <Icon name="arrowRight" size={13} /></span>
+        </button>
+      ))}
+      {!groups.length && <p className="text-[13px] text-ink-50">No products yet.</p>}
+    </div>
+  );
+}
 
 /* Stock movements: every change to stock and why — orders, cancellations,
    manual counts (customer review: inventory must follow orders). */
@@ -68,8 +124,10 @@ export function ProductsManager({ seller = false }) {
   const retailers = useRetailers();
   const [retailer, setRetailer] = useState('');
   const [view, setView] = useState('list');
-  const rows = useMemo(() => (retailer ? all.filter((p) => p.retailerId === retailer) : all), [all, retailer]);
+  const rows = useMemo(() => (retailer === OWN ? all.filter((p) => !p.retailerId) : retailer ? all.filter((p) => p.retailerId === retailer) : all), [all, retailer]);
   const sellerName = (id) => retailers.find((r) => r.id === id)?.name || '';
+  /* who sells it: the retailer, or Nivora for its own catalogue */
+  const ownerName = (id) => (id ? sellerName(id) || '—' : 'Nivora');
   const [q, setQ] = useState('');
   const [dept, setDept] = useState('');
   const [cat, setCat] = useState('');
@@ -118,6 +176,7 @@ export function ProductsManager({ seller = false }) {
     act(toast, () => saveProduct(prod, seller ? sellerName(actor.retailerId) : undefined), isNew ? `${prod.name} added` : `${prod.name} updated`);
   };
   const onBulk = (list) => act(toast, () => importProducts(list, seller ? actor.retailerId : list[0]?.retailerId), `${list.length} products imported`);
+  const importTo = retailer === OWN ? null : retailer || 'r1';
   const onDelete = (p) => {
     if (!window.confirm(`Delist "${p.name}"?`)) return;
     act(toast, () => deleteProduct(p.id), 'Product delisted');
@@ -145,12 +204,17 @@ export function ProductsManager({ seller = false }) {
           filename="nivora-products"
           label="Export"
           headers={['SKU', 'Name', 'Retailer', 'Category', 'Sub-category', 'Material', 'Size', 'Brand', 'Price', 'MRP', 'Discount %', 'Stock']}
-          rows={filtered.map((p) => [p.sku, p.name, sellerName(p.retailerId), departmentMeta(p.department || DEFAULT_DEPARTMENT).name, p.subcategoryName || categoryName(p.category), p.material, p.size, p.supplierName, p.price, p.mrp, p.discount, p.stock])}
+          rows={filtered.map((p) => [p.sku, p.name, ownerName(p.retailerId), departmentMeta(p.department || DEFAULT_DEPARTMENT).name, p.subcategoryName || categoryName(p.category), p.material, p.size, p.supplierName, p.price, p.mrp, p.discount, p.stock])}
         />
       </AdminPageHead>
 
-      <Tabs value={view} onChange={setView} options={[{ value: 'list', label: 'Products', icon: 'package', count: rows.length }, { value: 'ledger', label: 'Stock movements', icon: 'refresh' }]} />
-      {view === 'ledger' && <StockLedger retailerId={seller ? actor.retailerId : retailer} />}
+      <Tabs value={view} onChange={setView} options={[
+        { value: 'list', label: 'Products', icon: 'package', count: rows.length },
+        ...(seller ? [] : [{ value: 'retailers', label: 'By retailer', icon: 'store', count: new Set(all.map((p) => p.retailerId || '')).size }]),
+        { value: 'ledger', label: 'Stock movements', icon: 'refresh' },
+      ]} />
+      {view === 'retailers' && <RetailerBreakdown products={all} retailers={retailers} onOpen={(id) => { setRetailer(id); setPage(1); setView('list'); }} />}
+      {view === 'ledger' && <StockLedger retailerId={seller ? actor.retailerId : retailer === OWN ? undefined : retailer} />}
       {view === 'list' && <>
 
       {!canEdit && <ViewOnlyBanner what="the catalogue" />}
@@ -160,6 +224,7 @@ export function ProductsManager({ seller = false }) {
         {!seller && (
           <select value={retailer} onChange={(e) => { setRetailer(e.target.value); setPage(1); }} aria-label="Retailer" className="h-12 rounded-[18px] border border-line bg-white px-4 text-[13px] font-semibold text-forest outline-none transition focus:border-forest/40">
             <option value="">All retailers</option>
+            <option value={OWN}>Nivora — own catalogue</option>
             {retailers.filter((r) => r.status !== 'pending' && r.status !== 'needs_changes').map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
           </select>
         )}
@@ -178,8 +243,8 @@ export function ProductsManager({ seller = false }) {
       </div>
 
       <div className="overflow-hidden rounded-[20px] border border-line bg-white/86 shadow-[0_18px_40px_rgba(9, 81, 67,0.08)]">
-        <div className="hidden grid-cols-[1fr_92px_84px_132px_96px] gap-3 border-b border-line bg-canvas px-4 py-3 text-[13px] font-medium text-forest-800 sm:grid">
-          <span>Product</span><span>Price</span><span>MRP</span><span>Stock</span><span className="text-right">Actions</span>
+        <div className={cx('hidden gap-3 border-b border-line bg-canvas px-4 py-3 text-[13px] font-medium text-forest-800 sm:grid', seller ? 'grid-cols-[1fr_92px_84px_132px_96px]' : 'grid-cols-[1fr_170px_92px_84px_132px_96px]')}>
+          <span>Product</span>{!seller && <span>Retailer</span>}<span>Price</span><span>MRP</span><span>Stock</span><span className="text-right">Actions</span>
         </div>
         {shown.map((p, i) => {
           const isCustom = !CATALOG.some((c) => c.id === p.id);
@@ -187,7 +252,7 @@ export function ProductsManager({ seller = false }) {
             <motion.div
               key={p.id}
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: Math.min(i, 12) * 0.02 }}
-              className="grid grid-cols-2 items-center gap-x-3 gap-y-2.5 border-b border-line px-4 py-3 transition-colors last:border-0 hover:bg-canvas/40 sm:grid-cols-[1fr_92px_84px_132px_96px] sm:gap-3"
+              className={cx('grid grid-cols-2 items-center gap-x-3 gap-y-2.5 border-b border-line px-4 py-3 transition-colors last:border-0 hover:bg-canvas/40 sm:gap-3', seller ? 'sm:grid-cols-[1fr_92px_84px_132px_96px]' : 'sm:grid-cols-[1fr_170px_92px_84px_132px_96px]')}
             >
               <div className="col-span-2 flex items-center gap-3 sm:col-span-1">
                 <span className="photo-bed grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-md border border-line">
@@ -200,9 +265,14 @@ export function ProductsManager({ seller = false }) {
                     {p.name}
                     {isCustom && <Badge tone="ok">Added</Badge>}
                   </p>
-                  <p className="text-[11px] text-ink-50">{p.sku} · {departmentMeta(p.department || DEFAULT_DEPARTMENT).name} › {p.subcategoryName || categoryName(p.category)}{!seller && <> · <span className="font-semibold text-forest-800">{sellerName(p.retailerId)}</span></>}</p>
+                  <p className="text-[11px] text-ink-50">{p.sku} · {departmentMeta(p.department || DEFAULT_DEPARTMENT).name} › {p.subcategoryName || categoryName(p.category)}{!seller && <span className="sm:hidden"> · <span className="font-semibold text-forest-800">{ownerName(p.retailerId)}</span></span>}</p>
                 </div>
               </div>
+              {!seller && (
+                <button type="button" onClick={() => { setRetailer(p.retailerId || OWN); setPage(1); }} title="Show only this retailer’s products" className="hidden min-w-0 items-center gap-2 text-left text-[12.5px] font-semibold text-forest-800 hover:text-forest sm:flex">
+                  <Icon name="store" size={14} className="shrink-0 text-ink-35" /><span className="truncate">{ownerName(p.retailerId)}</span>
+                </button>
+              )}
               <span className="tnum text-[13px] font-semibold">{money(p.price)}</span>
               <span className="tnum text-right text-[13px] text-ink-50 sm:text-left"><span className="sm:hidden">MRP </span>{money(p.mrp)}</span>
               {canEdit
@@ -238,9 +308,10 @@ export function ProductsManager({ seller = false }) {
         <CategoryDiscountDialog
           open
           onClose={() => setDiscount(false)}
-          products={rows}
+          products={all}
           department={dept}
           category={cat}
+          retailer={retailer === OWN ? '' : retailer}
         />
       )}
 
@@ -248,7 +319,7 @@ export function ProductsManager({ seller = false }) {
         open={bulk}
         onClose={() => setBulk(false)}
         existingSkus={new Set(all.map((p) => p.sku))}
-        onImport={(list) => onBulk(list.map((p) => ({ ...p, retailerId: p.retailerId || (seller ? actor.retailerId : retailer || 'r1') })))}
+        onImport={(list) => onBulk(list.map((p) => ({ ...p, retailerId: p.retailerId || (seller ? actor.retailerId : importTo) })))}
       />
 
       {editing !== undefined && (

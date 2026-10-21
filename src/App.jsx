@@ -46,7 +46,6 @@ import OtpLogin from './pages/auth/OtpLogin';
 import ForgotPassword from './pages/auth/ForgotPassword';
 import ForgotEmail from './pages/auth/ForgotEmail';
 import Register from './pages/auth/Register';
-import ResetPassword from './pages/auth/ResetPassword';
 import Unauthorized from './pages/Unauthorized';
 import AdminDashboard from './pages/admin/Dashboard';
 import AdminProducts from './pages/admin/Products';
@@ -103,7 +102,6 @@ export default function App() {
           <Route path="/login/otp" element={<OtpLogin />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password/:token" element={<ResetPassword />} />
           <Route path="/forgot-email" element={<ForgotEmail />} />
           <Route path="/invite/:token" element={<InviteAccept />} />
         </Route>

@@ -55,8 +55,12 @@ function useDashboardData() {
     const newCustomers = [...customers30].filter((k) => firstOrder.get(k) >= now - 30 * DAY).length;
 
     const parts = orders.flatMap((o) => o.parts.map((p) => ({ ...p, orderId: o.id, createdAt: o.createdAt, customer: o.customer })));
+    const since30 = now - 30 * DAY;
     const perRetailer = retailers.filter((r) => r.status !== 'pending' && r.status !== 'needs_changes' && r.status !== 'rejected').map((r) => {
       const mine = parts.filter((p) => p.retailerId === r.id);
+      const recent = mine.filter((p) => p.status !== 'Cancelled' && p.createdAt >= since30);
+      const sales30 = recent.reduce((s, p) => s + p.total, 0);
+      const units30 = recent.reduce((s, p) => s + (p.lines || []).reduce((n, l) => n + (l.qty || 0), 0), 0);
       const done = mine.filter((p) => p.status === 'Delivered' && logAt(p, 'Delivered'));
       const fulfil = done.length ? done.reduce((s, p) => s + hours(logAt(p, 'Delivered') - p.createdAt), 0) / done.length : 0;
       return {
@@ -66,6 +70,9 @@ function useDashboardData() {
         cancelRate: mine.length ? Math.round((mine.filter((p) => p.status === 'Cancelled').length / mine.length) * 100) : 0,
         fulfilHours: Math.round(fulfil),
         commission: mine.filter((p) => p.status !== 'Cancelled').reduce((s, p) => s + p.commission, 0),
+        sales30, units30, orders30: recent.length,
+        avgUnit: units30 ? Math.round(sales30 / units30) : 0,
+        listed: products.filter((p) => p.retailerId === r.id).length,
       };
     }).sort((a, b) => b.sales - a.sales);
 
@@ -99,6 +106,61 @@ function useDashboardData() {
       lowStock: products.filter((p) => p.stock > 0 && p.stock <= 8),
     };
   }, [orders, retailers, refunds, settings, products, payouts, held]);
+}
+
+/* Who is doing best (client review, Oct 2026): retailers ranked by sales,
+   by units sold or by products listed, over the last 30 days. */
+const RANK_BY = [
+  { key: 'sales', label: 'Sales (₹)', value: (r) => r.sales30, show: (v) => money(v) },
+  { key: 'units', label: 'Units sold', value: (r) => r.units30, show: (v) => `${v.toLocaleString('en-IN')} units` },
+  { key: 'listed', label: 'Products listed', value: (r) => r.listed, show: (v) => `${v.toLocaleString('en-IN')} products` },
+];
+
+function Leaderboard({ rows, onOpen }) {
+  const [by, setBy] = useState('sales');
+  const m = RANK_BY.find((x) => x.key === by);
+  const ranked = [...rows].sort((a, b) => m.value(b) - m.value(a) || b.sales30 - a.sales30);
+  const top = Math.max(1, ...ranked.map(m.value));
+  return (
+    <Panel
+      title="Who is doing best"
+      note="Last 30 days. Open a retailer for the full picture."
+      action={(
+        <div className="flex gap-1 rounded-full bg-sunk p-1" role="tablist" aria-label="Rank retailers by">
+          {RANK_BY.map((x) => (
+            <button key={x.key} type="button" role="tab" aria-selected={by === x.key} onClick={() => setBy(x.key)} className={cx('rounded-full px-3 py-1.5 text-[12px] font-bold transition', by === x.key ? 'bg-forest text-white shadow-btn' : 'text-forest-800 hover:text-forest')}>
+              {x.label}
+            </button>
+          ))}
+        </div>
+      )}
+    >
+      <ol className="space-y-2">
+        {ranked.map((r, i) => (
+          <li key={r.id}>
+            <button type="button" onClick={() => onOpen(r.id)} className="w-full rounded-[16px] border border-line-soft p-3 text-left transition hover:bg-[#f8f6f1]">
+              <span className="flex items-center gap-3">
+                <span className={cx('tnum grid h-9 w-9 shrink-0 place-items-center rounded-full text-[14px] font-black', i === 0 ? 'bg-amber-50 text-amber' : i < 3 ? 'bg-emerald-50 text-forest' : 'bg-sunk text-ink-50')}>{i + 1}</span>
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-baseline justify-between gap-2">
+                    <b className="truncate text-[14px] text-ink">{r.name}</b>
+                    <b className="tnum shrink-0 text-[14px] text-forest">{m.show(m.value(r))}</b>
+                  </span>
+                  <span className="mt-1.5 block h-2 overflow-hidden rounded-full bg-sunk">
+                    <span className="block h-2 rounded-full bg-forest" style={{ width: `${Math.round((m.value(r) / top) * 100)}%` }} />
+                  </span>
+                  <span className="mt-1.5 block text-[11.5px] text-ink-50">
+                    {money(r.sales30)} sales · {r.units30.toLocaleString('en-IN')} units · {r.orders30} orders · {r.listed.toLocaleString('en-IN')} products listed{r.avgUnit ? ` · avg ${money(r.avgUnit)} a unit` : ''}
+                  </span>
+                </span>
+              </span>
+            </button>
+          </li>
+        ))}
+        {!ranked.length && <li className="text-[13px] text-ink-50">No approved retailers yet.</li>}
+      </ol>
+    </Panel>
+  );
 }
 
 export default function AdminDashboard() {
@@ -185,6 +247,7 @@ export default function AdminDashboard() {
 
         {tab === 'retail' && (
           <>
+            <Leaderboard rows={d.perRetailer.filter((r) => r.status === 'approved' || r.status === 'suspended')} onOpen={(id) => navigate(`/admin/retailers/${id}`)} />
             <div className="grid gap-5 lg:grid-cols-2">
               <ChartCard title="Sales by retailer" note="All live sub-orders" table={{ headers: ['Retailer', 'Sales', 'Sub-orders'], rows: d.perRetailer.map((r) => [r.name, money(r.sales), r.parts]) }}>
                 <BarList rows={d.perRetailer.map((r) => ({ key: r.id, label: r.name, value: r.sales, parts: r.parts }))} format={rupeesCompact} color={SERIES[0]} detail={(r) => `${r.parts} sub-orders`} />
@@ -195,12 +258,12 @@ export default function AdminDashboard() {
             </div>
             <Panel title="Scorecard" pad={false}>
               <div className="thin-bar overflow-x-auto">
-                <table className="w-full min-w-[640px] text-[13px]">
-                  <thead className="bg-[#f6f3ed] text-left text-[11px] uppercase tracking-[0.1em] text-forest-800"><tr><th className="px-4 py-2.5">Retailer</th><th className="px-3">Status</th><th className="px-3 text-right">Sales</th><th className="px-3 text-right">Sub-orders</th><th className="px-3 text-right">Cancelled</th><th className="px-3 text-right">Fulfilment</th><th className="px-4 text-right">Commission</th></tr></thead>
+                <table className="w-full min-w-[820px] text-[13px]">
+                  <thead className="bg-[#f6f3ed] text-left text-[11px] uppercase tracking-[0.1em] text-forest-800"><tr><th className="px-4 py-2.5">Retailer</th><th className="px-3">Status</th><th className="px-3 text-right">Sales</th><th className="px-3 text-right">Units (30 d)</th><th className="px-3 text-right">Products</th><th className="px-3 text-right">Sub-orders</th><th className="px-3 text-right">Cancelled</th><th className="px-3 text-right">Fulfilment</th><th className="px-4 text-right">Commission</th></tr></thead>
                   <tbody>{d.perRetailer.map((r) => (
                     <tr key={r.id} onClick={() => navigate(`/admin/retailers/${r.id}`)} className="cursor-pointer border-t border-line-soft hover:bg-[#f8f6f1]">
                       <td className="px-4 py-2.5 font-bold text-ink">{r.name}</td><td className="px-3"><StatusPill status={r.status} /></td>
-                      <td className="tnum px-3 text-right">{money(r.sales)}</td><td className="tnum px-3 text-right">{r.parts}</td>
+                      <td className="tnum px-3 text-right">{money(r.sales)}</td><td className="tnum px-3 text-right">{r.units30.toLocaleString('en-IN')}</td><td className="tnum px-3 text-right">{r.listed.toLocaleString('en-IN')}</td><td className="tnum px-3 text-right">{r.parts}</td>
                       <td className={cx('tnum px-3 text-right font-bold', r.cancelRate > 10 ? 'text-clay-600' : 'text-ink-70')}>{r.cancelRate}%</td>
                       <td className="tnum px-3 text-right">{r.fulfilHours ? `${r.fulfilHours} h` : '—'}</td><td className="tnum px-4 text-right">{money(r.commission)}</td>
                     </tr>

@@ -2,7 +2,9 @@ import { useMemo, useState } from 'react';
 import Icon from '../Icon';
 import Modal from '../Modal';
 import { Button, Field } from '../ui';
+import RetailerProductPicker from './RetailerProductPicker';
 import { useAdminStore } from '../../context/AdminStore';
+import { useRetailers } from '../../store/retailers';
 import { useToast } from '../../context/ToastContext';
 import { categoryName } from '../../data/catalog';
 import { DEPARTMENTS, DEFAULT_DEPARTMENT, departmentMeta } from '../../data/departments';
@@ -24,13 +26,18 @@ import { act } from '../../lib/act';
  * discount *code* from the Discounts module to the category. The code is
  * scoped to that category and set to auto-apply at checkout; shoppers can
  * still type it.
+ *
+ * Oct 2026: it can also target one retailer, on all of that retailer's
+ * products or only the ones ticked (a "retailer" bulk rule). Codes cannot be
+ * limited to a retailer, so that choice is for "Set a discount here" only.
  * ==========================================================================*/
 
 const SELECT = 'h-12 w-full rounded-md border border-line bg-white/80 px-4 text-[14px] text-ink outline-none transition focus:border-forest focus:shadow-[0_0_0_2px_rgba(9, 81, 67,0.18)]';
 const LABEL = 'mb-1.5 block text-[11.5px] font-semibold uppercase tracking-[0.16em] text-forest-800';
 
-export default function CategoryDiscountDialog({ open, onClose, products, department = '', category = '' }) {
+export default function CategoryDiscountDialog({ open, onClose, products, department = '', category = '', retailer = '' }) {
   const { saveBulkRule, coupons, saveCoupon } = useAdminStore();
+  const retailers = useRetailers().filter((r) => r.status === 'approved' || r.status === 'suspended');
   const [mode, setMode] = useState('rule');
   const [code, setCode] = useState('');
   const toast = useToast();
@@ -52,8 +59,9 @@ export default function CategoryDiscountDialog({ open, onClose, products, depart
 
   /* Pre-filled from whatever the product list is filtered by. */
   const [f, setF] = useState(() => ({
-    scopeType: category ? 'category' : 'department',
-    scopeValue: category || department || DEFAULT_DEPARTMENT,
+    scopeType: retailer ? 'retailer' : category ? 'category' : 'department',
+    scopeValue: retailer || category || department || DEFAULT_DEPARTMENT,
+    productSkus: [],
     kind: 'percent',
     value: '10',
     minQty: '1',
@@ -64,19 +72,22 @@ export default function CategoryDiscountDialog({ open, onClose, products, depart
   const pct = f.kind === 'percent';
   const value = Math.max(0, Number(String(f.value).replace(/[^\d.]/g, '')) || 0);
   const minQty = Math.max(1, Math.round(Number(String(f.minQty).replace(/\D/g, '')) || 1));
-  const scopeLabel = f.scopeType === 'department'
-    ? departmentMeta(f.scopeValue).name
-    : subs.find((s) => s.slug === f.scopeValue)?.label ?? categoryName(f.scopeValue);
+  const theirs = useMemo(() => (f.scopeType === 'retailer' ? products.filter((p) => p.retailerId === f.scopeValue) : []), [products, f.scopeType, f.scopeValue]);
+  const scopeLabel = f.scopeType === 'retailer'
+    ? `${retailers.find((r) => r.id === f.scopeValue)?.name || 'this retailer'}${f.productSkus.length ? ` (${f.productSkus.length} chosen)` : ''}`
+    : f.scopeType === 'department'
+      ? departmentMeta(f.scopeValue).name
+      : subs.find((s) => s.slug === f.scopeValue)?.label ?? categoryName(f.scopeValue);
 
   /* What the rule would touch, and what a shopper saves on an average unit. */
   const preview = useMemo(() => {
-    const rule = { scopeType: f.scopeType, scopeValue: f.scopeValue };
+    const rule = { scopeType: f.scopeType, scopeValue: f.scopeValue, productSkus: f.productSkus };
     const hit = products.filter((p) => ruleMatches(rule, p));
     const each = hit.length
       ? Math.round(hit.reduce((sum, p) => sum + (pct ? (p.price * value) / 100 : Math.min(value, p.price)), 0) / hit.length)
       : 0;
     return { count: hit.length, each };
-  }, [products, f.scopeType, f.scopeValue, pct, value]);
+  }, [products, f.scopeType, f.scopeValue, f.productSkus, pct, value]);
 
   const coupon = coupons.find((c) => c.code === code.trim().toUpperCase());
   const couponScope = f.scopeType === 'department' ? `dept:${f.scopeValue}` : f.scopeValue;
@@ -84,6 +95,7 @@ export default function CategoryDiscountDialog({ open, onClose, products, depart
   const submit = (e) => {
     e.preventDefault();
     if (mode === 'code') {
+      if (f.scopeType === 'retailer') return toast.error('A discount code cannot be limited to one retailer — use “Set a discount here”.');
       if (!coupon) return toast.error('No discount code with that name — create it under Discounts first.');
       if (!preview.count) return toast.error('No products in that selection yet.');
       act(toast, () => saveCoupon({ ...coupon, scope: couponScope, autoApply: true, active: true }), `${coupon.code} now applies itself to ${scopeLabel}`);
@@ -98,6 +110,7 @@ export default function CategoryDiscountDialog({ open, onClose, products, depart
       name: f.name.trim() || `${pct ? `${value}% off` : `${money(value)} off`} ${scopeLabel}`,
       scopeType: f.scopeType,
       scopeValue: f.scopeValue,
+      productSkus: f.scopeType === 'retailer' ? f.productSkus : [],
       minQty,
       kind: f.kind,
       value,
@@ -107,11 +120,11 @@ export default function CategoryDiscountDialog({ open, onClose, products, depart
   };
 
   return (
-    <Modal open={open} onClose={onClose} title="Apply discount to a category" size="md">
+    <Modal open={open} onClose={onClose} title="Apply a discount" size="md">
       <form onSubmit={submit} className="space-y-4">
         <div className="flex gap-2 rounded-md bg-sunk p-1">
           {[['rule', 'Set a discount here', 'tag'], ['code', 'Use a discount code', 'key']].map(([k, label, ic]) => (
-            <button key={k} type="button" onClick={() => setMode(k)} className={cx('flex flex-1 items-center justify-center gap-1.5 rounded-sm py-2.5 text-[13px] font-bold transition', mode === k ? 'bg-forest text-white shadow-btn' : 'text-forest-800 hover:text-forest')}>
+            <button key={k} type="button" onClick={() => { setMode(k); if (k === 'code' && f.scopeType === 'retailer') setF((s) => ({ ...s, scopeType: 'department', scopeValue: department || DEFAULT_DEPARTMENT, productSkus: [] })); }} className={cx('flex flex-1 items-center justify-center gap-1.5 rounded-sm py-2.5 text-[13px] font-bold transition', mode === k ? 'bg-forest text-white shadow-btn' : 'text-forest-800 hover:text-forest')}>
               <Icon name={ic} size={14} /> {label}
             </button>
           ))}
@@ -132,26 +145,39 @@ export default function CategoryDiscountDialog({ open, onClose, products, depart
                 setF((s) => ({
                   ...s,
                   scopeType,
-                  scopeValue: scopeType === 'department'
-                    ? (department || DEFAULT_DEPARTMENT)
-                    : (category || subs[0]?.slug || ''),
+                  productSkus: [],
+                  scopeValue: scopeType === 'retailer'
+                    ? (retailer || retailers[0]?.id || '')
+                    : scopeType === 'department'
+                      ? (department || DEFAULT_DEPARTMENT)
+                      : (category || subs[0]?.slug || ''),
                 }));
               }}
               className={SELECT}
             >
               <option value="department">A whole category</option>
               <option value="category">One sub-category</option>
+              {mode === 'rule' && <option value="retailer">One retailer’s products</option>}
             </select>
           </div>
 
           <div>
-            <span className={LABEL}>{f.scopeType === 'department' ? 'Category' : 'Sub-category'}</span>
-            <select value={f.scopeValue} onChange={(e) => set('scopeValue')(e.target.value)} className={SELECT}>
-              {f.scopeType === 'department'
-                ? DEPARTMENTS.map((d) => <option key={d.slug} value={d.slug}>{d.name}</option>)
-                : subs.map((s) => <option key={s.slug} value={s.slug}>{s.label}</option>)}
+            <span className={LABEL}>{f.scopeType === 'retailer' ? 'Retailer' : f.scopeType === 'department' ? 'Category' : 'Sub-category'}</span>
+            <select value={f.scopeValue} onChange={(e) => setF((s) => ({ ...s, scopeValue: e.target.value, productSkus: [] }))} className={SELECT}>
+              {f.scopeType === 'retailer'
+                ? retailers.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)
+                : f.scopeType === 'department'
+                  ? DEPARTMENTS.map((d) => <option key={d.slug} value={d.slug}>{d.name}</option>)
+                  : subs.map((s) => <option key={s.slug} value={s.slug}>{s.label}</option>)}
             </select>
           </div>
+
+          {f.scopeType === 'retailer' && f.scopeValue && (
+            <div className="sm:col-span-2">
+              <span className={LABEL}>Products</span>
+              <RetailerProductPicker key={f.scopeValue} products={theirs} value={f.productSkus} onChange={(v) => set('productSkus')(v)} />
+            </div>
+          )}
 
           {mode === 'code' ? (
             <div className="sm:col-span-2">

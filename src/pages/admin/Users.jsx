@@ -63,13 +63,13 @@ function MemberForm({ member, team, onClose }) {
     setErr('');
     if (!f.fullName.trim()) return setErr('Enter the person’s name.');
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email)) return setErr('Enter a valid work email — one account per person, no shared logins.');
-    if (f.phone && !isMobile10(f.phone)) return setErr('Mobile must be 10 digits (used for the two-factor code).');
+    if (!isMobile10(f.phone)) return setErr('Enter a 10-digit mobile — it receives sign-in codes and is how they set their password.');
     if (team.some((u) => u.email === f.email.trim().toLowerCase() && u.id !== member?.id)) return setErr('Someone on the team already uses that email.');
     try {
       if (isNew) {
         const a = await createAccount({ fullName: f.fullName.trim(), email: f.email, phone: f.phone, title: f.title.trim(), role: 'ADMIN', teamRole: f.teamRole }, { by: user?.fullName });
         notify({ userId: a.id, icon: 'users', title: 'Welcome to the Nivora team', body: `You joined as ${teamRoleLabel(f.teamRole)}. Two-factor sign-in is on for your account.`, to: '/admin/dashboard' });
-        toast.success(`${a.fullName} added as ${teamRoleLabel(f.teamRole)} — invite sent to ${a.email}`);
+        toast.success(`${a.fullName} added as ${teamRoleLabel(f.teamRole)}. They set a password with Forgot password and their mobile.`);
       } else {
         act(toast, () => updateAccount(member.id, { fullName: f.fullName.trim(), phone: f.phone, title: f.title.trim(), ...(owner ? {} : { teamRole: f.teamRole }) }, 'Team member updated'), 'Saved');
       }

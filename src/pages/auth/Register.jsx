@@ -96,6 +96,7 @@ export default function Register() {
         email: f.email.trim(),
         fullName: f.fullName.trim(),
         password: f.password,
+        phoneToken: res?.phoneToken,
       });
       toast.success('Mobile verified — welcome to Nivora!');
       navigate(landingFor(session, explicit), { replace: true });

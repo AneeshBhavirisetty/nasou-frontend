@@ -22,7 +22,7 @@ const LEGACY_PASSWORDS = ['nasou123'];
 export const DEMO_2FA_CODE = '123456';
 
 const DAY = 86400000;
-const acc = (o) => ({ status: 'active', demo: true, notes: [], createdAt: Date.now() - 120 * DAY, aliases: [], ...o });
+const acc = (o) => ({ status: 'active', demo: true, createdAt: Date.now() - 120 * DAY, aliases: [], ...o });
 
 function seed() {
   return [
@@ -105,7 +105,7 @@ export async function createAccount(fields, { password, by } = {}) {
   const email = norm(fields.email);
   if (email && findAccount(email)) throw new Error('An account with that email already exists.');
   if (fields.phone && findAccount(fields.phone)) throw new Error('An account with that mobile number already exists.');
-  const a = { id: uid('u'), status: 'active', notes: [], aliases: [], createdAt: Date.now(), demo: false, ...fields, email };
+  const a = { id: uid('u'), status: 'active', aliases: [], createdAt: Date.now(), demo: false, ...fields, email };
   if (password) a.pwHash = await pwHash(a, password);
   else a.demo = true; // invited team members use the demo password until they set one
   accountsStore.set((list) => [...list, a]);
@@ -130,14 +130,6 @@ export function updateAccount(id, fields, summary = 'Updated account') {
     });
   }
   return after;
-}
-
-export function addAccountNote(id, text, by) {
-  if (LIVE) return post(`/admin/customers/${id}/notes`, { text }).then(() => refresh('accounts'));
-  const a = getAccount(id);
-  if (!a) return;
-  accountsStore.set((list) => list.map((x) => (x.id === id ? { ...x, notes: [{ id: uid('nt'), text, by, at: Date.now() }, ...(x.notes || [])] } : x)));
-  audit({ action: 'customer.note', entity: 'account', entityId: id, summary: `Internal note on ${a.fullName}`, after: { note: text } });
 }
 
 /* ── retailer staff invites (requirement 21) ─────────────────────────────── */

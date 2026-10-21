@@ -21,6 +21,7 @@ export const BULK_SCOPES = [
   { key: 'category', label: 'Sub-category' },
   { key: 'brand', label: 'Brand' },
   { key: 'product', label: 'Specific product' },
+  { key: 'retailer', label: 'Retailer' },
 ];
 
 export function ruleMatches(rule, product) {
@@ -30,6 +31,8 @@ export function ruleMatches(rule, product) {
     case 'category': return product.category === rule.scopeValue;
     case 'brand': return product.supplier === rule.scopeValue;
     case 'product': return product.id === rule.scopeValue || product.sku === rule.scopeValue;
+    /* one retailer: all its products, or only rule.productSkus */
+    case 'retailer': return product.retailerId === rule.scopeValue && (!rule.productSkus?.length || rule.productSkus.includes(product.sku));
     default: return false;
   }
 }

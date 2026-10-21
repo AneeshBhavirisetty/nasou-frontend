@@ -3,14 +3,12 @@ import { useNavigate, useParams } from 'react-router-dom';
 import DataTable from '../../components/admin/DataTable';
 import ReasonDialog from '../../components/admin/ReasonDialog';
 import Modal from '../../components/Modal';
-import { Avatar, BackLinkInline, DetailList, EmptyNote, Kpi, Panel, StatusPill, TEXTAREA_CLS } from '../../components/admin/AdminUI';
+import { Avatar, BackLinkInline, DetailList, EmptyNote, Kpi, Panel, StatusPill } from '../../components/admin/AdminUI';
 import { Button, Field } from '../../components/ui';
-import { useAuth } from '../../context/AuthContext';
 import { useIam } from '../../context/IamStore';
 import { useToast } from '../../context/ToastContext';
-import { addAccountNote, updateAccount } from '../../store/accounts';
+import { updateAccount } from '../../store/accounts';
 import { notify } from '../../store/notifications';
-import { audit } from '../../lib/auditLog';
 import { useCustomers } from './Users';
 import { useOrders } from '../../store/orders';
 import { formatOrderDate } from '../../data/orders';
@@ -18,9 +16,9 @@ import { money, isMobile10 } from '../../lib/format';
 import { act } from '../../lib/act';
 
 /* Customer support control (requirement 12): edit details, block or unblock,
-   send a password reset, internal notes; opened from the Customers list. */
+   opened from the Customers list. Customers reset their own password with a
+   code to their mobile (Forgot password). */
 
-const when = (ms) => new Date(ms).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' });
 const readProfile = (id) => { try { return JSON.parse(localStorage.getItem(`nasou_profile_${id}`) || 'null') || {}; } catch { return {}; } };
 
 function EditDetails({ account, onClose }) {
@@ -54,13 +52,11 @@ export default function AdminCustomerDetail() {
   const id = decodeURIComponent(raw);
   const navigate = useNavigate();
   const toast = useToast();
-  const { user } = useAuth();
   const { can } = useIam();
   const customers = useCustomers();
   const orders = useOrders();
   const c = customers.find((x) => x.id === id);
   const [dialog, setDialog] = useState(null);
-  const [note, setNote] = useState('');
   const canEdit = can('customers', 'edit');
   const mine = useMemo(() => (c ? orders.filter((o) => (c.account && o.userId === c.account.id) || (c.email && o.email === c.email) || (!c.email && o.phone === c.phone)) : []), [orders, c]);
 
@@ -84,11 +80,6 @@ export default function AdminCustomerDetail() {
           {a && canEdit && (
             <div className="flex flex-wrap gap-2">
               <Button size="sm" variant="outline" icon="pencil" onClick={() => setDialog('edit')}>Edit details</Button>
-              <Button size="sm" variant="outline" icon="key" onClick={() => {
-                audit({ action: 'customer.password_reset', entity: 'account', entityId: a.id, summary: `Sent a password reset link to ${a.email || a.phone}` });
-                notify({ userId: a.id, icon: 'lock', kind: 'account', title: 'Password reset requested by support', body: 'Use the link we emailed you to choose a new password.', to: '/account' });
-                toast.success(`Reset link sent to ${a.email || `+91 ${a.phone}`}`);
-              }}>Send password reset</Button>
               {c.status === 'blocked'
                 ? <Button size="sm" icon="check" onClick={() => { act(toast, () => updateAccount(a.id, { status: 'active', blockedReason: null }, 'Customer unblocked'), 'Unblocked'); }}>Unblock</Button>
                 : <Button size="sm" icon="lock" className="!border-clay !bg-clay" onClick={() => setDialog('block')}>Block</Button>}
@@ -127,20 +118,6 @@ export default function AdminCustomerDetail() {
           {a && (
             <Panel title="Saved addresses">
               {addresses.length ? <ul className="space-y-2 text-[12.5px]">{addresses.map((ad) => <li key={ad.id} className="rounded-[12px] bg-[#f6f3ed] p-2.5"><b className="text-ink">{ad.label}</b>{ad.isDefault && ' · default'}<br />{ad.line1}, {ad.city} {ad.pin}</li>)}</ul> : <DetailList rows={[['Address book', 'Nothing saved yet']]} />}
-            </Panel>
-          )}
-          {a && (
-            <Panel title="Internal notes" note="Team only.">
-              {canEdit && (
-                <form onSubmit={(e) => { e.preventDefault(); if (note.trim().length < 3) return; act(toast, () => addAccountNote(a.id, note.trim(), user?.fullName)); setNote(''); }} className="mb-3 space-y-2">
-                  <textarea value={note} onChange={(e) => setNote(e.target.value)} className={TEXTAREA_CLS} placeholder="e.g. Prefers delivery after 6 pm; site contact is his foreman." />
-                  <Button size="sm" type="submit" icon="plus">Add note</Button>
-                </form>
-              )}
-              <ul className="space-y-2">
-                {(a.notes || []).map((n) => <li key={n.id} className="rounded-[12px] bg-[#f6f3ed] p-2.5 text-[12.5px]"><p className="text-ink">{n.text}</p><p className="mt-0.5 text-[11px] text-ink-50">{n.by} · {when(n.at)}</p></li>)}
-                {!a.notes?.length && <li className="text-[12.5px] text-ink-50">No notes.</li>}
-              </ul>
             </Panel>
           )}
         </div>

@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { authApi } from '../../lib/api';
 import { Button } from '../../components/ui';
@@ -20,7 +19,6 @@ const STEPS = ['Mobile', 'Verify', 'New password'];
 export default function ForgotPassword() {
   const toast = useToast();
   const navigate = useNavigate();
-  const { sendOtp, verifyOtp } = useAuth();
 
   const [step, setStep] = useState(0);
   const [phone, setPhone] = useState('');
@@ -37,13 +35,14 @@ export default function ForgotPassword() {
     if (!isMobile10(phone)) return setError('Enter a valid 10-digit mobile number.');
     setLoading(true);
     try {
-      await sendOtp(phone.trim());
-      toast.success('Verification code sent.');
-    } catch {
-      toast.info(MOCK ? 'Demo mode — use code 123456' : 'Code sent.');
+      await authApi.forgotPassword(phone.trim());
+      /* The API answers the same whether or not the number has an account. */
+      toast.success(MOCK ? 'Demo mode — use code 123456' : 'If this number has an account, a code is on its way.');
+      setStep(1);
+    } catch (err) {
+      setError(err.message || 'Could not send a code. Try again.');
     } finally {
       setLoading(false);
-      setStep(1);
     }
   };
 
@@ -52,8 +51,8 @@ export default function ForgotPassword() {
     if (otp.length !== 6) { setOtpErr(true); return setError('Enter the 6-digit code.'); }
     setLoading(true);
     try {
-      const data = await verifyOtp(phone.trim(), otp);
-      setToken(data?.resetToken || data?.accessToken || 'demo-reset-token');
+      const data = await authApi.verifyResetCode(phone.trim(), otp);
+      setToken(data.resetToken);
       setStep(2);
     } catch (err) {
       if (MOCK && otp === '123456') { setToken('demo-reset-token'); setStep(2); }

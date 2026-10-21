@@ -160,8 +160,9 @@ export function AuthProvider({ children }) {
     return data;
   }, [_apply]);
 
-  const register = useCallback(async ({ phone, email, fullName, password }) => {
-    const data = await api('/auth/register', { method: 'POST', body: JSON.stringify({ phone, email, fullName, password }) });
+  /* phoneToken: what /auth/otp/verify returned for a new number — the proof it was verified. */
+  const register = useCallback(async ({ phone, email, fullName, password, phoneToken }) => {
+    const data = await api('/auth/register', { method: 'POST', body: JSON.stringify({ phone, email, fullName, password, phoneToken }) });
     _apply(data);
     return data;
   }, [_apply]);

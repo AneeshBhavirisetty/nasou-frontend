@@ -3,7 +3,9 @@ import { AnimatePresence, motion } from 'framer-motion';
 import Icon from '../Icon';
 import Modal from '../Modal';
 import { Badge, Button, Field } from '../ui';
+import RetailerProductPicker from './RetailerProductPicker';
 import { useAdminStore } from '../../context/AdminStore';
+import { useRetailers } from '../../store/retailers';
 import { useToast } from '../../context/ToastContext';
 import { categoryName, suppliers } from '../../data/catalog';
 import { DEPARTMENTS, DEFAULT_DEPARTMENT, departmentMeta } from '../../data/departments';
@@ -13,8 +15,9 @@ import { EASE } from '../../lib/motion';
 import { act } from '../../lib/act';
 
 /* Bulk (quantity) pricing rules — client review 2, admin item 8.
-   A rule: "N+ units of <category | sub-category | brand | product> → X% or
-   ₹X per unit off". How rules combine is documented in lib/pricing.js. */
+   A rule: "N+ units of <category | sub-category | brand | product | retailer>
+   → X% or ₹X per unit off". A retailer rule covers all that retailer's
+   products or only the ones picked. How rules combine is in lib/pricing.js. */
 
 const SELECT = 'h-12 w-full rounded-md border border-line bg-white/80 px-4 text-[14px] text-ink outline-none transition focus:border-forest focus:shadow-[0_0_0_2px_rgba(9, 81, 67,0.18)]';
 const LABEL = 'mb-1.5 block text-[11.5px] font-semibold uppercase tracking-[0.16em] text-forest-800';
@@ -22,7 +25,7 @@ const LABEL = 'mb-1.5 block text-[11.5px] font-semibold uppercase tracking-[0.16
 const blank = { name: '', scopeType: 'category', scopeValue: 'pvc-fittings', minQty: 50, kind: 'percent', value: 5, active: true };
 
 /* Options for the "value" of each scope, live from the admin store. */
-function useScopeOptions(products) {
+function useScopeOptions(products, retailers) {
   return useMemo(() => {
     const subs = new Map();
     const brands = new Map(suppliers.map((s) => [s.slug, s.name]));
@@ -34,11 +37,12 @@ function useScopeOptions(products) {
       department: DEPARTMENTS.map((d) => [d.slug, d.name]),
       category: [...subs.entries()].sort((a, b) => a[1].localeCompare(b[1])),
       brand: [...brands.entries()].sort((a, b) => a[1].localeCompare(b[1])),
+      retailer: retailers.filter((r) => r.status === 'approved' || r.status === 'suspended').map((r) => [r.id, r.name]),
     };
-  }, [products]);
+  }, [products, retailers]);
 }
 
-export function scopeText(rule, products) {
+export function scopeText(rule, products, retailers = []) {
   const type = BULK_SCOPES.find((s) => s.key === rule.scopeType)?.label || rule.scopeType;
   let name = rule.scopeValue;
   if (rule.scopeType === 'department') name = departmentMeta(rule.scopeValue).name;
@@ -48,13 +52,19 @@ export function scopeText(rule, products) {
     const p = products.find((x) => x.id === rule.scopeValue || x.sku === rule.scopeValue);
     name = p ? `${p.name} (${p.sku})` : rule.scopeValue;
   }
+  if (rule.scopeType === 'retailer') {
+    const n = rule.productSkus?.length || 0;
+    name = `${retailers.find((r) => r.id === rule.scopeValue)?.name || 'Retailer'} · ${n ? `${n} product${n === 1 ? '' : 's'}` : 'all products'}`;
+  }
   return { type, name };
 }
 
 function BulkRuleForm({ rule, onClose, onSave }) {
   const { products } = useAdminStore();
-  const opts = useScopeOptions(products);
-  const [r, setR] = useState(() => ({ ...blank, ...(rule || {}) }));
+  const retailers = useRetailers();
+  const opts = useScopeOptions(products, retailers);
+  const [r, setR] = useState(() => ({ ...blank, productSkus: [], ...(rule || {}) }));
+  const theirs = useMemo(() => (r.scopeType === 'retailer' ? products.filter((p) => p.retailerId === r.scopeValue) : []), [products, r.scopeType, r.scopeValue]);
   const [productQ, setProductQ] = useState(() => {
     if (rule?.scopeType !== 'product') return '';
     const p = products.find((x) => x.id === rule.scopeValue);
@@ -65,7 +75,7 @@ function BulkRuleForm({ rule, onClose, onSave }) {
 
   const changeScope = (t) => {
     const first = t === 'product' ? '' : opts[t]?.[0]?.[0] || '';
-    setR((s) => ({ ...s, scopeType: t, scopeValue: first }));
+    setR((s) => ({ ...s, scopeType: t, scopeValue: first, productSkus: [] }));
     setProductQ('');
   };
 
@@ -80,12 +90,16 @@ function BulkRuleForm({ rule, onClose, onSave }) {
       scopeValue = p.id;
     }
     if (!scopeValue) return setErr('Choose what this rule applies to.');
-    if (!(Number(r.minQty) >= 2)) return setErr('Minimum quantity should be 2 or more.');
+    /* a retailer's discount can start at one unit; quantity offers start at two */
+    const least = r.scopeType === 'retailer' ? 1 : 2;
+    if (!(Number(r.minQty) >= least)) return setErr(`Minimum quantity should be ${least} or more.`);
     if (!(Number(r.value) > 0)) return setErr('Enter a discount above 0.');
     if (r.kind === 'percent' && Number(r.value) > 60) return setErr('Bulk % discount cannot exceed 60%.');
-    const scope = scopeText({ ...r, scopeValue }, products);
+    const productSkus = r.scopeType === 'retailer' ? r.productSkus : [];
+    const scope = scopeText({ ...r, scopeValue, productSkus }, products, retailers);
     onSave({
       ...r,
+      productSkus,
       id: rule?.id || `b_${Date.now().toString(36)}`,
       name: r.name.trim() || `${scope.name} ${r.minQty}+`,
       scopeValue,
@@ -117,10 +131,16 @@ function BulkRuleForm({ rule, onClose, onSave }) {
           ) : (
             <label className="block">
               <span className={LABEL}>{BULK_SCOPES.find((s) => s.key === r.scopeType)?.label}</span>
-              <select value={r.scopeValue} onChange={(e) => set('scopeValue', e.target.value)} className={SELECT}>
+              <select value={r.scopeValue} onChange={(e) => setR((s) => ({ ...s, scopeValue: e.target.value, productSkus: [] }))} className={SELECT}>
                 {(opts[r.scopeType] || []).map(([v, label]) => <option key={v} value={v}>{label}</option>)}
               </select>
             </label>
+          )}
+          {r.scopeType === 'retailer' && r.scopeValue && (
+            <div className="sm:col-span-2">
+              <span className={LABEL}>Products</span>
+              <RetailerProductPicker key={r.scopeValue} products={theirs} value={r.productSkus} onChange={(v) => set('productSkus', v)} />
+            </div>
           )}
           <Field label="Minimum quantity" inputMode="numeric" value={String(r.minQty)} onChange={(e) => set('minQty', e.target.value.replace(/\D/g, ''))} hint={r.scopeType === 'product' ? 'Units of this product' : 'Units across the scope, mixed items count'} />
           <label className="block">
@@ -155,6 +175,7 @@ function BulkRuleForm({ rule, onClose, onSave }) {
 export default function BulkPricingPanel({ creating, setCreating, canEdit = true }) {
   const toast = useToast();
   const { products, bulkRules, saveBulkRule, deleteBulkRule } = useAdminStore();
+  const retailers = useRetailers();
   const [editing, setEditing] = useState(null);
 
   /* what the rule saves at exactly its minimum quantity on a typical item */
@@ -177,7 +198,7 @@ export default function BulkPricingPanel({ creating, setCreating, canEdit = true
         <div className="grid gap-4 md:grid-cols-2">
           <AnimatePresence initial={false}>
             {bulkRules.map((r) => {
-              const scope = scopeText(r, products);
+              const scope = scopeText(r, products, retailers);
               const ex = example(r);
               return (
                 <motion.article

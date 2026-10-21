@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import Icon from '../Icon';
-import { Panel, Kpi, LABEL_CLS } from './AdminUI';
+import { Panel, Kpi, LABEL_CLS, SELECT_CLS } from './AdminUI';
 import { Button } from '../ui';
+import { useRetailers } from '../../store/retailers';
 import { useToast } from '../../context/ToastContext';
 import { post } from '../../lib/api';
 import { LIVE } from '../../lib/config';
@@ -17,6 +18,10 @@ const fmt = (n) => Number(n || 0).toLocaleString('en-IN');
 
 export default function MasterSheetImport({ canEdit }) {
   const toast = useToast();
+  /* whose sheet this is (client review, Oct 2026: one final sheet per retailer); '' = Nivora's own */
+  const retailers = useRetailers().filter((r) => r.status === 'approved' || r.status === 'suspended');
+  const [owner, setOwner] = useState('');
+  const ownerName = owner ? retailers.find((r) => r.id === owner)?.name || 'this retailer' : 'Nivora’s own catalogue';
   const [sheet, setSheet] = useState(null);
   const [stock, setStock] = useState(100);
   const [retire, setRetire] = useState(true);
@@ -44,13 +49,14 @@ export default function MasterSheetImport({ canEdit }) {
     setBusy(dryRun ? 'check' : 'import');
     setProgress(0);
     try {
-      const rep = await sendMasterRows(sheet.rows, { post, dryRun, defaultStock: Number(stock) || 0, onProgress: (d, t) => setProgress(Math.round((d / t) * 100)) });
+      const retailerId = owner || null;
+      const rep = await sendMasterRows(sheet.rows, { post, dryRun, retailerId, defaultStock: Number(stock) || 0, onProgress: (d, t) => setProgress(Math.round((d / t) * 100)) });
       if (retire) {
         const keep = sheet.rows.map((r) => r.itemCode).filter(Boolean);
-        rep.retire = await post('/admin/catalog/master-import/retire', { keep, dryRun });
+        rep.retire = await post('/admin/catalog/master-import/retire', { keep, dryRun, retailerId });
       }
       setReport(rep);
-      toast.success(dryRun ? 'Checked — nothing was changed' : `Imported: ${fmt(rep.created)} new, ${fmt(rep.updated)} updated`);
+      toast.success(dryRun ? 'Checked — nothing was changed' : `Imported for ${ownerName}: ${fmt(rep.created)} new, ${fmt(rep.updated)} updated`);
     } catch (x) {
       toast.error(x.message);
     } finally {
@@ -66,8 +72,16 @@ export default function MasterSheetImport({ canEdit }) {
   const notes = report?.lines.filter((l) => !l.errors.length && l.notes.some((n) => !n.startsWith('no selling price'))) || [];
 
   return (
-    <Panel title="Master product sheet" note="The client’s full product list (Item Code, Category, Sub category … Selling price, Image URL). Upload the .xlsx so the image links come with it.">
+    <Panel title="Master product sheet" note="One final sheet per retailer, in the master format (Item Code, Category, Sub category … Selling price, Image URL). Upload the .xlsx so the image links come with it.">
       <div className="space-y-4">
+        <label className="block">
+          <span className={LABEL_CLS}>Whose sheet is this?</span>
+          <select value={owner} onChange={(e) => { setOwner(e.target.value); setReport(null); }} disabled={!!busy} className={SELECT_CLS}>
+            <option value="">Nivora — own catalogue</option>
+            {retailers.map((r) => <option key={r.id} value={r.id}>{r.name}{r.city ? ` — ${r.city}` : ''}</option>)}
+          </select>
+          <span className="mt-1 block text-[11.5px] text-ink-50">Every row is added to, or updates, {ownerName}. An Item Code already used by someone else is reported and skipped.</span>
+        </label>
         <label className="flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-[18px] border border-dashed border-forest/30 bg-emerald-50/40 px-4 py-6 text-center transition hover:border-forest">
           <Icon name="upload" size={22} className="text-forest" />
           <span className="text-[14px] font-bold text-forest">{sheet ? sheet.name : 'Choose the master sheet (.xlsx or .csv)'}</span>
@@ -100,14 +114,14 @@ export default function MasterSheetImport({ canEdit }) {
               <label className="flex items-start gap-2.5 rounded-[14px] border border-line px-3 py-2.5">
                 <input type="checkbox" checked={retire} onChange={(e) => setRetire(e.target.checked)} className="mt-1 h-4 w-4 accent-[#095143]" />
                 <span>
-                  <span className="block text-[13px] font-bold text-ink">Remove items not in the sheet</span>
-                  <span className="block text-[11.5px] text-ink-50">The house catalogue then matches the sheet exactly. Retailers’ own products are never touched.</span>
+                  <span className="block text-[13px] font-bold text-ink">Remove {owner ? 'their' : 'Nivora’s'} items not in the sheet</span>
+                  <span className="block text-[11.5px] text-ink-50">{ownerName} then matches the sheet exactly. Everyone else’s products are never touched.</span>
                 </span>
               </label>
             </div>
             <div className="flex flex-col gap-2 sm:flex-row">
               <Button variant="outline" icon="check" onClick={() => run(true)} disabled={!canEdit || !!busy}>{busy === 'check' ? `Checking… ${progress}%` : 'Check first'}</Button>
-              <Button icon="upload" onClick={() => run(false)} disabled={!canEdit || !!busy}>{busy === 'import' ? `Importing… ${progress}%` : `Import ${fmt(s.rows)} rows`}</Button>
+              <Button icon="upload" onClick={() => run(false)} disabled={!canEdit || !!busy}>{busy === 'import' ? `Importing… ${progress}%` : `Import ${fmt(s.rows)} rows for ${owner ? ownerName : 'Nivora'}`}</Button>
             </div>
           </>
         )}

@@ -92,7 +92,7 @@ const live = {
     return report;
   },
   async saveBulkRule(r) {
-    const body = { name: r.name, scopeType: r.scopeType, scopeValue: r.scopeValue, minQty: r.minQty, kind: r.kind, value: r.value, active: r.active !== false, version: r.version };
+    const body = { name: r.name, scopeType: r.scopeType, scopeValue: r.scopeValue, productSkus: r.scopeType === 'retailer' ? r.productSkus || [] : [], minQty: r.minQty, kind: r.kind, value: r.value, active: r.active !== false, version: r.version };
     const known = adminStore.get().bulkRules.some((x) => x.id === r.id);
     if (known) await put(`/admin/bulk-rules/${r.id}`, body);
     else await post('/admin/bulk-rules', body);
