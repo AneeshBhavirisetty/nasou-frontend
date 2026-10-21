@@ -96,7 +96,7 @@ export default function RetailerDetail() {
   const navigate = useNavigate();
   const toast = useToast();
   const r = useRetailer(id);
-  const { user, startView } = useAuth();
+  const { user } = useAuth();
   const { can } = useIam();
   const { products } = useAdminStore();
   const orders = useOrders();
@@ -120,7 +120,6 @@ export default function RetailerDetail() {
   const by = user?.fullName;
   const canStatus = can('retailerStatus', 'edit');
   const canRequest = can('retailerStatus', 'request');
-  const canView = ['owner', 'operations'].includes(user?.teamRole) && r.status !== 'deleted' && r.status !== 'pending';
   const canEdit = can('retailers', 'edit');
 
   return (
@@ -143,7 +142,6 @@ export default function RetailerDetail() {
           </div>
           <div className="flex flex-wrap gap-2">
             {(r.status === 'pending' || r.status === 'needs_changes') && canEdit && <Link to={`/admin/approvals?id=${r.id}`} className="inline-flex h-10 items-center gap-1.5 rounded-full bg-white px-4 text-[13px] font-bold text-forest"><Icon name="shieldCheck" size={15} /> Review application</Link>}
-            {canView && <button onClick={() => setDialog('view')} className="inline-flex h-10 items-center gap-1.5 rounded-full border border-white/25 bg-white/10 px-4 text-[13px] font-bold text-white hover:bg-white/20"><Icon name="eye" size={15} /> View as retailer</button>}
             {canStatus && r.status === 'approved' && <button onClick={() => setDialog('suspend')} className="inline-flex h-10 items-center gap-1.5 rounded-full border border-white/25 bg-white/10 px-4 text-[13px] font-bold text-white hover:bg-white/20"><Icon name="lock" size={15} /> Suspend</button>}
             {canStatus && (r.status === 'suspended' || r.status === 'deactivated') && <button onClick={() => { act(toast, () => setRetailerStatus(r.id, 'approved', { by, note: 'Reinstated' }), `${r.name} is active again`); }} className="inline-flex h-10 items-center gap-1.5 rounded-full bg-white px-4 text-[13px] font-bold text-forest"><Icon name="check" size={15} /> Reinstate</button>}
             {canStatus && (r.status === 'approved' || r.status === 'suspended') && <button onClick={() => setDialog('deactivate')} className="inline-flex h-10 items-center gap-1.5 rounded-full border border-white/25 bg-white/10 px-4 text-[13px] font-bold text-white hover:bg-white/20"><Icon name="close" size={15} /> Deactivate</button>}
@@ -267,9 +265,6 @@ export default function RetailerDetail() {
       <ReasonDialog open={dialog === 'request'} onClose={() => setDialog(null)} title={`Ask the Owner to delete ${r.name}`} confirm="Send request"
         intro="Deleting a retailer needs Owner approval. They will see your reason and the effects before deciding."
         onConfirm={(why) => { act(toast, () => requestAction({ kind: 'delete', retailerId: r.id, reason: why, by }), 'Request sent to the Owner'); }} />
-      <ReasonDialog open={dialog === 'view'} onClose={() => setDialog(null)} title={`View as ${r.name}`} confirm="Start view-only session" label="Why do you need to see their console?" placeholder="e.g. Retailer reports payouts page shows the wrong cycle — ticket #4471"
-        intro={<>You will see their seller console exactly as they do, <b>read-only</b>, for up to 15 minutes. A banner stays on screen the whole time.</>}
-        onConfirm={async (why) => { if (await act(toast, () => startView(r.id, why))) navigate('/seller'); }} />
       {dialog === 'delete' && (
         <DeleteDialog retailer={r} onClose={() => setDialog(null)} onConfirm={(why) => { act(toast, () => deleteRetailer(r.id, { by, reason: why }), `${r.name} deleted`); }} />
       )}

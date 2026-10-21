@@ -15,9 +15,8 @@ import SellerStatus from '../pages/seller/Status';
 
 /* Retailer admin view (requirement 14): a retailer manages only their own
    products, orders, payouts and store profile; their staff see the sections
-   of their staff role (requirement 21). The Nasou Hive team reaches this
-   console only through "View as retailer" — read-only, with a banner and a
-   timeout (requirement 29). */
+   of their staff role (requirement 21), and the store owner adds employees
+   on Team. */
 
 export const SELLER_NAV = [
   { to: '/seller', label: 'Dashboard', icon: 'gauge', section: 'dashboard', end: true },

@@ -152,6 +152,20 @@ export function inviteStaff({ email, retailerId, staffRole, invitedBy, retailerN
   notify({ userId: `retailer:${retailerId}`, icon: 'userPlus', title: `Invite sent to ${e}`, body: `Role: ${staffRole}`, to: '/seller/team' });
   return inv;
 }
+/* The store owner adds an employee directly: their own login under the store,
+   a role, and a starting password the owner hands over — no email needed. */
+export async function addStaff({ fullName, email, phone, password, staffRole, retailerId, addedBy, retailerName }) {
+  if (LIVE) {
+    const team = await post('/seller/team', { fullName, email, phone: phone || null, password, staffRole });
+    await refresh('accounts');
+    return team;
+  }
+  if (!password || password.length < 8) throw new Error('Give them a starting password of at least 8 characters.');
+  const a = await createAccount({ fullName, email, phone, role: 'RETAILER', retailerId, staffRole }, { password, by: addedBy });
+  audit({ action: 'staff.add', entity: 'retailer', entityId: retailerId, summary: `${addedBy} added ${fullName} as ${staffRole} at ${retailerName}` });
+  notify({ userId: `retailer:${retailerId}`, icon: 'users', title: `${fullName} added to your team`, body: `Role: ${staffRole}`, to: '/seller/team' });
+  return a;
+}
 export const findInvite = (token) => invitesStore.get().find((i) => i.token === token) || null;
 export async function acceptInvite(token, { fullName, phone, password }) {
   if (LIVE) return post(`/invites/${encodeURIComponent(token)}/accept`, { fullName, phone, password });

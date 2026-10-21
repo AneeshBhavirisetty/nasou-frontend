@@ -3,7 +3,6 @@ import { api, authApi, profileApi, IS_MOCK, sessionFor } from '../lib/api';
 import { clearSession, getStoredSession, isTokenExpired, parseJwt, setSession } from '../lib/auth';
 import { audit, resetBypassLog, setAuditActor } from '../lib/auditLog';
 import { DEMO_PROFILES, findAccount, getAccount, passwordMatches, setPassword, updateAccount } from '../store/accounts';
-import { getRetailer } from '../store/retailers';
 import { notify } from '../store/notifications';
 import { LIVE } from '../lib/config';
 import { clearSessionData, loadSession, startPolling, stopPolling } from '../lib/live';
@@ -18,13 +17,12 @@ const AuthContext = createContext(null);
  * team preset), retailerId and staffRole. Team accounts finish sign-in with
  * a second factor (requirement 3).
  *
- * "View as retailer" (requirement 29) is a separate, view-only overlay kept
- * in sessionStorage with a reason, a 15-minute timeout and audit entries at
- * start and end. Only Owner and Operations may start one.
+ * "View as retailer" was removed (client decision, Oct 2026): nothing starts
+ * one any more. The read-only overlay below only ends a session left over in
+ * sessionStorage from before.
  * ==========================================================================*/
 
 const VIEW_KEY = 'nivora_view_as';
-const VIEW_MINUTES = 15;
 
 const readView = () => {
   try {
@@ -242,21 +240,6 @@ export function AuthProvider({ children }) {
     return null;
   }, [session]);
 
-  /* "Log in as retailer" (requirement 29) */
-  const startView = useCallback(async (retailerId, reason) => {
-    if (!session || session.role !== 'ADMIN') throw new Error('Only the Nasou Hive team can do this.');
-    if (!['owner', 'operations'].includes(session.teamRole)) throw new Error('Only Owner and Operations can view as a retailer.');
-    if (!reason || reason.trim().length < 8) throw new Error('Give a reason (at least 8 characters) — it goes in the audit log.');
-    const r = getRetailer(retailerId);
-    /* LIVE: the server checks the role, audits the start and issues a 15-minute read-only token */
-    const granted = LIVE ? await api('/admin/impersonation', { method: 'POST', body: JSON.stringify({ retailerId, reason: reason.trim() }) }) : null;
-    const v = { retailerId, retailerName: r?.name, reason: reason.trim(), by: session.fullName, startedAt: Date.now(), expiresAt: granted?.expiresAt || Date.now() + VIEW_MINUTES * 60000, token: granted?.token };
-    try { sessionStorage.setItem(VIEW_KEY, JSON.stringify(v)); } catch { /* ignore */ }
-    setView(v);
-    audit({ action: 'impersonate.start', entity: 'retailer', entityId: retailerId, summary: `Started a view-only session as ${r?.name}: ${v.reason}` });
-    return v;
-  }, [session]);
-
   /* the view ends itself at its timeout */
   useEffect(() => {
     if (!view) return undefined;
@@ -295,9 +278,9 @@ export function AuthProvider({ children }) {
       isRetailer: user?.role === 'RETAILER',
       login, verify2fa, logout, register, sendOtp, verifyOtp, signInAccount, quickLogin,
       profile, updateProfile, changePassword, deactivateAccount, deleteAccount,
-      view, startView, endView,
+      view, endView,
     }),
-    [user, login, verify2fa, logout, register, sendOtp, verifyOtp, signInAccount, quickLogin, profile, updateProfile, changePassword, deactivateAccount, deleteAccount, view, startView, endView]
+    [user, login, verify2fa, logout, register, sendOtp, verifyOtp, signInAccount, quickLogin, profile, updateProfile, changePassword, deactivateAccount, deleteAccount, view, endView]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
