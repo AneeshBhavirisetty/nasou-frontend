@@ -18,7 +18,7 @@ import { useRetailers } from '../../store/retailers';
 import { Badge, Button } from '../../components/ui';
 import { useToast } from '../../context/ToastContext';
 import { useAdminStore } from '../../context/AdminStore';
-import { catalogBase as CATALOG, categoryName, suppliers } from '../../data/catalog';
+import { catalogBase as CATALOG, categoryName, photoOf, suppliers } from '../../data/catalog';
 import { DEPARTMENTS, DEFAULT_DEPARTMENT, departmentMeta } from '../../data/departments';
 import { money, cx } from '../../lib/format';
 import { act } from '../../lib/act';
@@ -140,13 +140,14 @@ export function ProductsManager({ seller = false }) {
   const iam = useIam();
   const canEdit = seller ? !actor.readOnly && iam.canSection('products') : iam.can('products', 'edit');
 
-  /* /admin/products?new=1 (the dashboard's "Add product") opens the form. */
+  /* ?new=1 (the dashboard's "Add product") opens the form; ?q= (the header search) filters. */
   useEffect(() => {
-    if (params.get('new')) {
-      if (canEdit) setEditing(null);
+    if (params.get('new') || params.get('q')) {
+      if (params.get('new') && canEdit) setEditing(null);
+      if (params.get('q')) { setQ(params.get('q')); setPage(1); }
       setParams({}, { replace: true });
     }
-  }, [params, setParams]);
+  }, [params, setParams]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const filtered = useMemo(() => {
     const n = q.trim().toLowerCase();
@@ -198,6 +199,8 @@ export function ProductsManager({ seller = false }) {
           </Button>
         )}
         {canEdit && !seller && <Button size="sm" variant="outline" icon="tag" onClick={() => setDiscount(true)}>Apply discount</Button>}
+        {/* a store's own codes are made and applied in its Discounts module (review 6) */}
+        {canEdit && seller && iam.canSection('discounts') && <Button size="sm" variant="outline" icon="tag" to="/seller/discounts?apply=1">Apply discount</Button>}
         {canEdit && <Button size="sm" variant="outline" icon="upload" onClick={() => setBulk(true)}>Bulk import</Button>}
         {canEdit && <Button size="sm" icon="plus" onClick={() => setEditing(null)}>Add product</Button>}
         <ExcelExportButton
@@ -256,8 +259,8 @@ export function ProductsManager({ seller = false }) {
             >
               <div className="col-span-2 flex items-center gap-3 sm:col-span-1">
                 <span className="photo-bed grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-md border border-line">
-                  {p.images?.[0]
-                    ? <img src={p.images[0]} alt="" className="h-full w-full object-cover" />
+                  {photoOf(p)
+                    ? <img src={photoOf(p)} alt="" loading="lazy" className="h-full w-full object-cover" />
                     : <ProductArt kind={p.art} material={p.material} className="h-full w-full p-1" />}
                 </span>
                 <div className="min-w-0">

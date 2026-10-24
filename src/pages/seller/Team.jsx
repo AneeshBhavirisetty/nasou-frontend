@@ -50,7 +50,7 @@ export default function SellerTeam() {
 
   return (
     <div className="space-y-5">
-      <AdminPageHead title="Team" note="Everyone who works on your store gets their own login — no shared passwords." />
+      <AdminPageHead title="Users & access" note="Everyone who works on your store gets their own login and a role that decides what they can open — no shared passwords." />
       <div className="grid gap-5 lg:grid-cols-[1fr_380px]">
         <Panel title="People" pad={false}>
           <ul className="divide-y divide-line-soft">

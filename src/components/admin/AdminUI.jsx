@@ -96,6 +96,8 @@ const STATUS_TONE = {
   matched: 'ok', mismatch: 'clay', missing_in_razorpay: 'amber', missing_in_books: 'clay', resolved: 'neutral',
   released: 'ok', reversed: 'neutral', Paid: 'ok', Collected: 'ok', 'Due on delivery': 'amber', 'Invoice due': 'amber', Refunded: 'neutral',
   accepted: 'ok', revoked: 'neutral', invited: 'amber',
+  /* support tickets and enquiries (review 6) */
+  in_progress: 'amber', closed: 'neutral', new: 'slate', contacted: 'ok', inactive: 'neutral',
 };
 const STATUS_TEXT = {
   needs_changes: 'Corrections asked', approved: 'Active', on_hold: 'On hold', ready: 'To settle', processing: 'On its way', open: 'This week', missing_in_razorpay: 'Not in Razorpay', missing_in_books: 'Not in our books',

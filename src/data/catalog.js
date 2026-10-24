@@ -111,16 +111,60 @@ function rebuild() {
     extra.push({ ...c, blurb: c.blurb || '' });
   }
   categories = [...baseSubs, ...extra].map((c) => ({ ...c, count: products.filter((p) => p.category === c.slug).length }));
+  /* Shoppers only see sub-categories that have products — the master sheet's
+     own (PVC, cPVC, uPVC under Plumbing…), not empty legacy ones (review 6). */
   departments = DEPARTMENTS.map((d) => ({
     ...d,
-    subs: categories.filter((c) => c.department === d.slug),
+    subs: categories.filter((c) => c.department === d.slug && c.count > 0).sort((a, b) => b.count - a.count),
     count: products.filter((p) => p.department === d.slug).length,
   }));
   _catName = new Map(categories.map((c) => [c.slug, c.name]));
-  bestsellers = products.filter((p) => p.badges.includes('Bestseller') && p.stock > 0).slice(0, 12);
-  newProducts = products.filter((p) => p.badges.includes('New')).slice(0, 8);
-  dealProducts = [...products].filter((p) => p.discount >= 18 && p.stock > 0).sort((a, b) => b.discount - a.discount).slice(0, 12);
+
+  /* Photos: a product without its own photo borrows its item's (same
+     category, sub-category and name — the sheet photographs per item, not per
+     size). Each department and sub-category gets a cover from its products. */
+  _itemPhoto = new Map();
+  _coverPhoto = new Map();
+  for (const p of products) {
+    const own = p.images?.[0];
+    if (!own) continue;
+    const k = itemKey(p);
+    if (!_itemPhoto.has(k)) _itemPhoto.set(k, own);
+    if (!_coverPhoto.has(p.category)) _coverPhoto.set(p.category, own);
+  }
+  for (const d of departments) {
+    const biggest = d.subs.find((c) => _coverPhoto.has(c.slug));
+    if (biggest) _coverPhoto.set(`dept:${d.slug}`, _coverPhoto.get(biggest.slug));
+  }
+
+  /* Rails lead with products that have a photo, so the home page never opens
+     on a wall of illustrations. */
+  const pictured = (a, b) => Number(!!photoOf(b)) - Number(!!photoOf(a));
+  bestsellers = products.filter((p) => p.badges.includes('Bestseller') && p.stock > 0).sort(pictured).slice(0, 12);
+  newProducts = products.filter((p) => p.badges.includes('New')).sort(pictured).slice(0, 8);
+  dealProducts = [...products].filter((p) => p.discount >= 18 && p.stock > 0)
+    .sort((a, b) => pictured(a, b) || b.discount - a.discount).slice(0, 12);
 }
+
+let _itemPhoto = new Map();
+let _coverPhoto = new Map();
+const itemKey = (p) => `${p.department}|${p.category}|${String(p.name || '').trim().toLowerCase()}`;
+/* The photo to show for a product: its own, else its item's; null = draw the illustration. */
+export const photoOf = (p) => p?.images?.[0] || _itemPhoto.get(itemKey(p || {})) || null;
+/* A cover photo for a sub-category slug, or a department ('dept:<slug>'). */
+export const coverPhoto = (key) => _coverPhoto.get(key) || null;
+
+/* The sheet's Item type, spelled one way ("Elbows", "elbow" → "Elbow"). */
+export function typeKey(kind) {
+  let k = String(kind || '').trim().toLowerCase().replace(/\s+/g, ' ');
+  if (!k) return '';
+  if (/ies$/.test(k)) k = `${k.slice(0, -3)}y`;
+  else if (/(sh|ch|x|ss)es$/.test(k)) k = k.slice(0, -2);
+  else if (/[^s]s$/.test(k) && k.length > 3) k = k.slice(0, -1);
+  return k;
+}
+export const typeLabel = (key) => key.replace(/\b([a-z])/g, (m) => m.toUpperCase())
+  .replace(/\b(Pvc|Upvc|Cpvc|Mta|Fta|Led|Mcb|Rccb)\b/g, (m) => ({ Pvc: 'PVC', Upvc: 'uPVC', Cpvc: 'cPVC' }[m] || m.toUpperCase()));
 function masterSubs() {
   try { return settingsStore.get().catalog?.subs || []; } catch { return []; }
 }

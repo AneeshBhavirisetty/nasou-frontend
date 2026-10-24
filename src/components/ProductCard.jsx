@@ -2,8 +2,9 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Icon from './Icon';
 import ProductArt from './ProductArt';
+import NotifyMe from './NotifyMe';
 import { Rating } from './ui';
-import { categoryName, sellerName } from '../data/catalog';
+import { categoryName, photoOf, sellerName } from '../data/catalog';
 import { money, discount as pctOff, cx, onRequest, quoteLink } from '../lib/format';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
@@ -21,6 +22,7 @@ export default function ProductCard({ product, compact = false }) {
   const quote = onRequest(product);
   const to = `/product/${product.id}`;
   const badge = product.badges[0];
+  const photo = photoOf(product);
 
   return (
     <motion.article
@@ -31,9 +33,9 @@ export default function ProductCard({ product, compact = false }) {
       <div className="relative">
         <Link to={to} className="block" aria-label={product.title}>
           <div className={cx('photo-bed relative overflow-hidden', compact ? 'aspect-square' : 'aspect-[4/3]')}>
-            {product.images?.[0] ? (
+            {photo ? (
               <img
-                src={product.images[0]}
+                src={photo}
                 alt={product.title}
                 loading="lazy"
                 className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
@@ -94,7 +96,7 @@ export default function ProductCard({ product, compact = false }) {
             {!quote && off > 0
               ? <p className="tnum text-[12px] text-ink-35 line-through">{money(product.mrp)}</p>
               : <p className="truncate text-[12px] capitalize text-ink-50">by {product.supplierName}</p>}
-            <p className={cx('mt-1 text-[11.5px] font-semibold', out ? 'text-ink-35' : low ? 'text-amber' : 'text-emerald-700')}>
+            <p className={cx('mt-1 text-[11.5px] font-semibold', out ? 'text-clay-600' : low ? 'text-amber' : 'text-emerald-700')}>
               {out ? 'Out of stock' : low ? `Only ${product.stock} left` : 'In stock'}
             </p>
             {!compact && sellerName(product) && (
@@ -112,17 +114,14 @@ export default function ProductCard({ product, compact = false }) {
             >
               <Icon name="chat" size={16} />
             </Link>
+          ) : out ? (
+            /* Out of stock: say so, and offer an alert instead of a dead button (review 6). */
+            <NotifyMe product={product} compact />
           ) : (
           <button
-            onClick={() => !out && add(product, { qty: 1 })}
-            disabled={out}
+            onClick={() => add(product, { qty: 1 })}
             aria-label={`Add ${product.name} to cart`}
-            className={cx(
-              'grid h-9 w-9 shrink-0 place-items-center rounded-md transition sm:h-10 sm:w-10',
-              out
-                ? 'cursor-not-allowed bg-sunk text-ink-35'
-                : 'bg-forest text-white shadow-btn hover:-translate-y-0.5 hover:bg-forest-800 active:translate-y-px'
-            )}
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-forest text-white shadow-btn transition hover:-translate-y-0.5 hover:bg-forest-800 active:translate-y-px sm:h-10 sm:w-10"
           >
             <Icon name="plus" size={17} strokeWidth={2.2} />
           </button>

@@ -164,7 +164,7 @@ export default function RetailerDetail() {
             <Kpi label="Sales" value={money(money_.sales)} note={`${parts.filter((p) => p.status !== 'Cancelled').length} live sub-orders`} icon="rupee" />
             <Kpi label="Commission earned" value={money(money_.commission)} note={`${r.commission?.rate ?? settings.commission.default}% base rate`} icon="percent" />
             <Kpi label="Owed to retailer" value={money(money_.unpaid)} note={`${money(money_.held)} more once delivered`} icon="card" />
-            <Kpi label="Products" value={mine.length} note={`${mine.filter((p) => p.stock > 0).length} in stock`} icon="package" />
+            <Kpi label="Products" value={r.productCount ?? mine.length} note={`${mine.filter((p) => p.stock > 0).length} in stock${r.productsByNivora ? ` · ${r.productsByNivora} uploaded by Nivora` : ''}`} icon="package" />
           </div>
           <div className="grid gap-5 lg:grid-cols-2">
             <Panel title="Business">

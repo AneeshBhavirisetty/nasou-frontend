@@ -90,14 +90,21 @@ export const SELLER_SECTIONS = [
   { key: 'dashboard', label: 'Dashboard' },
   { key: 'products', label: 'Products' },
   { key: 'orders', label: 'Orders' },
+  { key: 'discounts', label: 'Discounts' },
+  { key: 'customers', label: 'Customers' },
   { key: 'payouts', label: 'Payouts' },
+  { key: 'billing', label: 'Billing & payments' },
+  { key: 'reports', label: 'Reports & analytics' },
   { key: 'profile', label: 'Store profile' },
-  { key: 'team', label: 'Team' },
+  { key: 'team', label: 'Users & access' },
+  { key: 'support', label: 'Support' },
 ];
+/* Keep in step with nasou-api MarketScope.STAFF_SECTIONS (review 6 added
+   discounts, customers, reports, billing and support). */
 export const STAFF_ROLES = [
-  { key: 'owner', label: 'Store owner', sections: ['dashboard', 'products', 'orders', 'payouts', 'profile', 'team'] },
-  { key: 'manager', label: 'Manager', sections: ['dashboard', 'products', 'orders', 'payouts', 'profile'] },
-  { key: 'catalog', label: 'Catalog', sections: ['dashboard', 'products'] },
-  { key: 'fulfilment', label: 'Fulfilment', sections: ['dashboard', 'orders'] },
+  { key: 'owner', label: 'Store owner', sections: ['dashboard', 'products', 'orders', 'payouts', 'profile', 'team', 'discounts', 'customers', 'reports', 'billing', 'support'] },
+  { key: 'manager', label: 'Manager', sections: ['dashboard', 'products', 'orders', 'payouts', 'profile', 'discounts', 'customers', 'reports', 'billing', 'support'] },
+  { key: 'catalog', label: 'Catalog', sections: ['dashboard', 'products', 'discounts', 'reports', 'support'] },
+  { key: 'fulfilment', label: 'Fulfilment', sections: ['dashboard', 'orders', 'customers', 'support'] },
 ];
 export const staffRole = (k) => STAFF_ROLES.find((r) => r.key === k) || STAFF_ROLES[0];

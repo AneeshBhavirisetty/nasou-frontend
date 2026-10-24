@@ -41,7 +41,8 @@ export default function AdminRetailers() {
     }));
     return retailers.map((r) => ({
       ...r,
-      products: prod.get(r.id) || 0,
+      /* the server counts every product the store sells, whoever uploaded it (review 6) */
+      products: r.productCount ?? prod.get(r.id) ?? 0,
       orders: parts.get(r.id) || 0,
       sales: sales.get(r.id) || 0,
       rate: r.commission?.rate ?? commissionDefault,
@@ -63,7 +64,7 @@ export default function AdminRetailers() {
     ) },
     { key: 'status', label: 'Status', render: (r) => <StatusPill status={r.status} /> },
     { key: 'rate', label: 'Commission', align: 'right', render: (r) => `${r.rate}%` },
-    { key: 'products', label: 'Products', align: 'right' },
+    { key: 'products', label: 'Products', align: 'right', render: (r) => <span title={r.productsByNivora ? `${r.productsByNivora} uploaded by Nivora` : undefined}>{r.products.toLocaleString('en-IN')}{r.productsByNivora ? <span className="block text-[10.5px] font-semibold text-ink-35">{r.productsByNivora} by Nivora</span> : null}</span> },
     { key: 'orders', label: 'Sub-orders', align: 'right' },
     { key: 'sales', label: 'Sales', align: 'right', render: (r) => money(r.sales) },
     { key: 'joinedAt', label: 'Joined', render: (r) => formatOrderDate(r.joinedAt), csv: (r) => new Date(r.joinedAt).toISOString().slice(0, 10) },

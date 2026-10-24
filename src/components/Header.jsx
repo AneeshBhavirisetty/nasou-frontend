@@ -8,7 +8,7 @@ import NotificationBell from './NotificationBell';
 import DeliverTo from './DeliverTo';
 import { userRoleLabel } from '../lib/roles';
 import { Badge } from './ui';
-import { departments, searchProducts } from '../data/catalog';
+import { coverPhoto, dealProducts, departments, photoOf, products, searchProducts } from '../data/catalog';
 import { announcements } from '../data/site';
 import { money, cx } from '../lib/format';
 import { useCart } from '../context/CartContext';
@@ -111,8 +111,10 @@ function SearchBox({ onDone }) {
                   hi === i ? 'bg-sunk/70' : 'hover:bg-sunk/70'
                 )}
               >
-                <span className="photo-bed grid h-11 w-11 shrink-0 place-items-center rounded-[12px]">
-                  <ProductArt kind={p.art} material={p.material} className="h-full w-full p-1" />
+                <span className="photo-bed grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-[12px]">
+                  {photoOf(p)
+                    ? <img src={photoOf(p)} alt="" loading="lazy" className="h-full w-full object-cover" />
+                    : <ProductArt kind={p.art} material={p.material} className="h-full w-full p-1" />}
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[13.5px] font-semibold text-ink">{p.name}</span>
@@ -151,7 +153,7 @@ function AccountMenu() {
   if (!isAuthenticated) {
     return (
       <Link
-        to="/login"
+        to="/join"
         className="flex h-11 items-center gap-2 rounded-full bg-forest px-4 text-[13px] font-bold text-white shadow-btn transition hover:-translate-y-0.5 hover:bg-forest-800"
       >
         <Icon name="user" size={17} /> <span className="hidden sm:inline">Sign in</span>
@@ -226,6 +228,9 @@ function AccountMenu() {
 function MegaMenu({ onClose }) {
   const [dept, setDept] = useState(departments[0].slug);
   const d = departments.find((x) => x.slug === dept) ?? departments[0];
+  /* the side card shows this department's real best deal, not a fixed slogan */
+  const deal = dealProducts.find((p) => p.department === d.slug)
+    || products.filter((p) => p.department === d.slug && p.stock > 0).sort((a, b) => b.discount - a.discount)[0];
   return (
     <motion.div
       initial={{ opacity: 0, y: -8 }}
@@ -280,8 +285,10 @@ function MegaMenu({ onClose }) {
                   onClick={onClose}
                   className="group flex items-start gap-3 rounded-[14px] px-3 py-2.5 transition hover:bg-sunk/60"
                 >
-                  <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-[10px] bg-sunk text-forest transition group-hover:bg-forest group-hover:text-white">
-                    <Icon name="wrench" size={14} />
+                  <span className="mt-0.5 grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-[12px] bg-sunk text-forest ring-1 ring-line-soft transition group-hover:ring-forest/40">
+                    {coverPhoto(c.slug)
+                      ? <img src={coverPhoto(c.slug)} alt="" loading="lazy" className="h-full w-full object-cover transition duration-500 group-hover:scale-110" />
+                      : <Icon name={d.icon} size={15} />}
                   </span>
                   <span>
                     <span className="flex items-center gap-1.5 text-[14px] font-bold text-ink">
@@ -303,13 +310,22 @@ function MegaMenu({ onClose }) {
           )}
         </div>
 
-        <div className="forest-band relative hidden overflow-hidden rounded-[18px] p-5 text-white lg:block">
-          <Badge tone="dark" icon="tag" className="border-white/20 bg-white/10">This week</Badge>
-          <p className="mt-3 text-[19px] font-semibold leading-tight">Up to 30% off fast-moving PVC fittings.</p>
-          <p className="mt-1.5 text-[12.5px] leading-relaxed text-emerald-100">
-            Verified prices, GST invoice, same-day dispatch on stock.
-          </p>
-          <Link to="/deals" onClick={onClose} className="mt-4 inline-flex items-center gap-1.5 rounded-[12px] bg-white px-4 py-2.5 text-[12.5px] font-bold text-forest transition hover:-translate-y-0.5">
+        <div className="forest-band relative hidden overflow-hidden rounded-[18px] p-5 text-white lg:flex lg:flex-col">
+          <Badge tone="dark" icon="tag" className="w-fit border-white/20 bg-white/10">Best deal in {d.name}</Badge>
+          {deal ? (
+            <>
+              <Link to={`/product/${deal.id}`} onClick={onClose} className="mt-3 block overflow-hidden rounded-[14px] bg-white/95">
+                {photoOf(deal)
+                  ? <img src={photoOf(deal)} alt="" className="aspect-[4/3] w-full object-cover transition duration-500 hover:scale-105" />
+                  : <ProductArt kind={deal.art} material={deal.material} className="aspect-[4/3] w-full p-4" />}
+              </Link>
+              <p className="mt-3 text-[16px] font-semibold leading-tight">{deal.name}{deal.size ? ` · ${deal.size}` : ''}</p>
+              <p className="mt-1 text-[12.5px] text-emerald-100">{deal.discount > 0 ? `${deal.discount}% off · ` : ''}{money(deal.price)}</p>
+            </>
+          ) : (
+            <p className="mt-3 text-[16px] font-semibold leading-tight">Verified prices, GST invoice, same-day dispatch on stock.</p>
+          )}
+          <Link to="/deals" onClick={onClose} className="mt-auto inline-flex w-fit items-center gap-1.5 rounded-[12px] bg-white px-4 py-2.5 text-[12.5px] font-bold text-forest transition hover:-translate-y-0.5 lg:mt-4">
             Shop the deals <Icon name="arrowRight" size={13} />
           </Link>
         </div>
@@ -366,7 +382,8 @@ export default function Header() {
           <Logo size={38} />
         </Link>
 
-        <DeliverTo className="hidden xl:block" />
+        {/* xl:flex, not xl:block — block would stack the pin over the text and push it out of the chip */}
+        <DeliverTo className="hidden shrink-0 xl:flex" />
 
         <div className="mx-auto hidden w-full max-w-2xl md:block">
           <SearchBox />
@@ -446,7 +463,7 @@ export default function Header() {
             className="overflow-hidden border-t border-white/60 lg:hidden"
           >
             <div className="max-h-[70dvh] overflow-y-auto px-4 pb-5 pt-3 sm:px-6">
-              <DeliverTo className="mb-3" />
+              <DeliverTo className="mb-3 flex w-fit" />
               <p className="eyebrow mb-2 px-1">Categories</p>
               <div className="grid gap-1 rounded-[18px] bg-white p-1.5 shadow-card">
                 {departments.map((d) => (
@@ -475,7 +492,7 @@ export default function Header() {
               <div className="mt-3 grid grid-cols-2 gap-2">
                 <Link to="/deals" className="rounded-[14px] bg-white px-3 py-3 text-center text-[13px] font-bold text-forest shadow-card">Deals</Link>
                 {!isAuthenticated
-                  ? <Link to="/login" className="rounded-[14px] bg-white px-3 py-3 text-center text-[13px] font-bold text-forest shadow-card">Sign in</Link>
+                  ? <Link to="/join" className="rounded-[14px] bg-white px-3 py-3 text-center text-[13px] font-bold text-forest shadow-card">Sign in</Link>
                   : <Link to="/account" className="rounded-[14px] bg-white px-3 py-3 text-center text-[13px] font-bold text-forest shadow-card">My profile</Link>}
                 <Link to="/enquiry" className="rounded-[14px] bg-forest px-3 py-3 text-center text-[13px] font-bold text-white shadow-btn">Enquire now</Link>
                 <Link to="/sell" className="rounded-[14px] bg-sand px-3 py-3 text-center text-[13px] font-bold text-forest shadow-card">Sell on Nivora</Link>

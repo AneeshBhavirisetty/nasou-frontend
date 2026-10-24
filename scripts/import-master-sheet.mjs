@@ -8,8 +8,11 @@
 //   --batch=N   rows per request (default 500; smaller if a slow server times out)
 //   --stock=N   stock for new items (the sheet's Quantity column is empty); default 100
 //   --retire    afterwards, remove house products the sheet no longer lists
-//   --images=<map.json>  photos from scripts/upload-sheet-images.mjs: every row whose
-//                Image URL cell is filled gets its item's photo from the media library
+//   --images=<map.json>  photos from scripts/upload-sheet-images.mjs: each row gets its
+//                item's photo from the media library, matched by Category / Sub category /
+//                Item Name to the photo folders. Rows whose Image URL cell is empty get the
+//                collected photo too (client review 6: every product should show the photos
+//                we collected); add --sheet-links-only to photo only the rows the sheet links.
 // With two-factor sign-in on, also set TWO_FACTOR_CODE.
 import { createRequire } from 'node:module';
 import fs from 'node:fs';
@@ -38,14 +41,21 @@ if (!sheet) {
 const imagesArg = process.argv.find((a) => a.startsWith('--images='));
 if (imagesArg) {
   const index = photoIndex(JSON.parse(fs.readFileSync(imagesArg.slice('--images='.length), 'utf8')));
-  let matched = 0, missing = new Set();
+  const linksOnly = flag('sheet-links-only');
+  let matched = 0, filled = 0, missing = new Set();
   for (const r of sheet.rows) {
-    if (!r.imageUrl) continue;            // the sheet gives this row no photo
+    const linked = !!r.imageUrl;
+    if (!linked && linksOnly) continue;   // the sheet gives this row no photo
     const url = photoFor(r, index);
     // the sheet's own link is kept as the photo's source (nasou-api media_files.source_url)
-    if (url) { if (r.imageUrl.toLowerCase().startsWith('https://')) r.imageSource = r.imageUrl; r.imageUrl = url; matched++; } else missing.add(`${r.category} / ${r.subCategory} / ${r.itemName}`);
+    if (url) {
+      if (linked && r.imageUrl.toLowerCase().startsWith('https://')) r.imageSource = r.imageUrl;
+      r.imageUrl = url;
+      if (linked) matched++; else filled++;
+    } else missing.add(`${r.category} / ${r.subCategory} / ${r.itemName}`);
   }
-  console.log(`Photos: ${matched} rows matched` + (missing.size ? ` · no photo found for ${[...missing].join('; ')}` : ''));
+  console.log(`Photos: ${matched} rows matched their sheet link` + (filled ? `, ${filled} rows without a link given their item's collected photo` : '')
+    + (missing.size ? ` · no photo found for ${[...missing].join('; ')}` : ''));
 }
 const s = summarise(sheet.rows);
 console.log(`${file} › ${sheet.sheet}: ${s.rows} rows · priced ${s.priced} · no price ${s.unpriced} · image links ${s.imageLinks}`

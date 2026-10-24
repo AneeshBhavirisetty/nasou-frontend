@@ -8,11 +8,12 @@
    tinted shadows. Rose / amber / sky are kept for status only.
    ============================================================ */
 @theme {
-  /* Neutrals — cream paper. Never grey, never blue. */
-  --color-canvas: #efe7da;
+  /* Neutrals — the reference's linen paper (#EEEAE2, sampled from the client's
+     reference screens in review 6; the old #efe7da had drifted yellow). */
+  --color-canvas: #eeeae2;
   --color-surface: #ffffff;
   --color-sunk: #e6ecea;
-  --color-line: #e5d8c7;
+  --color-line: #e2dbcd;
   --color-line-soft: #e6ecea;
 
   /* Ink ramp — greened blacks */
@@ -22,8 +23,20 @@
   --color-ink-35: #82938d;
 
   /* Sand — the reference's beige pill buttons and warm panels */
-  --color-sand: #e5d8c7;
-  --color-sand-50: #f4ede2;
+  --color-sand: #e4dac6;
+  --color-sand-50: #f5f2ec;
+  /* The reference's sand-gold accent (charts, highlights, the "new" glow). */
+  --color-gold: #d4b879;
+  --color-gold-50: #f6efdc;
+  /* The reference hero's deep greens, for dark bands only — brand surfaces
+     (buttons, links, the logo) keep the logo's forest below. */
+  --color-pine: #173f35;
+  --color-pine-600: #205c4a;
+
+  /* One surface for the whole chat panel — header excepted — so the thread,
+     the inbox, the chips and the composer never sit on different fills
+     (review 6: "chatbot internal background mismatch"). */
+  --color-chat: #fbf9f5;
 
   /* Brand — the Nivora logo's two greens, exactly: forest #095143 (the
      N's body) and emerald #0f6e5e (its two side strokes and the wordmark).
@@ -220,7 +233,7 @@
   .forest-band {
     background:
       radial-gradient(circle at 85% 10%, rgba(72, 132, 112, 0.35), transparent 40%),
-      linear-gradient(120deg, #063a30 0%, #095143 100%);
+      linear-gradient(120deg, #173f35 0%, #205c4a 100%);
   }
 
   /* Review 5 refresh: warm mesh grounds, film grain, glass chips. */
@@ -229,13 +242,13 @@
       radial-gradient(60% 80% at 0% 0%, rgba(255, 255, 255, 0.85), transparent 60%),
       radial-gradient(50% 70% at 100% 0%, rgba(202, 216, 210, 0.75), transparent 60%),
       radial-gradient(60% 60% at 80% 100%, rgba(229, 216, 199, 0.9), transparent 60%),
-      #f4ede2;
+      #f5f2ec;
   }
   .mesh-forest {
     background:
       radial-gradient(55% 70% at 90% 0%, rgba(110, 168, 145, 0.35), transparent 60%),
       radial-gradient(45% 60% at 0% 100%, rgba(229, 216, 199, 0.18), transparent 60%),
-      linear-gradient(125deg, #063a30 0%, #095143 70%, #0f6e5e 100%);
+      linear-gradient(125deg, #173f35 0%, #1c4e40 55%, #205c4a 100%);
   }
   .grain::before {
     content: "";
@@ -315,6 +328,17 @@
   100% { opacity: 0.4; transform: scale(0.92); }
 }
 
+@keyframes sheen-drift {
+  0%, 100% { background-position: 0% 50%; }
+  50%      { background-position: 100% 50%; }
+}
+/* Review 6 "make it less stale": hero bands breathe slowly; cards that matter glow. */
+.band-live {
+  background-size: 160% 160%;
+  animation: sheen-drift 14s ease-in-out infinite;
+}
+.glow-gold { box-shadow: 0 0 0 1px rgba(212, 184, 121, 0.45), 0 18px 40px rgba(212, 184, 121, 0.18); }
+
 .animate-marquee { animation: marquee 32s linear infinite; }
 .animate-drift { animation: drift 8s ease-in-out infinite; }
 .animate-pulse-ring { animation: pulse-ring 3s ease-in-out infinite; }
@@ -328,5 +352,5 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-  .animate-marquee, .animate-float, .animate-drift, .animate-pulse-ring { animation: none !important; }
+  .animate-marquee, .animate-float, .animate-drift, .animate-pulse-ring, .band-live { animation: none !important; }
 }

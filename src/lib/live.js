@@ -11,6 +11,8 @@ import { notificationsStore } from '../store/notifications';
 import { adminStore, stockLedgerStore, liveProductsStore } from '../context/AdminStore';
 import { auditStore, setServerChain } from './auditLog';
 import { createStore } from './store';
+import { stockAlertsStore } from '../store/stockAlerts';
+import { enquiriesStore, loadEnquiries, loadSellerCustomers, loadTickets, sellerCustomersStore, ticketsStore } from '../store/support';
 
 /* The signed-in team member's own access levels (GET /admin/me/access). */
 export const accessStore = createStore('nivora_my_access', () => ({}));
@@ -104,8 +106,10 @@ export const load = {
     else if (isSeller()) liveProductsStore.set(await get('/seller/products'));
   },
   async discounts() {
-    if (!isAdmin()) return;
-    const [coupons, bulkRules] = await Promise.all([quiet(get('/admin/coupons')), quiet(get('/admin/bulk-rules'))]);
+    if (!isAdmin() && !isSeller()) return;
+    /* a retailer sees and edits only its own codes and automatic discounts (review 6) */
+    const base = isAdmin() ? '/admin' : '/seller';
+    const [coupons, bulkRules] = await Promise.all([quiet(get(`${base}/coupons`)), quiet(get(`${base}/bulk-rules`))]);
     adminStore.set((s) => ({ ...s, ...(coupons ? { coupons } : {}), ...(bulkRules ? { bulkRules } : {}) }));
   },
   async stock() {
@@ -120,16 +124,28 @@ export const load = {
   async catalog() {
     await bootstrap();
   },
+  async tickets() {
+    if (isAdmin() || isSeller()) await loadTickets();
+  },
+  async enquiries() {
+    if (isAdmin() || isSeller()) await loadEnquiries();
+  },
+  async customers() {
+    if (isSeller()) await loadSellerCustomers();
+  },
+  async stockAlerts() {
+    if (who() && !isAdmin() && !isSeller()) stockAlertsStore.set(await get('/stock-alerts'));
+  },
 };
 
 /* Everything this person's screens use, in parallel. */
 export async function loadSession() {
   if (!LIVE || !who()) return;
   const jobs = isAdmin()
-    ? ['access', 'settings', 'retailers', 'requests', 'orders', 'refunds', 'payouts', 'accounts', 'products', 'discounts', 'notifications', 'audit', 'recon']
+    ? ['access', 'settings', 'retailers', 'requests', 'orders', 'refunds', 'payouts', 'accounts', 'products', 'discounts', 'notifications', 'audit', 'recon', 'tickets', 'enquiries']
     : isSeller()
-      ? ['retailers', 'orders', 'refunds', 'payouts', 'products', 'stock', 'notifications', 'accounts']
-      : ['orders', 'notifications'];
+      ? ['retailers', 'orders', 'refunds', 'payouts', 'products', 'stock', 'notifications', 'accounts', 'discounts', 'tickets', 'enquiries', 'customers']
+      : ['orders', 'notifications', 'stockAlerts'];
   await Promise.allSettled(jobs.map((k) => load[k]()));
 }
 
@@ -140,7 +156,7 @@ export const refresh = (...names) => Promise.allSettled(names.map((k) => load[k]
 export function clearSessionData() {
   if (!LIVE) return;
   [ordersStore, refundsStore, accountsStore, invitesStore, requestsStore, notificationsStore, stockLedgerStore,
-    liveProductsStore, auditStore].forEach((s) => s.set([]));
+    liveProductsStore, auditStore, stockAlertsStore, ticketsStore, enquiriesStore, sellerCustomersStore].forEach((s) => s.set([]));
   accessStore.set({});
   payoutsStore.set({ rows: [], held: {} });
   reconRowsStore.set({ rows: [] });
@@ -157,7 +173,7 @@ export function startPolling() {
   timers.push(setInterval(() => { if (visible() && who()) load.notifications().catch(() => {}); }, 30000));
   timers.push(setInterval(() => {
     if (!visible() || !who()) return;
-    refresh('orders', 'refunds', ...(isAdmin() ? ['retailers', 'requests', 'access'] : []));
+    refresh('orders', 'refunds', ...(isAdmin() ? ['retailers', 'requests', 'access', 'tickets'] : isSeller() ? ['tickets'] : []));
   }, 120000));
 }
 export function stopPolling() {

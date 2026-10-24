@@ -53,6 +53,8 @@ const productInput = (p) => ({
   subcategory: p.subcategoryName || p.category, supplierName: p.supplierName, material: p.material, form: p.form,
   kind: p.kind, art: p.art, size: p.size, price: p.price, mrp: p.mrp, stock: p.stock,
   images: p.images || [], badges: p.badges || [], version: p.version,
+  /* master-sheet columns (review 6: the form follows the sheet) */
+  itemSubtype2: p.itemSubtype2 ?? null, color: p.color ?? null, saleUnit: p.saleUnit || null, packUnit: p.packUnit || null,
 });
 const afterProducts = () => refresh('products', 'stock', 'catalog');
 const live = {
@@ -74,10 +76,11 @@ const live = {
     return afterProducts();
   },
   async saveCoupon(c) {
-    const body = { code: c.code, kind: c.kind, value: c.value, minOrder: c.minOrder || 0, maxDiscount: c.maxDiscount || 0, scope: c.scope || '', startsOn: c.startsOn || '', expiry: c.expiry || '', active: c.active !== false, usageLimit: c.usageLimit ?? null, version: c.version, autoApply: !!c.autoApply };
+    const body = { code: c.code, kind: c.kind, value: c.value, minOrder: c.minOrder || 0, maxDiscount: c.maxDiscount || 0, scope: c.scope || '', startsOn: c.startsOn || '', expiry: c.expiry || '', active: c.active !== false, usageLimit: c.usageLimit ?? null, version: c.version, autoApply: !!c.autoApply, productSkus: c.productSkus || [] };
     const known = adminStore.get().coupons.some((x) => x.id === c.id);
-    if (known) await put(`/admin/coupons/${c.id}`, body);
-    else await post('/admin/coupons', body);
+    /* a retailer's own codes live under /seller (review 6) */
+    if (known) await put(`${base()}/coupons/${c.id}`, body);
+    else await post(`${base()}/coupons`, body);
     return refresh('discounts');
   },
   /* a whole sheet in one request (POST /admin|seller/products/import) */
@@ -94,8 +97,8 @@ const live = {
   async saveBulkRule(r) {
     const body = { name: r.name, scopeType: r.scopeType, scopeValue: r.scopeValue, productSkus: r.scopeType === 'retailer' ? r.productSkus || [] : [], minQty: r.minQty, kind: r.kind, value: r.value, active: r.active !== false, version: r.version };
     const known = adminStore.get().bulkRules.some((x) => x.id === r.id);
-    if (known) await put(`/admin/bulk-rules/${r.id}`, body);
-    else await post('/admin/bulk-rules', body);
+    if (known) await put(`${base()}/bulk-rules/${r.id}`, body);
+    else await post(`${base()}/bulk-rules`, body);
     return refresh('discounts', 'catalog');
   },
 };
@@ -194,7 +197,7 @@ export function useAdminStore() {
     audit({ action: 'discount.save', entity: 'coupon', entityId: coupon.code, summary: `Saved code ${coupon.code}${coupon.autoApply ? ' (auto-applies)' : ''}`, after: { value: coupon.value, kind: coupon.kind, scope: coupon.scope, active: coupon.active } });
   }, []);
   const deleteCoupon = useCallback((id) => {
-    if (LIVE) return del(`/admin/coupons/${id}`).then(() => refresh('discounts'));
+    if (LIVE) return del(`${base()}/coupons/${id}`).then(() => refresh('discounts'));
     setSection('coupons', (cs) => cs.filter((c) => c.id !== id));
     audit({ action: 'discount.delete', entity: 'coupon', entityId: id, summary: 'Deleted a discount code' });
   }, []);
@@ -204,7 +207,7 @@ export function useAdminStore() {
     setSection('bulkRules', (rs) => (rs.some((r) => r.id === rule.id) ? rs.map((r) => (r.id === rule.id ? { ...r, ...rule } : r)) : [{ ...rule }, ...rs]));
     audit({ action: 'discount.bulk_rule', entity: 'bulk_rule', entityId: rule.id, summary: `Saved bulk rule “${rule.name}”` });
   }, []);
-  const deleteBulkRule = useCallback((id) => (LIVE ? del(`/admin/bulk-rules/${id}`).then(() => refresh('discounts'))
+  const deleteBulkRule = useCallback((id) => (LIVE ? del(`${base()}/bulk-rules/${id}`).then(() => refresh('discounts'))
     : setSection('bulkRules', (rs) => rs.filter((r) => r.id !== id))), []);
 
   const reset = useCallback(() => {

@@ -1,4 +1,4 @@
-import { useParams, Link } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import Icon from '../components/Icon';
 import Logo from '../components/Logo';
 import { Badge, Button, Container } from '../components/ui';
@@ -11,6 +11,7 @@ import { money } from '../lib/format';
 export default function Invoice() {
   const { id } = useParams();
   const order = findOrder(id);
+  const navigate = useNavigate();
 
   if (!order) {
     return (
@@ -32,9 +33,10 @@ export default function Invoice() {
   return (
     <Container className="py-8 sm:py-10">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3 print:hidden">
-        <Link to="/orders" className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-ink-50 transition hover:text-ink">
-          <Icon name="arrowLeft" size={14} /> Back to orders
-        </Link>
+        {/* opened from the shop, the seller console or Super Admin — go back there */}
+        <button type="button" onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/orders'))} className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-ink-50 transition hover:text-ink">
+          <Icon name="arrowLeft" size={14} /> Back
+        </button>
         <Button size="sm" icon="fileText" onClick={() => window.print()}>Print / save PDF</Button>
       </div>
 

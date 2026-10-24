@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import Icon from '../components/Icon';
 import ProductCard from '../components/ProductCard';
 import { Badge, Button, Container, Breadcrumbs, Skeleton } from '../components/ui';
-import { categories, categoryName, departments, departmentName, products, suppliers } from '../data/catalog';
+import { categories, categoryName, departments, departmentName, products, suppliers, typeKey, typeLabel } from '../data/catalog';
 import { money, cx } from '../lib/format';
 import { EASE } from '../lib/motion';
 
@@ -16,7 +16,6 @@ const SORTS = [
   { key: 'discount', label: 'Biggest discount' },
   { key: 'new', label: 'Newest' },
 ];
-const MATERIALS = ['PVC', 'uPVC', 'cPVC'];
 const PRICE_MAX = 2000;
 const PAGE = 60;
 
@@ -25,12 +24,6 @@ const TIERS = [
   { key: 'mid', label: 'Mid-range', note: 'Balanced price and finish' },
   { key: 'premium', label: 'Premium', note: 'Top-grade brands' },
 ];
-const KIND_LABEL = {
-  elbow: 'Elbow', tee: 'Tee', coupling: 'Coupling', reducer: 'Reducer', bush: 'Reducer bush',
-  fta: 'Female threaded adapter (FTA)', mta: 'Male threaded adapter (MTA)', bend: 'Bend',
-  cap: 'End cap', shoe: 'Shoe', pipe: 'Pipe', valve: 'Ball valve', union: 'Union',
-  saddle: 'Service saddle', nipple: 'Tank nipple',
-};
 const DISCOUNTS = [10, 20, 30];
 const RATINGS = [4.5, 4];
 const BANDS = [
@@ -51,11 +44,32 @@ const sizeValue = (s = '') => {
     return sum + (b ? a / b : a || 0);
   }, 0);
 };
-const ALL_SIZES = [...new Set(products.map((p) => p.size).filter(Boolean))].sort((a, b) => sizeValue(a) - sizeValue(b) || a.localeCompare(b));
-/* fixed order (most common first) so options never jump while you click */
-const KIND_TOTALS = products.reduce((m, p) => (p.kind ? m.set(p.kind, (m.get(p.kind) || 0) + 1) : m), new Map());
-const ALL_KINDS = [...KIND_TOTALS.keys()].sort((a, b) => KIND_TOTALS.get(b) - KIND_TOTALS.get(a));
-const BRANDS_BY_SIZE = [...suppliers].sort((a, b) => (b.count || 0) - (a.count || 0) || a.name.localeCompare(b.name));
+/* The option lists come from the catalogue itself — built when the shop
+   renders, not when this file loads: with the API the catalogue arrives
+   after the code, and lists made at load time were empty (review 6: the
+   Product type filter "did not expand"). Fixed order, most common first,
+   so options never jump while you click. */
+function useOptionLists() {
+  return useMemo(() => {
+    const kinds = new Map();
+    const brandCounts = new Map();
+    const materials = new Map();
+    for (const p of products) {
+      const k = typeKey(p.kind);
+      if (k) kinds.set(k, (kinds.get(k) || 0) + 1);
+      if (p.supplier) brandCounts.set(p.supplier, (brandCounts.get(p.supplier) || 0) + 1);
+      if (p.material) materials.set(p.material, (materials.get(p.material) || 0) + 1);
+    }
+    const byCount = (m) => [...m.keys()].sort((a, b) => m.get(b) - m.get(a) || String(a).localeCompare(String(b)));
+    return {
+      sizes: [...new Set(products.map((p) => p.size).filter(Boolean))].sort((a, b) => sizeValue(a) - sizeValue(b) || a.localeCompare(b)),
+      kinds: byCount(kinds),
+      materials: byCount(materials),
+      brands: [...suppliers].sort((a, b) => (brandCounts.get(b.slug) || 0) - (brandCounts.get(a.slug) || 0) || a.name.localeCompare(b.name)),
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [products, suppliers]);
+}
 
 function Group({ title, children, defaultOpen = true, active = 0 }) {
   const [open, setOpen] = useState(defaultOpen);
@@ -149,6 +163,8 @@ export default function Shop() {
   const [brandQ, setBrandQ] = useState('');
   const [allSizes, setAllSizes] = useState(false);
   const [allBrands, setAllBrands] = useState(false);
+  const [allKinds, setAllKinds] = useState(false);
+  const lists = useOptionLists();
 
   useEffect(() => { const t = setTimeout(() => setBooting(false), 260); return () => clearTimeout(t); }, []);
   /* The header menu / home tiles navigate here with a new ?dept / ?category.
@@ -194,7 +210,7 @@ export default function Shop() {
     if (skip !== 'mat' && mats.length && !mats.includes(p.material)) return false;
     if (skip !== 'sup' && sups.length && !sups.includes(p.supplier)) return false;
     if (skip !== 'tier' && tiers.length && !tiers.includes(p.supplierTier)) return false;
-    if (skip !== 'kind' && kinds.length && !kinds.includes(p.kind)) return false;
+    if (skip !== 'kind' && kinds.length && !kinds.includes(typeKey(p.kind))) return false;
     if (skip !== 'size' && sizes.length && !sizes.includes(p.size)) return false;
     if (skip !== 'col' && cols.length && !cols.some((c) => p.badges.includes(c))) return false;
     if (skip !== 'price' && (p.price < minPrice || (maxPrice < PRICE_MAX && p.price > maxPrice))) return false;
@@ -235,7 +251,7 @@ export default function Shop() {
     mat: facet('mat', (p) => p.material),
     sup: facet('sup', (p) => p.supplier),
     tier: facet('tier', (p) => p.supplierTier),
-    kind: facet('kind', (p) => p.kind),
+    kind: facet('kind', (p) => typeKey(p.kind)),
     size: facet('size', (p) => p.size),
     col: facet('col', (p) => p.badges),
     offBase: searched.filter((p) => matches(p, 'off')),
@@ -256,13 +272,19 @@ export default function Shop() {
 
   const brandList = useMemo(() => {
     const n = brandQ.trim().toLowerCase();
-    return BRANDS_BY_SIZE.filter((s) => !n || s.name.toLowerCase().includes(n));
-  }, [brandQ]);
+    return lists.brands.filter((s) => !n || s.name.toLowerCase().includes(n));
+  }, [brandQ, lists]);
 
-  /* sub-categories of the chosen departments (all of them when none chosen) */
-  const subList = depts.length ? categories.filter((c) => depts.includes(c.department)) : categories;
+  /* sub-categories of the chosen departments (all of them when none chosen) —
+     only the ones that have products, as in the master sheet (review 6) */
+  const subList = (depts.length ? categories.filter((c) => depts.includes(c.department)) : categories).filter((c) => c.count > 0 || cats.includes(c.slug));
 
-  const sizeList = allSizes ? ALL_SIZES : ALL_SIZES.filter((s) => sizes.includes(s) || (counts.size.get(s) || 0) >= 15).slice(0, 14);
+  const sizeList = allSizes ? lists.sizes : lists.sizes.filter((s) => sizes.includes(s) || (counts.size.get(s) || 0) >= 15).slice(0, 14);
+  /* item types that occur with the other filters, most common first; the first 12 until expanded */
+  const kindList = lists.kinds.filter((k) => kinds.includes(k) || (counts.kind.get(k) || 0) > 0)
+    .sort((a, b) => (counts.kind.get(b) || 0) - (counts.kind.get(a) || 0));
+  const kindShown = allKinds ? kindList : kindList.filter((k, i) => i < 12 || kinds.includes(k));
+  const materialList = lists.materials.filter((m) => mats.includes(m) || (counts.mat.get(m) || 0) > 0);
 
   const setBand = (b) => {
     const on = minPrice === b.min && maxPrice === b.max;
@@ -359,10 +381,17 @@ export default function Shop() {
         </div>
       </Group>
 
-      <Group title="Product type" active={kinds.length} defaultOpen={false}>
-        {ALL_KINDS.map((k) => (
-          <Check key={k} label={KIND_LABEL[k] || k} checked={kinds.includes(k)} onChange={() => toggle(kinds, setKinds)(k)} count={counts.kind.get(k) || 0} />
+      {/* the master sheet's "Item type" */}
+      <Group title="Product type" active={kinds.length} defaultOpen={depts.length > 0 || cats.length > 0}>
+        {kindShown.map((k) => (
+          <Check key={k} label={typeLabel(k)} checked={kinds.includes(k)} onChange={() => toggle(kinds, setKinds)(k)} count={counts.kind.get(k) || 0} />
         ))}
+        {kindList.length === 0 && <p className="px-1 py-2 text-[12.5px] text-ink-35">No product types for these filters.</p>}
+        {kindList.length > 12 && (
+          <button type="button" onClick={() => setAllKinds((v) => !v)} className="mt-1 text-[12.5px] font-bold text-forest hover:underline">
+            {allKinds ? 'Show fewer types' : `Show all ${kindList.length} types`}
+          </button>
+        )}
       </Group>
 
       <Group title="Size" active={sizes.length} defaultOpen={false}>
@@ -378,12 +407,12 @@ export default function Shop() {
           })}
         </div>
         <button type="button" onClick={() => setAllSizes((v) => !v)} className="mt-2 text-[12.5px] font-bold text-forest hover:underline">
-          {allSizes ? 'Show common sizes' : `Show all ${ALL_SIZES.length} sizes`}
+          {allSizes ? 'Show common sizes' : `Show all ${lists.sizes.length} sizes`}
         </button>
       </Group>
 
-      <Group title="Material" active={mats.length}>
-        {MATERIALS.map((m) => (
+      <Group title="Material" active={mats.length} defaultOpen={false}>
+        {materialList.map((m) => (
           <Check key={m} label={m} checked={mats.includes(m)} onChange={() => toggle(mats, setMats)(m)} count={counts.mat.get(m) || 0} />
         ))}
       </Group>
@@ -415,7 +444,7 @@ export default function Shop() {
     ...(priceActive ? [[`${money(minPrice)} – ${maxPrice < PRICE_MAX ? money(maxPrice) : 'any'}`, () => { setMinPrice(0); setMaxPrice(PRICE_MAX); }]] : []),
     ...(minOff ? [[`${minOff}%+ off`, () => setMinOff(0)]] : []),
     ...(minRating ? [[`${minRating}★ & up`, () => setMinRating(0)]] : []),
-    ...kinds.map((k) => [KIND_LABEL[k] || k, () => toggle(kinds, setKinds)(k)]),
+    ...kinds.map((k) => [typeLabel(k), () => toggle(kinds, setKinds)(k)]),
     ...sizes.map((s) => [`Size ${s}`, () => toggle(sizes, setSizes)(s)]),
     ...mats.map((m) => [m, () => toggle(mats, setMats)(m)]),
     ...tiers.map((t) => [`${TIERS.find((x) => x.key === t)?.label ?? t} brands`, () => toggle(tiers, setTiers)(t)]),
@@ -457,19 +486,20 @@ export default function Shop() {
         <span className="hidden shrink-0 text-[11px] font-bold uppercase tracking-[0.18em] text-ink sm:inline">Quick filters</span>
         <div className="no-bar -my-1 flex gap-2 overflow-x-auto py-1">
           {[
+            /* the master sheet's categories, not just the plumbing pipe materials (review 6) */
+            ...departments.filter((d) => d.count > 0).map((d) => ({ key: `dept-${d.slug}`, label: d.name, icon: d.icon, on: depts.includes(d.slug), act: () => { toggle(depts, setDepts)(d.slug); setCats([]); } })),
             { label: 'In stock', icon: 'check', on: inStockOnly, act: () => setInStock((v) => !v) },
             { label: 'On offer', icon: 'tag', on: dealOnly, act: () => setDealOnly((v) => !v) },
             { label: '20%+ off', icon: 'sparkle', on: minOff === 20, act: () => setMinOff(minOff === 20 ? 0 : 20) },
             { label: '4.5★ & up', icon: 'star', on: minRating === 4.5, act: () => setMinRating(minRating === 4.5 ? 0 : 4.5) },
             { label: 'Bestsellers', icon: 'layers', on: cols.includes('Bestseller'), act: () => toggle(cols, setCols)('Bestseller') },
             { label: 'Premium brands', icon: 'shieldCheck', on: tiers.includes('premium'), act: () => toggle(tiers, setTiers)('premium') },
-            ...MATERIALS.map((m) => ({ label: m, icon: 'droplet', on: mats.includes(m), act: () => toggle(mats, setMats)(m) })),
             { label: 'Top rated', icon: 'star', on: sort === 'rating', act: () => setSort(sort === 'rating' ? 'relevance' : 'rating') },
             { label: 'Biggest discount', icon: 'sparkle', on: sort === 'discount', act: () => setSort(sort === 'discount' ? 'relevance' : 'discount') },
             { label: 'Newest', icon: 'clock', on: sort === 'new', act: () => setSort(sort === 'new' ? 'relevance' : 'new') },
           ].map((c) => (
             <button
-              key={c.label}
+              key={c.key || c.label}
               onClick={c.act}
               aria-pressed={c.on}
               className={cx(

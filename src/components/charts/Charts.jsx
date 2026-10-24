@@ -171,6 +171,72 @@ export function LineChart({ points, format = (v) => v, tick = format, label = 'V
   );
 }
 
+/* ── column chart (single series, vertical bars, per-bar tooltip) ─────────────
+   Review 6 asked for a bar chart beside the line and pie: one series in brand
+   forest, 4px rounded tops on the zero baseline, 2px surface gaps, the bar
+   under the pointer brightened with a tooltip, every other label thinned so
+   they never collide. */
+export function ColumnChart({ points, format = (v) => v, tick = format, label = 'Value', color = FOREST, height = 220, sub }) {
+  const [ref, width] = useWidth();
+  const [hover, setHover] = useState(null);
+  const m = { l: 52, r: 10, t: 14, b: 28 };
+  const iw = width - m.l - m.r;
+  const ih = height - m.t - m.b;
+  const ticks = useMemo(() => niceTicks(Math.max(0, ...points.map((p) => p.value))), [points]);
+  const top = ticks[ticks.length - 1] || 1;
+  const slot = iw / Math.max(1, points.length);
+  const bar = Math.max(4, Math.min(42, slot - 2));
+  const x = (i) => m.l + i * slot + (slot - bar) / 2;
+  const y = (v) => m.t + ih - (v / top) * ih;
+  const every = Math.max(1, Math.ceil(points.length / Math.max(2, Math.floor(iw / 64))));
+  const h = hover != null ? points[hover] : null;
+  const total = points.reduce((s, p) => s + p.value, 0);
+
+  return (
+    <div ref={ref} className="relative">
+      <svg width={width} height={height} role="img" aria-label={`${label}: ${points.length} bars, total ${format(total)}.`} className="block">
+        {ticks.map((t) => (
+          <g key={t}>
+            <line x1={m.l} x2={width - m.r} y1={y(t)} y2={y(t)} stroke={INK.grid} strokeWidth="1" />
+            <text x={m.l - 8} y={y(t)} dy="0.32em" textAnchor="end" fontSize="11" fill={INK.muted}>{tick(t)}</text>
+          </g>
+        ))}
+        {points.map((p, i) => {
+          const hgt = Math.max(p.value > 0 ? 2 : 0, y(0) - y(p.value));
+          const r = Math.min(4, bar / 2, hgt);
+          const x0 = x(i);
+          const y0 = y(0) - hgt;
+          /* rounded top corners only, square on the baseline */
+          const d = hgt <= 0 ? '' : `M${x0},${y(0)} V${y0 + r} Q${x0},${y0} ${x0 + r},${y0} H${x0 + bar - r} Q${x0 + bar},${y0} ${x0 + bar},${y0 + r} V${y(0)} Z`;
+          return (
+            <g key={p.key || p.label}>
+              {d && <path d={d} fill={color} style={{ filter: hover === i ? 'brightness(1.15)' : undefined }} />}
+              {/* hit target: the whole column slot, taller than the mark */}
+              <rect
+                x={m.l + i * slot} y={m.t} width={slot} height={ih} fill="transparent" tabIndex={0}
+                aria-label={`${p.label}: ${format(p.value)}`}
+                onPointerEnter={() => setHover(i)} onPointerLeave={() => setHover(null)}
+                onFocus={() => setHover(i)} onBlur={() => setHover(null)}
+                className="outline-none"
+              />
+              {i % every === 0 && <text x={x0 + bar / 2} y={height - 8} textAnchor="middle" fontSize="11" fill={INK.muted}>{p.label}</text>}
+            </g>
+          );
+        })}
+      </svg>
+      {h && (
+        <div
+          className="pointer-events-none absolute top-1 z-10 rounded-[10px] border border-line bg-white px-3 py-2 shadow-lift"
+          style={{ left: Math.min(Math.max(x(hover) + bar / 2 - 70, 0), width - 150), width: 140 }}
+        >
+          <p className="tnum text-[14px] font-bold text-ink">{format(h.value)}</p>
+          <p className="text-[11.5px] text-ink-50">{h.label}{sub ? ` · ${sub(h)}` : ''}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ── horizontal bar list (value at the tip, per-bar tooltip) ───────────────── */
 export function BarList({ rows, format = (v) => v, color = FOREST, detail, max: forcedMax }) {
   const [hover, setHover] = useState(null);

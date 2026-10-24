@@ -14,6 +14,7 @@ import { DEPARTMENTS, departmentMeta } from '../../data/departments';
 import { money, cx } from '../../lib/format';
 import { EASE } from '../../lib/motion';
 import { act } from '../../lib/act';
+import { useRetailers } from '../../store/retailers';
 
 const blank = { code: '', kind: 'percent', value: 10, minOrder: 0, maxDiscount: 0, scope: '', expiry: '', active: true, autoApply: false };
 
@@ -112,6 +113,15 @@ export default function AdminDiscounts() {
   const { coupons, bulkRules, saveCoupon, deleteCoupon } = useAdminStore();
   const [editing, setEditing] = useState(undefined);
   const [tab, setTab] = useState('codes');
+  /* Nivora's own codes and the codes retailers make for their products are
+     kept apart (review 6): the team manages Nivora's; a store's are shown
+     here read-only (pause only) — the store manages them in its console. */
+  const [owner, setOwner] = useState('nivora');
+  const retailers = useRetailers();
+  const storeName = (id) => retailers.find((r) => r.id === id)?.name || 'A retailer';
+  const nivoraCodes = coupons.filter((c) => !c.retailerId);
+  const storeCodes = coupons.filter((c) => c.retailerId);
+  const listed = owner === 'nivora' ? nivoraCodes : storeCodes;
   const [creatingBulk, setCreatingBulk] = useState(false);
   const canEdit = useIam().can('discounts', 'edit');
 
@@ -153,11 +163,18 @@ export default function AdminDiscounts() {
 
       {tab === 'codes' && (
       <>
+      <div className="flex flex-wrap gap-2">
+        {[['nivora', 'Nivora codes', nivoraCodes.length], ['stores', 'Retailers’ own codes', storeCodes.length]].map(([k, l, n]) => (
+          <button key={k} onClick={() => setOwner(k)} className={cx('flex items-center gap-2 rounded-full border px-4 py-2 text-[13px] font-bold transition', owner === k ? 'border-forest bg-forest text-white' : 'border-line bg-white text-ink-70 hover:border-forest/40')}>
+            <Icon name={k === 'nivora' ? 'tag' : 'store'} size={14} /> {l} <span className={cx('tnum rounded-full px-1.5 text-[11px]', owner === k ? 'bg-white/20' : 'bg-sunk')}>{n}</span>
+          </button>
+        ))}
+      </div>
 
-      {coupons.length > 0 ? (
+      {listed.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2">
           <AnimatePresence initial={false}>
-            {coupons.map((c) => {
+            {listed.map((c) => {
               const p = preview(c);
               return (
                 <motion.article
@@ -198,19 +215,20 @@ export default function AdminDiscounts() {
                         >
                           <Icon name={c.active ? 'check' : 'clock'} size={14} />
                         </button>
-                        <button onClick={() => setEditing(c)} className="grid h-8 w-8 place-items-center rounded-md border border-line text-ink-50 transition hover:border-ink-35 hover:text-ink" aria-label="Edit">
+                        {!c.retailerId && <button onClick={() => setEditing(c)} className="grid h-8 w-8 place-items-center rounded-md border border-line text-ink-50 transition hover:border-ink-35 hover:text-ink" aria-label="Edit">
                           <Icon name="wrench" size={14} />
-                        </button>
-                        <button
+                        </button>}
+                        {!c.retailerId && <button
                           onClick={() => { if (window.confirm(`Delete code ${c.code}?`)) { act(toast, () => deleteCoupon(c.id), 'Code deleted'); } }}
                           className="grid h-8 w-8 place-items-center rounded-md border border-line text-ink-50 transition hover:border-clay/40 hover:text-clay"
                           aria-label="Delete"
                         >
                           <Icon name="trash" size={14} />
-                        </button>
+                        </button>}
                       </div>}
                     </div>
 
+                    {c.retailerId && <p className="mt-2 flex items-center gap-1.5 text-[12px] font-bold text-forest-800"><Icon name="store" size={12} /> {storeName(c.retailerId)} · only its products{c.productSkus?.length ? ` (${c.productSkus.length} picked)` : ''}</p>}
                     <p className="mt-2.5 text-[13px]">
                       <span className="font-semibold">{scopeLabel(c.scope)}</span>
                       {c.autoApply && c.scope && <span className="ml-1.5 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700">Auto-applies</span>}
@@ -236,8 +254,8 @@ export default function AdminDiscounts() {
       ) : (
         <div className="rounded-[20px] border border-dashed border-[#c7ded9] bg-[#f4f7f5] px-4 py-12 text-center">
           <span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-sunk text-ink-35"><Icon name="tag" size={22} /></span>
-          <p className="mt-3 text-[13px] text-ink-50">No discount codes yet.</p>
-          {canEdit && <div className="mt-4"><Button size="sm" icon="plus" onClick={() => setEditing(null)}>Create your first code</Button></div>}
+          <p className="mt-3 text-[13px] text-ink-50">{owner === 'stores' ? 'No retailer has made its own code yet.' : 'No discount codes yet.'}</p>
+          {canEdit && owner === 'nivora' && <div className="mt-4"><Button size="sm" icon="plus" onClick={() => setEditing(null)}>Create your first code</Button></div>}
         </div>
       )}
 

@@ -82,11 +82,11 @@ export default function AdminLayout({ children }) {
   return (
     <ProtectedRoute allowedRoles={['ADMIN']}>
       <div className="min-h-dvh overflow-x-hidden bg-canvas text-forest">
-        <div className="min-h-dvh bg-[radial-gradient(circle_at_top_left,rgba(9, 81, 67,0.14),transparent_28%),radial-gradient(circle_at_top_right,rgba(229,216,199,0.8),transparent_24%),linear-gradient(180deg,#efeae1_0%,#f5f1ea_48%,#efeae1_100%)]">
+        <div className="min-h-dvh bg-canvas">
           <AdminSideRail open={rail} onClose={() => setRail(false)} />
 
           <div className={cx('min-w-0 transition-[margin] duration-200', rail ? 'lg:ml-[272px]' : 'lg:ml-0')}>
-            <header className="sticky top-0 z-30 flex min-h-[68px] items-center justify-between gap-3 border-b border-white/64 bg-canvas/82 px-4 pb-3 pt-[calc(12px+env(safe-area-inset-top))] backdrop-blur-2xl sm:px-6 lg:min-h-[78px] lg:px-10">
+            <header className="sticky top-0 z-30 flex min-h-[68px] items-center justify-between gap-3 bg-canvas px-4 pb-3 pt-[calc(12px+env(safe-area-inset-top))] backdrop-blur-2xl sm:px-6 lg:min-h-[78px] lg:px-10">
               <div className="flex min-w-0 items-center gap-3">
                 {!rail && (
                   <button onClick={() => setRail(true)} aria-label="Show sidebar" className="hidden h-11 w-11 shrink-0 place-items-center rounded-full border border-white/72 bg-white/82 text-forest shadow-[0_10px_24px_rgba(9, 81, 67,0.08)] transition hover:-translate-y-px lg:grid">

@@ -20,6 +20,7 @@ import Info from './pages/Info';
 import NotFound from './pages/NotFound';
 import AdminCatalogImport from './pages/AdminCatalogImport';
 import Sell from './pages/Sell';
+import Join from './pages/Join';
 import InviteAccept from './pages/InviteAccept';
 import SellerRegister from './pages/seller/Register';
 import SellerLayout from './layouts/SellerLayout';
@@ -29,6 +30,14 @@ import SellerProducts from './pages/seller/Products';
 import SellerPayouts from './pages/seller/Payouts';
 import SellerProfile from './pages/seller/Profile';
 import SellerTeam from './pages/seller/Team';
+import SellerDiscounts from './pages/seller/Discounts';
+import SellerCustomers from './pages/seller/Customers';
+import SellerEnquiries from './pages/seller/Enquiries';
+import SellerBilling from './pages/seller/Billing';
+import SellerReports from './pages/seller/Reports';
+import SellerSupport from './pages/seller/Support';
+import AdminSupport from './pages/admin/Support';
+import AdminEnquiries from './pages/admin/Enquiries';
 import AdminRetailers from './pages/admin/Retailers';
 import AdminRetailerDetail from './pages/admin/RetailerDetail';
 import AdminApprovals from './pages/admin/Approvals';
@@ -72,6 +81,9 @@ export default function App() {
     <>
       <ScrollToTop />
       <Routes>
+        {/* "Who am I" between the landing page and signing in (review 6) */}
+        <Route path="/join" element={<Join />} />
+
         <Route element={<PublicLayout />}>
           <Route path="/" element={<Home />} />
           <Route path="/shop" element={<Shop />} />
@@ -114,6 +126,12 @@ export default function App() {
           <Route path="/seller/payouts" element={<SellerPayouts />} />
           <Route path="/seller/profile" element={<SellerProfile />} />
           <Route path="/seller/team" element={<SellerTeam />} />
+          <Route path="/seller/discounts" element={<SellerDiscounts />} />
+          <Route path="/seller/customers" element={<SellerCustomers />} />
+          <Route path="/seller/enquiries" element={<SellerEnquiries />} />
+          <Route path="/seller/billing" element={<SellerBilling />} />
+          <Route path="/seller/reports" element={<SellerReports />} />
+          <Route path="/seller/support" element={<SellerSupport />} />
         </Route>
 
         <Route element={<AdminLayout />}>
@@ -137,6 +155,8 @@ export default function App() {
           <Route path="/admin/customers/:id" element={<AdminCustomerDetail />} />
           <Route path="/admin/billing" element={<AdminBilling />} />
           <Route path="/admin/reports" element={<AdminReports />} />
+          <Route path="/admin/support" element={<AdminSupport />} />
+          <Route path="/admin/enquiries" element={<AdminEnquiries />} />
           <Route path="/admin/catalog/import" element={<AdminCatalogImport />} />
         </Route>
       </Routes>

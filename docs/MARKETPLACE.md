@@ -83,6 +83,51 @@ the old password `nasou123`. A staff invite link to try:
 2. Discounts by code: Products › Apply discount › "Use a discount code" ties a Discounts-module code to a category, and the code then applies itself at checkout.
 3. Inventory: placing an order takes stock out, and cancelling puts it back. Every movement is listed under Products › Stock movements. With the API configured, checkout posts to `POST /checkout`, which decrements stock in the same transaction.
 
+## Client review 6
+
+API changes are in nasou-api migration **V16** (item codes, retailer discount
+codes, stock alerts, support tickets, enquiry → product). `node scripts/review6-check.mjs`
+in nasou-api checks them end to end against a dev API.
+
+**Customer website**
+
+| # | Ask | Where |
+| --- | --- | --- |
+| 1 | Reference colours, less stale | `index.css`: canvas is the reference linen `#eeeae2`, dark bands use the reference greens (`pine`), gold accent; slow-moving hero bands (`band-live`). Logo green unchanged. |
+| 1, 12 | Chatbot background mismatch | One surface (`--color-chat`) for the whole panel — `ChatWidget.jsx` |
+| 2 | "Delivering in" text overflowing | `Header.jsx` passed `xl:block`, which stacked the pin over the text — now `xl:flex`; `DeliverTo.jsx` |
+| 3 | "Who am I" before sign-in | `/join` (`pages/Join.jsx`): Manufacturer → trade desk, Retailer → Sell on Nivora, Customer → sign-in. Header "Sign in" goes there. |
+| 4 | Twilio button in sign-up | `components/auth/VerifyPhone.jsx` — inline Verify / code / ✓ in customer sign-up and the retailer application (`/sellers/apply` now requires the `phoneToken`) |
+| 5 | AI chatbot | Customer chat is answered by the AI service when `AI_SERVICE_URL` is set; contract in nasou-api `docs/AI-ASSISTANT.md` |
+| 6–8 | Photos on every card | `photoOf` / `coverPhoto` in `data/catalog.js`; rails lead with pictured products; department cards show a real photo. `scripts/import-master-sheet.mjs --images` now gives rows without a link their item's collected photo (905 rows of the Alpha sheet). |
+| 9 | Product type filter did not open | Lists were built when `Shop.jsx` loaded — empty with the API. Now built from the live catalogue; Product type = the sheet's Item type. |
+| 10 | Quick filters only PVC/cPVC/uPVC | The sheet's six categories |
+| 11 | Sub-categories that don't exist | Menus and filters show only sub-categories with products; the mega-menu side card is the department's real best deal |
+| 12 | Wishlist filters | Category › Sub-category › Brand › Availability dropdowns, Recently saved kept |
+| 13 | Out of stock | "Out of stock" button + **Notify me** (`NotifyMe.jsx`, `/stock-alerts`); bell + email when back (checked every minute) |
+| 14 | What happens after an enquiry | The form now saves to the API (it never did). Team: bell + Super Admin › Enquiries + `ENQUIRY_NOTIFY_EMAIL`. About one product: its retailer gets a bell, an email and Seller › Enquiries. The confirmation lists these steps. |
+
+**Retailer console** (`layouts/SellerLayout.jsx`)
+
+| # | Ask | Where |
+| --- | --- | --- |
+| 1, 6 | Header like the reference; Orders/Products/Payouts across the top | search, AI assistant, support, bell, profile; top tabs |
+| 2, 11 | Line, pie and bar charts; reference dashboard | `pages/seller/Dashboard.jsx` (`ColumnChart` added to `Charts.jsx`) |
+| 3 | Header same colour as the page | both consoles |
+| 4, 5 | Item codes, sheet schema | `ProductForm.jsx` (code shown, made by the server: PL02378…); `ItemCodes.java` |
+| 7 | Discounts, Reports, Billing, Customers | `pages/seller/{Discounts,Reports,Billing,Customers}.jsx` |
+| 8 | Codes applied to categories / sub-categories / products | Seller › Discounts (and Products › Apply discount); only ever the store's own lines |
+| 9 | Team → Users & access | renamed |
+| 10 | AI chatbot | the chat bubble is the AI assistant for retailers |
+| 11 | Quick actions | Update stock, **Create order** (for a registered customer, by mobile, cash on delivery, normal checkout), Add product, Generate invoice |
+| 12 | Order tracking | status board + progress bar per order |
+| 13 | Invoices | Billing & payments lists every invoice; each order has "GST invoice" |
+| SA 15 | Support tickets | Seller › Support, Super Admin › Support tickets |
+
+**Super Admin**: retailer product counts come from the server and show how many
+Nivora uploaded; Discounts separates Nivora codes from retailers' own;
+Enquiries and Support tickets pages added.
+
 ## Open decisions (section 5), set to the recommended defaults
 
 All of these can be changed in **Commission & plans › Money rules**:

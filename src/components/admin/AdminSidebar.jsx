@@ -7,6 +7,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useIam } from '../../context/IamStore';
 import { useRetailers, useRequests } from '../../store/retailers';
 import { useRefunds } from '../../store/orders';
+import { useEnquiries, useTickets } from '../../store/support';
 import { cx } from '../../lib/format';
 
 /* Console navigation: a grouped full-height sidebar on desktop, a bottom bar
@@ -23,8 +24,10 @@ export const ADMIN_NAV = [
   { group: 'Marketplace', to: '/admin/retailers', label: 'Retailers', short: 'Retailers', icon: 'store', module: 'retailers' },
   { group: 'Marketplace', to: '/admin/approvals', label: 'Approvals', short: 'Approvals', icon: 'shieldCheck', module: ['retailers', 'retailerStatus'], badge: 'approvals' },
   { group: 'Marketplace', to: '/admin/commission', label: 'Commission', short: 'Commission', icon: 'percent', module: 'commission' },
+  { group: 'Marketplace', to: '/admin/support', label: 'Support tickets', short: 'Support', icon: 'ticket', module: 'retailers', badge: 'tickets' },
   { group: 'Commerce', to: '/admin/orders', label: 'Orders', short: 'Orders', icon: 'truck', module: 'orders' },
   { group: 'Commerce', to: '/admin/refunds', label: 'Refunds', short: 'Refunds', icon: 'refresh', module: 'refunds', badge: 'refunds' },
+  { group: 'Commerce', to: '/admin/enquiries', label: 'Enquiries', short: 'Enquiries', icon: 'inbox', module: 'orders', badge: 'enquiries' },
   { group: 'Commerce', to: '/admin/products', label: 'Products', short: 'Products', icon: 'package', module: 'catalog' },
   { group: 'Commerce', to: '/admin/catalog', label: 'Master catalog', short: 'Catalog', icon: 'layers', module: 'catalog', exact: true, off: true },
   { group: 'Commerce', to: '/admin/discounts', label: 'Discounts', short: 'Discounts', icon: 'tag', module: 'catalog' },
@@ -62,7 +65,11 @@ function useBadges() {
   const requests = useRequests();
   const refunds = useRefunds();
   const { can, isOwner } = useIam();
+  const tickets = useTickets();
+  const enquiries = useEnquiries();
   return {
+    tickets: can('retailers', 'view') ? tickets.filter((t) => t.status === 'OPEN' || t.unreadTeam > 0).length : 0,
+    enquiries: can('orders', 'view') ? enquiries.filter((e) => e.status === 'NEW').length : 0,
     approvals: retailers.filter((r) => r.status === 'pending' || r.pendingChanges).length + (isOwner ? requests.filter((q) => q.status === 'open').length : 0),
     refunds: can('refunds', 'approve') ? refunds.filter((r) => r.status === 'requested').length : 0,
   };

@@ -5,11 +5,12 @@ import Icon from '../components/Icon';
 import ProductArt from '../components/ProductArt';
 import ProductCard from '../components/ProductCard';
 import TraceRail from '../components/TraceRail';
+import NotifyMe from '../components/NotifyMe';
 import Reveal from '../components/Reveal';
 import Accordion, { AccordionItem } from '../components/Accordion';
 import Tabs from '../components/Tabs';
 import { Badge, Button, Container, Breadcrumbs, PriceTag, Rating, SectionHead, Stepper } from '../components/ui';
-import { categoryName, departmentName, findProduct, isListed, offersFor, relatedProducts, sellerName } from '../data/catalog';
+import { categoryName, departmentName, findProduct, isListed, offersFor, photoOf, relatedProducts, sellerName } from '../data/catalog';
 import { useCart, MAX_QTY } from '../context/CartContext';
 import { useAdminStore } from '../context/AdminStore';
 import { bulkOffersFor, describeBulk } from '../lib/pricing';
@@ -47,7 +48,8 @@ export default function ProductDetail() {
   const navigate = useNavigate();
   const [qty, setQty] = useState(1);
   const [shot, setShot] = useState(0);
-  const gallery = product?.images ?? [];
+  /* its own photos, else its item's photo (same product in another size) */
+  const gallery = product?.images?.length ? product.images : product && photoOf(product) ? [photoOf(product)] : [];
   const tilt = usePointerTilt({ max: 6 });
 
   const offers = useMemo(() => (product ? offersFor(product) : []), [product]);
@@ -187,7 +189,7 @@ export default function ProductDetail() {
               </p>
               <div className="mt-3 flex items-center gap-2 text-[13px] font-semibold">
                 {out ? (
-                  <span className="flex items-center gap-1.5 text-ink-35"><Icon name="clock" size={15} /> Out of stock</span>
+                  <span className="flex items-center gap-1.5 text-clay-600"><Icon name="clock" size={15} /> Out of stock — tap “Notify me” and we’ll tell you when it’s back</span>
                 ) : (
                   <span className={cx('flex items-center gap-1.5', low ? 'text-amber' : 'text-emerald-700')}>
                     <Icon name="check" size={15} strokeWidth={2.5} /> {low ? `Only ${product.stock} left` : 'In stock'} · dispatch {deliveryBy(1)}
@@ -209,7 +211,9 @@ export default function ProductDetail() {
             <div className="mt-6 grid grid-cols-[1fr_auto] gap-3">
               {onRequest(product)
                 ? <Button to={quoteLink(product)} size="lg" variant="primary" icon="chat">Ask for a price</Button>
-                : <Button onClick={addToCart} disabled={out} size="lg" variant="primary" icon="cart">Add to cart</Button>}
+                : out
+                  ? <Button disabled size="lg" variant="primary" icon="clock">Out of stock</Button>
+                  : <Button onClick={addToCart} size="lg" variant="primary" icon="cart">Add to cart</Button>}
               <button
                 onClick={() => wishlist.toggle(product.id)}
                 aria-pressed={saved}
@@ -223,7 +227,9 @@ export default function ProductDetail() {
             </div>
             {onRequest(product)
               ? <p className="mt-3 text-[12.5px] text-ink-50">No list price yet for this item — send an enquiry and we will quote you.</p>
-              : <Button onClick={buyNow} disabled={out} size="lg" variant="mint" full className="mt-3" iconRight="arrowRight">Buy now</Button>}
+              : out
+                ? <NotifyMe product={product} className="mt-3" />
+                : <Button onClick={buyNow} size="lg" variant="mint" full className="mt-3" iconRight="arrowRight">Buy now</Button>}
 
             {bulkOffers.length > 0 && (
               <div className="mt-6 rounded-[18px] border border-dashed border-forest/40 bg-emerald-50/60 p-4">

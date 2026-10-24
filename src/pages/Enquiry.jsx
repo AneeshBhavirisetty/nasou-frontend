@@ -5,9 +5,19 @@ import Icon from '../components/Icon';
 import { Badge, Button, Container, Breadcrumbs, Field } from '../components/ui';
 import PhoneField from '../components/auth/PhoneField';
 import { useToast } from '../context/ToastContext';
-import { departments } from '../data/catalog';
+import { departments, findProduct, sellerName, suppliers } from '../data/catalog';
+import { post } from '../lib/api';
+import { LIVE } from '../lib/config';
 import { brand, whatsappLink } from '../data/site';
 import { isMobile10, cx } from '../lib/format';
+
+/* What happens after "Send enquiry" (client review 6, customer item 14) —
+   the same steps nasou-api's EnquiryService takes. */
+const NEXT_STEPS = (product) => [
+  ['inbox', 'Saved with the Nivora trade desk', 'The team sees it straight away in Super Admin › Enquiries, with a notification.'],
+  ...(product ? [['store', `${sellerName(product)} is told too`, `The seller of ${product.sku} gets a notification and an email, and sees it under Enquiries.`]] : []),
+  ['phone', 'We call you within one working day', 'With prices, slab rates and stock for what you asked about.'],
+];
 
 const PURPOSE = [
   { id: 'bulk', label: 'Bulk / project order', note: 'Slab pricing above ₹25,000' },
@@ -23,22 +33,33 @@ export default function Enquiry() {
   const item = (params.get('item') || '').replace(/[^A-Za-z0-9-]/g, '').slice(0, 40);
   const [f, setF] = useState({
     name: '', company: '', phone: '', email: '',
-    purpose: item ? 'quote' : 'bulk', category: '', qty: '',
+    purpose: item ? 'quote' : PURPOSE.some((p) => p.id === params.get('purpose')) ? params.get('purpose') : 'bulk', category: '', qty: '',
     message: item ? `Please quote your price for item ${item}.` : '',
   });
   const [err, setErr] = useState('');
   const [sent, setSent] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const product = item ? findProduct(item) : null;
   const set = (k, v) => setF((s) => ({ ...s, [k]: v }));
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
     setErr('');
     if (!f.name.trim()) return setErr('Please tell us your name.');
     if (!isMobile10(f.phone)) return setErr('Enter a valid 10-digit mobile number.');
     if (f.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email)) return setErr('That email address doesn’t look right.');
     if (!f.message.trim()) return setErr('Add a line about what you need.');
-    setSent(true);
-    toast.success('Enquiry received — we’ll call you back within one working day.');
+    setBusy(true);
+    try {
+      /* saved on the server: the trade desk (and the product's seller) are notified */
+      if (LIVE) await post('/enquiries', { ...f, name: f.name.trim(), sku: item || null });
+      setSent(true);
+      toast.success('Enquiry received — we’ll call you back within one working day.');
+    } catch (x) {
+      setErr(x.message || 'Could not send the enquiry. Try again, or call us.');
+    } finally {
+      setBusy(false);
+    }
   };
 
   if (sent) {
@@ -58,6 +79,14 @@ export default function Enquiry() {
             <span className="tnum font-semibold text-ink">+91 {f.phone}</span> within one working day.
             For anything urgent, ring {brand.phone}.
           </p>
+          <ol className="mt-5 space-y-2.5 text-left">
+            {NEXT_STEPS(product).map(([ic, t, d], i) => (
+              <li key={t} className="flex gap-3 rounded-[14px] bg-[#f6f3ed] p-3">
+                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white text-forest shadow-card"><Icon name={ic} size={14} /></span>
+                <span className="min-w-0"><span className="block text-[13px] font-bold text-ink">{i + 1}. {t}</span><span className="block text-[12px] leading-snug text-ink-50">{d}</span></span>
+              </li>
+            ))}
+          </ol>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <Button to="/shop" iconRight="arrowRight">Browse the catalogue</Button>
             <Button variant="outline" onClick={() => { setSent(false); set('message', ''); }}>
@@ -172,7 +201,7 @@ export default function Enquiry() {
             )}
 
             <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-line-soft pt-5">
-              <Button type="submit" size="lg" iconRight="arrowRight">Send enquiry</Button>
+              <Button type="submit" size="lg" iconRight="arrowRight" loading={busy}>Send enquiry</Button>
               <span className="text-[12px] text-ink-35">We reply within one working day.</span>
             </div>
           </form>
@@ -214,7 +243,7 @@ export default function Enquiry() {
                   ['tag', 'Slab pricing above ₹25,000'],
                   ['truck', 'Same-day dispatch on in-stock lines'],
                   ['shieldCheck', 'GST invoice on every order'],
-                  ['layers', '27 brands under one account'],
+                  ['layers', `${suppliers.length} brands under one account`],
                 ].map(([ic, t]) => (
                   <li key={t} className="flex items-center gap-2.5">
                     <span className="grid h-8 w-8 shrink-0 place-items-center rounded-[10px] bg-white/10"><Icon name={ic} size={15} /></span> {t}

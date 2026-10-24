@@ -9,7 +9,7 @@ import Marquee from '../components/Marquee';
 import HomeHero from '../components/home/HomeHero';
 import Accordion, { AccordionItem } from '../components/Accordion';
 import { Container, Rating } from '../components/ui';
-import { departments, bestsellers, dealProducts, newProducts, products, suppliers } from '../data/catalog';
+import { coverPhoto, departments, bestsellers, dealProducts, newProducts, products, suppliers } from '../data/catalog';
 import { testimonials, faqs, valueProps } from '../data/site';
 import { useSettings } from '../store/settings';
 import { useRetailers } from '../store/retailers';
@@ -71,21 +71,28 @@ export default function Home() {
 
       {/* category bento */}
       <section id="categories">
-        <Head label="Shop by category" title="Everything a site needs, under one roof." note="Plumbing, electrical, agriculture, hardware, paints and more — sold by verified local counters." />
+        <Head label="Shop by category" title="Everything a site needs, under one roof." note={`${departments.filter((d) => d.count).map((d) => d.name).join(', ')} — sold by verified local counters.`} />
         <div className="grid auto-rows-[150px] grid-cols-2 gap-3 sm:auto-rows-[170px] sm:gap-4 lg:grid-cols-4">
           {bento.map((d, i) => {
             const big = i === 0;
             const wide = i === 1;
+            /* a real product photo from the department (review 6); the old illustration only if it has none */
+            const photo = coverPhoto(`dept:${d.slug}`);
             return (
               <motion.div key={d.slug} whileHover={{ y: -4 }} transition={{ type: 'spring', stiffness: 300, damping: 24 }} className={cx(big && 'col-span-2 row-span-2', wide && 'col-span-2')}>
                 <Link to={`/shop?dept=${d.slug}`} className={cx('group relative flex h-full flex-col justify-between overflow-hidden rounded-[24px] p-5 shadow-card', big ? 'mesh-forest text-white' : 'bg-white text-forest')}>
-                  <span className={cx('grid h-11 w-11 place-items-center rounded-[14px]', big ? 'bg-white/15 text-white' : 'bg-sunk text-forest')}><Icon name={d.icon} size={20} /></span>
-                  {d.slug === 'plumbing' ? (
+                  <span className={cx('relative z-[1] grid h-11 w-11 place-items-center rounded-[14px]', big ? 'bg-white/15 text-white' : 'bg-sunk text-forest')}><Icon name={d.icon} size={20} /></span>
+                  {photo ? (
+                    <span className={cx('pointer-events-none absolute overflow-hidden bg-white shadow-lift transition duration-700 group-hover:-rotate-2 group-hover:scale-105',
+                      big ? 'bottom-6 right-6 h-[58%] w-[46%] rounded-[22px] ring-4 ring-white/20' : 'bottom-3 right-3 h-[64%] w-[38%] rounded-[16px] ring-1 ring-line-soft')}>
+                      <img src={photo} alt="" loading="lazy" className="h-full w-full object-cover" />
+                    </span>
+                  ) : d.slug === 'plumbing' ? (
                     <ProductArt kind="tee" material="PVC" className={cx('pointer-events-none absolute transition duration-700 group-hover:rotate-6 group-hover:scale-110', big ? '-right-6 bottom-0 h-[78%] w-[70%]' : '-right-3 -bottom-2 h-[90%] w-[55%]')} />
                   ) : (
                     <Icon name={d.icon} size={big ? 180 : 110} strokeWidth={0.8} className={cx('pointer-events-none absolute -bottom-6 -right-6 transition duration-700 group-hover:scale-110', big ? 'text-white/15' : 'text-forest/10')} />
                   )}
-                  <div className="relative">
+                  <div className={cx('relative', photo && (big ? 'max-w-[50%]' : 'max-w-[58%]'))}>
                     <p className={cx('font-hero font-semibold leading-tight', big ? 'text-[30px] text-white' : 'text-[18px]')}>{d.name}</p>
                     <p className={cx('mt-1 text-[12.5px]', big ? 'max-w-[260px] text-emerald-100' : 'text-ink-50')}>{big ? d.blurb : d.count ? `${d.count.toLocaleString('en-IN')} items` : 'Coming soon'}</p>
                     {big && <span className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-[13px] font-bold text-forest">{d.count.toLocaleString('en-IN')} items <Icon name="arrowRight" size={14} /></span>}

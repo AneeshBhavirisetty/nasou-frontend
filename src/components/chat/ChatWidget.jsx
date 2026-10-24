@@ -15,8 +15,15 @@ import { api } from '../../lib/api';
 /* ============================================================================
  * ChatWidget — floating support chat, bottom-right.
  *
- *   Customer : one thread with the Nivora support desk.
- *   Admin               : an inbox of every customer thread, with replies.
+ *   Customer : one thread with the Nivora support desk. With the client's AI
+ *              service connected (nasou-api AI_SERVICE_URL) its first answers
+ *              come from the AI; otherwise from built-in rules.
+ *   Retailer : the Nivora AI assistant (review 6) — POST /assistant/chat,
+ *              answered from the store's own live data. Support requests go
+ *              through Support tickets instead.
+ *   Admin    : an inbox of every customer thread, with replies.
+ *
+ * Anything can open the panel with window.dispatchEvent(new Event(OPEN_CHAT)).
  *
  * Review 5: restyled to the reference (cream thread, forest header, sand
  * chips) and the quick questions answer from live data — your latest order's
@@ -28,6 +35,7 @@ import { api } from '../../lib/api';
  * ==========================================================================*/
 
 const KEY = 'nasou_chat_v1';
+export const OPEN_CHAT = 'nivora:open-chat';
 const AGENT = { name: 'Nivora support', sub: 'Replies in a few minutes' };
 const QUICK = ['Where is my order?', 'Bulk price for 500 pcs?', 'GST invoice copy', 'Is this size in stock?'];
 const SHOW = { Pending: 'placed', Processing: 'being packed', Shipped: 'on the way', Delivered: 'delivered', Cancelled: 'cancelled' };
@@ -191,7 +199,7 @@ function Bubble({ m, mine }) {
       <div
         className={cx(
           'max-w-[78%] rounded-[14px] px-3.5 py-2.5 text-[13px] leading-snug',
-          mine ? 'rounded-br-[4px] bg-forest text-white shadow-[0_8px_20px_rgba(9, 81, 67,0.22)]' : 'rounded-bl-[4px] border border-white/80 bg-white text-ink shadow-[0_6px_16px_rgba(9, 81, 67,0.08)]'
+          mine ? 'rounded-br-[4px] bg-forest text-white shadow-[0_8px_20px_rgba(9,81,67,0.22)]' : 'rounded-bl-[4px] border border-line-soft bg-white text-ink shadow-[0_4px_12px_rgba(9,81,67,0.06)]'
         )}
       >
         {m.text}
@@ -211,13 +219,13 @@ function Composer({ onSend, placeholder = 'Type a message…' }) {
     setV('');
   };
   return (
-    <form onSubmit={submit} className="flex items-center gap-2 border-t border-white/70 bg-white p-3">
+    <form onSubmit={submit} className="flex items-center gap-2 border-t border-line-soft bg-chat p-3">
       <input
         value={v}
         onChange={(e) => setV(e.target.value)}
         placeholder={placeholder}
         aria-label="Message"
-        className="h-11 min-w-0 flex-1 rounded-full border border-line bg-[#fbfaf7] px-4 text-[13px] text-ink outline-none transition placeholder:text-ink-35 focus:border-forest/50 focus:bg-white"
+        className="h-11 min-w-0 flex-1 rounded-full border border-line bg-white px-4 text-[13px] text-ink outline-none transition placeholder:text-ink-35 focus:border-forest/50 focus:bg-white"
       />
       <button
         type="submit"
@@ -248,7 +256,7 @@ function CustomerChat({ store, threadId, who }) {
 
   return (
     <>
-      <div className="thin-bar flex-1 space-y-3 overflow-y-auto bg-[#f4ede2] p-4">
+      <div className="thin-bar flex-1 space-y-3 overflow-y-auto bg-chat p-4">
         {msgs.length === 0 && (
           <div className="rounded-[18px] border border-white/80 bg-white p-4 text-[13px] leading-relaxed text-ink-70 shadow-[0_6px_16px_rgba(9, 81, 67,0.08)]">
             <p className="font-hero text-[16px] font-semibold text-forest">Hi{who?.name && who.name !== 'Guest' ? ` ${who.name.split(' ')[0]}` : ''} 👋</p>
@@ -259,7 +267,7 @@ function CustomerChat({ store, threadId, who }) {
         <div ref={endRef} />
       </div>
       {msgs.length === 0 && (
-        <div className="no-bar flex gap-2 overflow-x-auto border-t border-white/70 bg-[#f4ede2] px-3 py-2.5">
+        <div className="no-bar flex gap-2 overflow-x-auto border-t border-line-soft bg-chat px-3 py-2.5">
           {QUICK.map((q) => (
             <button
               key={q}
@@ -272,8 +280,66 @@ function CustomerChat({ store, threadId, who }) {
         </div>
       )}
       {store.live && !who?.id
-        ? <p className="border-t border-white/70 bg-white p-3 text-center text-[12.5px] text-ink-50"><a href="/login" className="font-bold text-forest">Sign in</a> to chat with Nivora support.</p>
+        ? <p className="border-t border-line-soft bg-chat p-3 text-center text-[12.5px] text-ink-50"><a href="/login" className="font-bold text-forest">Sign in</a> to chat with Nivora support.</p>
         : <Composer onSend={send} />}
+    </>
+  );
+}
+
+/* ── retailer: AI assistant ─────────────────────────────────────────────── */
+const ASSIST_KEY = 'nivora_assistant_v1';
+const ASSIST_QUICK = ['Which orders should I pack?', 'What is running low on stock?', 'How were sales this week?', 'How do I create a discount?'];
+const readAssist = () => { try { return JSON.parse(sessionStorage.getItem(ASSIST_KEY) || '[]'); } catch { return []; } };
+
+function AssistantChat({ who }) {
+  const [msgs, setMsgs] = useState(readAssist);
+  const [thinking, setThinking] = useState(false);
+  const endRef = useRef(null);
+  useEffect(() => {
+    try { sessionStorage.setItem(ASSIST_KEY, JSON.stringify(msgs.slice(-40))); } catch { /* private mode */ }
+    endRef.current?.scrollIntoView({ block: 'end' });
+  }, [msgs, thinking]);
+
+  const send = async (text) => {
+    const mine = { id: `u${now()}`, from: 'user', text, at: now() };
+    const history = msgs.slice(-12).map((m) => ({ role: m.from === 'user' ? 'user' : 'assistant', text: m.text }));
+    setMsgs((l) => [...l, mine]);
+    setThinking(true);
+    let reply;
+    try {
+      reply = LIVE
+        ? (await api('/assistant/chat', { method: 'POST', body: JSON.stringify({ message: text, history }) })).reply
+        : 'In the live app I answer from your store’s orders, stock and sales. Try the Orders and Products pages meanwhile.';
+    } catch (e) {
+      reply = e.message || 'I could not answer just now. Try again in a moment.';
+    }
+    setThinking(false);
+    setMsgs((l) => [...l, { id: `a${now()}`, from: 'agent', text: reply, at: now() }]);
+  };
+
+  return (
+    <>
+      <div className="thin-bar flex-1 space-y-3 overflow-y-auto bg-chat p-4">
+        {msgs.length === 0 && (
+          <div className="rounded-[18px] border border-line-soft bg-white p-4 text-[13px] leading-relaxed text-ink-70 shadow-[0_4px_12px_rgba(9,81,67,0.06)]">
+            <p className="font-hero text-[16px] font-semibold text-forest">Hi {who?.name?.split(' ')[0] || 'there'} 👋</p>
+            <p className="mt-1">I’m the Nivora assistant. Ask about orders to pack, stock, sales, discounts or support — I answer from your store’s live data.</p>
+          </div>
+        )}
+        {msgs.map((m) => <Bubble key={m.id} m={m} mine={m.from === 'user'} />)}
+        {thinking && (
+          <div className="flex justify-start"><span className="flex gap-1 rounded-[14px] rounded-bl-[4px] border border-line-soft bg-white px-3.5 py-3">
+            {[0, 1, 2].map((i) => <span key={i} className="h-1.5 w-1.5 animate-bounce rounded-full bg-forest/50" style={{ animationDelay: `${i * 0.12}s` }} />)}
+          </span></div>
+        )}
+        <div ref={endRef} />
+      </div>
+      {msgs.length === 0 && (
+        <div className="no-bar flex gap-2 overflow-x-auto border-t border-line-soft bg-chat px-3 py-2.5">
+          {ASSIST_QUICK.map((q) => <button key={q} onClick={() => send(q)} className="pill-sand shrink-0 px-3 py-1.5 text-[11.5px]">{q}</button>)}
+        </div>
+      )}
+      <Composer onSend={send} placeholder="Ask the assistant…" />
     </>
   );
 }
@@ -289,7 +355,7 @@ function AdminChat({ store }) {
 
   if (!thread) {
     return (
-      <div className="flex-1 overflow-y-auto bg-canvas">
+      <div className="flex-1 overflow-y-auto bg-chat">
         {store.threads.length === 0 && (
           <p className="p-5 text-center text-[13px] text-ink-50">No conversations yet.</p>
         )}
@@ -297,7 +363,7 @@ function AdminChat({ store }) {
           <button
             key={t.id}
             onClick={() => setOpenId(t.id)}
-            className="flex w-full items-center gap-3 border-b border-line-soft bg-white px-3.5 py-3 text-left transition hover:bg-sunk"
+            className="flex w-full items-center gap-3 border-b border-line-soft bg-chat px-3.5 py-3 text-left transition hover:bg-white"
           >
             <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-emerald-50 text-[12px] font-bold text-emerald-600">
               {t.name[0]}
@@ -329,11 +395,11 @@ function AdminChat({ store }) {
     <>
       <button
         onClick={() => setOpenId(null)}
-        className="flex items-center gap-1.5 border-b border-line-soft bg-white px-3.5 py-2.5 text-[12px] font-bold text-forest transition hover:bg-sunk"
+        className="flex items-center gap-1.5 border-b border-line-soft bg-chat px-3.5 py-2.5 text-[12px] font-bold text-forest transition hover:bg-white"
       >
         <Icon name="arrowLeft" size={13} /> All conversations
       </button>
-      <div className="flex-1 space-y-3 overflow-y-auto bg-canvas p-4">
+      <div className="flex-1 space-y-3 overflow-y-auto bg-chat p-4">
         {thread.messages.map((m) => <Bubble key={m.id} m={m} mine={m.from === 'agent'} />)}
         <div ref={endRef} />
       </div>
@@ -344,11 +410,17 @@ function AdminChat({ store }) {
 
 /* ── widget shell ──────────────────────────────────────────────────────── */
 export default function ChatWidget() {
-  const { isAuthenticated, isAdmin, user } = useAuth();
+  const { isAuthenticated, isAdmin, isRetailer, user } = useAuth();
+  const assistant = isRetailer && !isAdmin;
   const local = useChatStore();
-  const remote = useLiveChatStore(LIVE && isAuthenticated, isAdmin);
+  const remote = useLiveChatStore(LIVE && isAuthenticated && !(isRetailer && !isAdmin), isAdmin);
   const store = LIVE ? remote : local;
   const [open, setOpen] = useState(false);
+  useEffect(() => {
+    const show = () => setOpen(true);
+    window.addEventListener(OPEN_CHAT, show);
+    return () => window.removeEventListener(OPEN_CHAT, show);
+  }, []);
 
   const threadId = useMemo(
     () => (LIVE ? 'mine' : isAuthenticated ? `u-${user?.id ?? 'me'}` : 'guest'),
@@ -369,25 +441,25 @@ export default function ChatWidget() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.96 }}
             transition={{ duration: 0.22, ease: EASE }}
-            className="fixed bottom-[calc(var(--tabbar-h,0px)+5rem)] right-4 z-[190] flex h-[min(72dvh,520px)] w-[calc(100vw-2rem)] max-w-[392px] flex-col overflow-hidden rounded-[26px] border border-white/80 bg-[#f4ede2] shadow-[0_30px_90px_rgba(31,59,52,0.28)] sm:bottom-[calc(var(--tabbar-h,0px)+6rem)] sm:right-6"
+            className="fixed bottom-[calc(var(--tabbar-h,0px)+5rem)] right-4 z-[190] flex h-[min(72dvh,520px)] w-[calc(100vw-2rem)] max-w-[392px] flex-col overflow-hidden rounded-[26px] border border-white/80 bg-chat shadow-[0_30px_90px_rgba(31,59,52,0.28)] sm:bottom-[calc(var(--tabbar-h,0px)+6rem)] sm:right-6"
             role="dialog"
-            aria-label={isAdmin ? 'Support inbox' : 'Chat with Nivora support'}
+            aria-label={isAdmin ? 'Support inbox' : assistant ? 'Nivora AI assistant' : 'Chat with Nivora support'}
           >
             <header className="mesh-forest relative flex items-center gap-2.5 overflow-hidden px-4 py-4 text-white">
               <span className="field-dots-dark pointer-events-none absolute inset-0 opacity-30" />
               <span className="relative grid h-10 w-10 place-items-center rounded-full bg-white text-forest">
-                <Icon name={isAdmin ? 'headset' : 'chat'} size={16} />
+                <Icon name={isAdmin ? 'headset' : assistant ? 'bot' : 'chat'} size={16} />
               </span>
               <span className="relative min-w-0 flex-1">
                 <span className="block truncate text-[14px] font-bold">
-                  {isAdmin ? 'Support inbox' : AGENT.name}
+                  {isAdmin ? 'Support inbox' : assistant ? 'Nivora AI assistant' : AGENT.name}
                 </span>
                 <span className="flex min-w-0 items-center gap-1.5 text-[11px] text-white/60">
                   <span className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-emerald-50" />
-                  <span className="truncate">{isAdmin ? `${store.threads.length} conversation${store.threads.length === 1 ? '' : 's'}` : AGENT.sub}</span>
+                  <span className="truncate">{isAdmin ? `${store.threads.length} conversation${store.threads.length === 1 ? '' : 's'}` : assistant ? 'Answers from your store’s live data' : AGENT.sub}</span>
                 </span>
               </span>
-              {!isAdmin && (
+              {!isAdmin && !assistant && (
                 <a
                   href={whatsappLink()}
                   target="_blank"
@@ -406,7 +478,9 @@ export default function ChatWidget() {
 
             {isAdmin
               ? <AdminChat store={store} />
-              : <CustomerChat store={store} threadId={threadId} who={who} />}
+              : assistant
+                ? <AssistantChat who={who} />
+                : <CustomerChat store={store} threadId={threadId} who={who} />}
           </motion.div>
         )}
       </AnimatePresence>
@@ -425,7 +499,7 @@ export default function ChatWidget() {
             exit={{ opacity: 0, rotate: 45, scale: 0.7 }}
             transition={{ duration: 0.16 }}
           >
-            <Icon name={open ? 'close' : isAdmin ? 'headset' : 'chat'} size={22} />
+            <Icon name={open ? 'close' : isAdmin ? 'headset' : assistant ? 'bot' : 'chat'} size={22} />
           </motion.span>
         </AnimatePresence>
         {!open && unread > 0 && (
