@@ -34,7 +34,9 @@ export default function AdminCatalogImport() {
   const { can } = useIam();
   const { products } = useAdminStore();
   const retailers = useRetailers().filter((r) => r.status === 'approved' || r.status === 'suspended');
-  const [rid, setRid] = useState(retailers[0]?.id || '');
+  /* the first retailer until one is picked (the list may arrive after the first render) */
+  const [picked, setRid] = useState('');
+  const rid = picked || retailers[0]?.id || '';
   const canEdit = can('catalog', 'edit');
   const seller = retailers.find((r) => r.id === rid);
   const mine = useMemo(() => products.filter((p) => p.retailerId === rid), [products, rid]);

@@ -9,13 +9,13 @@ import { departments, findProduct, sellerName, suppliers } from '../data/catalog
 import { post } from '../lib/api';
 import { LIVE } from '../lib/config';
 import { brand, whatsappLink } from '../data/site';
-import { isMobile10, cx } from '../lib/format';
+import { isMobile10, cx, itemCode } from '../lib/format';
 
 /* What happens after "Send enquiry" (client review 6, customer item 14) —
    the same steps nasou-api's EnquiryService takes. */
 const NEXT_STEPS = (product) => [
   ['inbox', 'Saved with the Nivora trade desk', 'The team sees it straight away in Super Admin › Enquiries, with a notification.'],
-  ...(product ? [['store', `${sellerName(product)} is told too`, `The seller of ${product.sku} gets a notification and an email, and sees it under Enquiries.`]] : []),
+  ...(product ? [['store', `${sellerName(product)} is told too`, `The seller of ${itemCode(product)} gets a notification and an email, and sees it under Enquiries.`]] : []),
   ['phone', 'We call you within one working day', 'With prices, slab rates and stock for what you asked about.'],
 ];
 

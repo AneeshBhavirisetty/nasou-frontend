@@ -44,16 +44,26 @@ if (!sheet) {
 }
 const imagesArg = process.argv.find((a) => a.startsWith('--images='));
 if (imagesArg) {
-  const index = photoIndex(JSON.parse(fs.readFileSync(imagesArg.slice('--images='.length), 'utf8')));
+  const map = JSON.parse(fs.readFileSync(imagesArg.slice('--images='.length), 'utf8'));
+  const index = photoIndex(map);
+  /* the row's own link, when that photo is in the media library — exact, even
+     when the Item Name differs from the photo's folder name */
+  const linkedPhoto = (link) => {
+    try {
+      const path = decodeURIComponent(new URL(link).pathname).split('/').slice(2).join('/');
+      return map[path] || null;
+    } catch { return null; }
+  };
   const linksOnly = flag('sheet-links-only');
   let matched = 0, filled = 0, missing = new Set();
   for (const r of sheet.rows) {
     const linked = !!r.imageUrl;
     if (!linked && linksOnly) continue;   // the sheet gives this row no photo
-    const url = photoFor(r, index);
+    const url = (linked && linkedPhoto(r.imageUrl)) || photoFor(r, index);
     // the sheet's own link is kept as the photo's source (nasou-api media_files.source_url)
     if (url) {
-      if (linked && r.imageUrl.toLowerCase().startsWith('https://')) r.imageSource = r.imageUrl;
+      // without the query: a sheet link may carry a read token (?sig=…) for the private storage
+      if (linked && r.imageUrl.toLowerCase().startsWith('https://')) r.imageSource = r.imageUrl.split('?')[0];
       r.imageUrl = url;
       if (linked) matched++; else filled++;
     } else missing.add(`${r.category} / ${r.subCategory} / ${r.itemName}`);

@@ -2,17 +2,27 @@ import { useNavigate, useParams } from 'react-router-dom';
 import Icon from '../components/Icon';
 import Logo from '../components/Logo';
 import { Badge, Button, Container } from '../components/ui';
-import { findOrder, formatOrderDate } from '../data/orders';
+import { formatOrderDate } from '../data/orders';
+import { useOrders } from '../store/orders';
+import { useAuth } from '../context/AuthContext';
+import { LIVE } from '../lib/config';
 import { getRetailer } from '../store/retailers';
 import { brand } from '../data/site';
 import { money } from '../lib/format';
 
-/* Printable GST invoice — the target of the invoice links in the Excel export. */
+/* Printable GST invoice — the target of the invoice links in the Excel export.
+   Subscribed to the orders store: opened straight from a link, the orders
+   arrive a moment after the first render. */
 export default function Invoice() {
   const { id } = useParams();
-  const order = findOrder(id);
+  const orders = useOrders();
+  const order = orders.find((o) => o.id === id) || null;
+  const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
+  if (!order && LIVE && isAuthenticated && orders.length === 0) {
+    return <Container className="flex min-h-[60dvh] items-center justify-center py-16"><p className="text-[14px] font-semibold text-ink-50">Loading the invoice…</p></Container>;
+  }
   if (!order) {
     return (
       <Container className="flex min-h-[60dvh] items-center justify-center py-16">
