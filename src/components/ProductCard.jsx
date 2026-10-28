@@ -5,7 +5,7 @@ import ProductArt from './ProductArt';
 import NotifyMe from './NotifyMe';
 import { Rating } from './ui';
 import { categoryName, photoOf, sellerName } from '../data/catalog';
-import { money, discount as pctOff, cx, onRequest, quoteLink } from '../lib/format';
+import { money, discount as pctOff, cx, onRequest, quoteLink, itemCode } from '../lib/format';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 
@@ -70,7 +70,7 @@ export default function ProductCard({ product, compact = false }) {
         </button>
 
         <span className="absolute bottom-2 left-2 rounded-full bg-white/90 px-2 py-0.5 font-mono text-[10px] font-bold text-ink-70 sm:bottom-3 sm:left-3">
-          {product.sku}
+          {itemCode(product)}
         </span>
       </div>
 

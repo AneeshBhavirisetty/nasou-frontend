@@ -2,12 +2,15 @@
 // into a running Nivora API — the same rows and rules as Admin › Catalog import.
 //
 //   API_URL=https://<api-host> EMAIL=<owner or operations> PASSWORD=... \
-//     node scripts/import-master-sheet.mjs <sheet.xlsx> [--dry-run] [--stock=100] [--retire]
+//     node scripts/import-master-sheet.mjs <sheet.xlsx> --retailer=<id> [--dry-run] [--stock=100] [--retire]
 //
+//   --retailer=<id>  whose sheet this is (required: Nivora is a platform; Item Codes are
+//               the retailer's own, so every retailer's sheet may start at PL00001)
+//   --clear-unowned  first remove products that belong to no retailer (the old house catalogue)
 //   --dry-run   check every row, write nothing
 //   --batch=N   rows per request (default 500; smaller if a slow server times out)
 //   --stock=N   stock for new items (the sheet's Quantity column is empty); default 100
-//   --retire    afterwards, remove house products the sheet no longer lists
+//   --retire    afterwards, remove the retailer's products the sheet no longer lists
 //   --images=<map.json>  photos from scripts/upload-sheet-images.mjs: each row gets its
 //                item's photo from the media library, matched by Category / Sub category /
 //                Item Name to the photo folders. Rows whose Image URL cell is empty get the
@@ -25,9 +28,10 @@ const file = process.argv.slice(2).find((a) => !a.startsWith('--'));
 const flag = (n) => process.argv.includes(`--${n}`);
 const batch = Number((process.argv.find((a) => a.startsWith('--batch=')) || '--batch=500').split('=')[1]);
 const stock = Number((process.argv.find((a) => a.startsWith('--stock=')) || '--stock=100').split('=')[1]);
+const retailerId = (process.argv.find((a) => a.startsWith('--retailer=')) || '').split('=')[1] || null;
 const api = (process.env.API_URL || '').replace(/\/$/, '') + '/api/v1';
-if (!file || !process.env.API_URL || !process.env.EMAIL || !process.env.PASSWORD) {
-  console.error('Usage: API_URL=… EMAIL=… PASSWORD=… node scripts/import-master-sheet.mjs <sheet.xlsx> [--dry-run] [--stock=100] [--retire]');
+if (!file || !retailerId || !process.env.API_URL || !process.env.EMAIL || !process.env.PASSWORD) {
+  console.error('Usage: API_URL=… EMAIL=… PASSWORD=… node scripts/import-master-sheet.mjs <sheet.xlsx> --retailer=<id> [--dry-run] [--stock=100] [--retire] [--clear-unowned]');
   process.exit(1);
 }
 
@@ -93,9 +97,14 @@ const post = async (path, body) => {
   }
 };
 
+if (flag('clear-unowned')) {
+  const cleared = await post('/admin/catalog/master-import/retire', { keep: [], dryRun: flag('dry-run'), retailerId: null });
+  console.log(`${cleared.dryRun ? 'Would remove' : 'Removed'} ${cleared.retired} products that belong to no retailer`);
+}
+
 const started = Date.now();
 const report = await sendMasterRows(sheet.rows, {
-  post, dryRun: flag('dry-run'), defaultStock: stock, batch,
+  post, dryRun: flag('dry-run'), defaultStock: stock, batch, retailerId,
   onProgress: (done, all) => process.stdout.write(`\r  ${flag('dry-run') ? 'checked' : 'imported'} ${done}/${all}`),
 });
 console.log(`\n${report.dryRun ? 'Dry run' : 'Imported'} in ${Math.round((Date.now() - started) / 1000)} s: `
@@ -110,7 +119,7 @@ for (const l of notes.slice(0, 30)) console.log(`  note line ${l.line} ${l.sku}:
 
 if (flag('retire')) {
   const keep = sheet.rows.map((r) => r.itemCode).filter(Boolean);
-  const retired = await post('/admin/catalog/master-import/retire', { keep, dryRun: flag('dry-run') });
+  const retired = await post('/admin/catalog/master-import/retire', { keep, dryRun: flag('dry-run'), retailerId });
   console.log(`${retired.dryRun ? 'Would remove' : 'Removed'} ${retired.retired} products not in the sheet`
     + (retired.skus.length ? ` (e.g. ${retired.skus.slice(0, 5).join(', ')})` : ''));
 }

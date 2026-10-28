@@ -20,6 +20,10 @@ export function deliveryBy(days = 2) {
 
 export const cx = (...parts) => parts.filter(Boolean).join(' ');
 
+/* The code people see: the retailer's Item Code (PL00001). `sku` is the
+   product's key across the site — "R" + retailer number + item code (R2PL00001). */
+export const itemCode = (p) => p?.itemCode || p?.sku || '';
+
 /* Mobile numbers: strip to digits, keep at most 10 (Indian mobile). */
 export const digits10 = (v) => String(v ?? '').replace(/\D/g, '').slice(0, 10);
 export const isMobile10 = (v) => /^\d{10}$/.test(String(v ?? '').replace(/\D/g, ''));

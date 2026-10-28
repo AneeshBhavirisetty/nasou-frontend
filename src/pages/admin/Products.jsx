@@ -5,7 +5,8 @@ import Icon from '../../components/Icon';
 import ProductArt from '../../components/ProductArt';
 import ExcelExportButton from '../../components/ExcelExportButton';
 import ProductForm from '../../components/admin/ProductForm';
-import BulkImportDialog from '../../components/admin/BulkImportDialog';
+import MasterSheetImport from '../../components/admin/MasterSheetImport';
+import Modal from '../../components/Modal';
 import CategoryDiscountDialog from '../../components/admin/CategoryDiscountDialog';
 import { AdminPageHead, Avatar, SearchInput, StatusPill, ViewOnlyBanner } from '../../components/admin/AdminUI';
 import { useIam } from '../../context/IamStore';
@@ -20,7 +21,7 @@ import { useToast } from '../../context/ToastContext';
 import { useAdminStore } from '../../context/AdminStore';
 import { catalogBase as CATALOG, categoryName, photoOf, suppliers } from '../../data/catalog';
 import { DEPARTMENTS, DEFAULT_DEPARTMENT, departmentMeta } from '../../data/departments';
-import { money, cx } from '../../lib/format';
+import { money, cx, itemCode } from '../../lib/format';
 import { act } from '../../lib/act';
 
 const PAGE = 20;
@@ -101,7 +102,7 @@ function StockLedger({ retailerId }) {
         { key: 'by', label: 'By' },
       ]}
       searchText={(e) => `${e.name} ${e.sku} ${e.ref} ${e.reason} ${e.by}`}
-      searchPlaceholder="Search product, SKU or order"
+      searchPlaceholder="Search product, item code or order"
       filters={[{ key: 'reason', label: 'Reason', options: ['order', 'cancelled', 'manual count'].map((r) => ({ value: r, label: r })), test: (e, v) => e.reason === v }]}
       date={(e) => e.at}
       empty="No stock has moved yet. Place an order on the storefront and it appears here."
@@ -118,7 +119,7 @@ export default function AdminProducts() {
    console (seller = true: their own products only, master catalog only). */
 export function ProductsManager({ seller = false }) {
   const toast = useToast();
-  const { dirty, setStock, saveProduct, deleteProduct, importProducts, reset } = useAdminStore();
+  const { dirty, setStock, saveProduct, deleteProduct, reset } = useAdminStore();
   const all = useScopedProducts();
   const actor = useActor();
   const retailers = useRetailers();
@@ -155,7 +156,7 @@ export function ProductsManager({ seller = false }) {
       if (dept && (p.department || DEFAULT_DEPARTMENT) !== dept) return false;
       if (cat && p.category !== cat) return false;
       if (brand && p.supplier !== brand) return false;
-      if (n && !`${p.name} ${p.sku} ${p.supplierName}`.toLowerCase().includes(n)) return false;
+      if (n && !`${p.name} ${p.sku} ${p.itemCode || ''} ${p.supplierName}`.toLowerCase().includes(n)) return false;
       return true;
     });
   }, [rows, q, dept, cat, brand]);
@@ -176,8 +177,6 @@ export function ProductsManager({ seller = false }) {
     const isNew = !rows.some((p) => p.id === prod.id);
     act(toast, () => saveProduct(prod, seller ? sellerName(actor.retailerId) : undefined), isNew ? `${prod.name} added` : `${prod.name} updated`);
   };
-  const onBulk = (list) => act(toast, () => importProducts(list, seller ? actor.retailerId : list[0]?.retailerId), `${list.length} products imported`);
-  const importTo = retailer === OWN ? null : retailer || 'r1';
   const onDelete = (p) => {
     if (!window.confirm(`Delist "${p.name}"?`)) return;
     act(toast, () => deleteProduct(p.id), 'Product delisted');
@@ -206,8 +205,8 @@ export function ProductsManager({ seller = false }) {
         <ExcelExportButton
           filename="nivora-products"
           label="Export"
-          headers={['SKU', 'Name', 'Retailer', 'Category', 'Sub-category', 'Material', 'Size', 'Brand', 'Price', 'MRP', 'Discount %', 'Stock']}
-          rows={filtered.map((p) => [p.sku, p.name, ownerName(p.retailerId), departmentMeta(p.department || DEFAULT_DEPARTMENT).name, p.subcategoryName || categoryName(p.category), p.material, p.size, p.supplierName, p.price, p.mrp, p.discount, p.stock])}
+          headers={['Item Code', 'Product ID', 'Name', 'Retailer', 'Category', 'Sub-category', 'Material', 'Size', 'Brand', 'Price', 'MRP', 'Discount %', 'Stock']}
+          rows={filtered.map((p) => [itemCode(p), p.sku, p.name, ownerName(p.retailerId), departmentMeta(p.department || DEFAULT_DEPARTMENT).name, p.subcategoryName || categoryName(p.category), p.material, p.size, p.supplierName, p.price, p.mrp, p.discount, p.stock])}
         />
       </AdminPageHead>
 
@@ -223,7 +222,7 @@ export function ProductsManager({ seller = false }) {
       {!canEdit && <ViewOnlyBanner what="the catalogue" />}
 
       <div className="flex flex-wrap gap-3 rounded-[20px] border border-line bg-white/86 p-3 shadow-[0_18px_40px_rgba(37,88,73,0.08)]">
-        <SearchInput placeholder="Search name, SKU or brand" value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} />
+        <SearchInput placeholder="Search name, item code or brand" value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} />
         {!seller && (
           <select value={retailer} onChange={(e) => { setRetailer(e.target.value); setPage(1); }} aria-label="Retailer" className="h-12 rounded-[18px] border border-line bg-white px-4 text-[13px] font-semibold text-forest outline-none transition focus:border-forest/40">
             <option value="">All retailers</option>
@@ -268,7 +267,7 @@ export function ProductsManager({ seller = false }) {
                     {p.name}
                     {isCustom && <Badge tone="ok">Added</Badge>}
                   </p>
-                  <p className="text-[11px] text-ink-50">{p.sku} · {departmentMeta(p.department || DEFAULT_DEPARTMENT).name} › {p.subcategoryName || categoryName(p.category)}{!seller && <span className="sm:hidden"> · <span className="font-semibold text-forest-800">{ownerName(p.retailerId)}</span></span>}</p>
+                  <p className="text-[11px] text-ink-50">{itemCode(p)} · {departmentMeta(p.department || DEFAULT_DEPARTMENT).name} › {p.subcategoryName || categoryName(p.category)}{!seller && <span className="sm:hidden"> · <span className="font-semibold text-forest-800">{ownerName(p.retailerId)}</span></span>}</p>
                 </div>
               </div>
               {!seller && (
@@ -318,12 +317,10 @@ export function ProductsManager({ seller = false }) {
         />
       )}
 
-      <BulkImportDialog
-        open={bulk}
-        onClose={() => setBulk(false)}
-        existingSkus={new Set(all.map((p) => p.sku))}
-        onImport={(list) => onBulk(list.map((p) => ({ ...p, retailerId: p.retailerId || (seller ? actor.retailerId : importTo) })))}
-      />
+      {/* every upload is the product sheet format (client, Oct 2026) */}
+      <Modal open={bulk} onClose={() => setBulk(false)} title="Bulk import" size="lg">
+        <MasterSheetImport canEdit={canEdit} seller={seller} retailerId={!seller && retailer !== OWN ? retailer : ''} panel={false} />
+      </Modal>
 
       {editing !== undefined && (
         <ProductForm

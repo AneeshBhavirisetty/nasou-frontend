@@ -10,7 +10,7 @@ import { userRoleLabel } from '../lib/roles';
 import { Badge } from './ui';
 import { coverPhoto, dealProducts, departments, photoOf, products, searchProducts } from '../data/catalog';
 import { announcements } from '../data/site';
-import { money, cx } from '../lib/format';
+import { money, cx, itemCode } from '../lib/format';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
@@ -118,7 +118,7 @@ function SearchBox({ onDone }) {
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[13.5px] font-semibold text-ink">{p.name}</span>
-                  <span className="block truncate text-[11.5px] text-ink-50">{p.sku} · {p.size || 'standard'}</span>
+                  <span className="block truncate text-[11.5px] text-ink-50">{itemCode(p)} · {p.size || 'standard'}</span>
                 </span>
                 <span className="tnum shrink-0 text-[13px] font-bold">{money(p.price)}</span>
               </button>

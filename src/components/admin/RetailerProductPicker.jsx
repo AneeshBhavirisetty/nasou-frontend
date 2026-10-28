@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import Icon from '../Icon';
-import { cx, money } from '../../lib/format';
+import { cx, money, itemCode } from '../../lib/format';
 
 /* Which of one retailer's products a discount covers (client review, Oct
    2026): all of them, or the ones ticked here. `products` are that retailer's
@@ -11,7 +11,7 @@ export default function RetailerProductPicker({ products, value, onChange }) {
   const chosen = useMemo(() => new Set(value), [value]);
   const hits = useMemo(() => {
     const n = q.trim().toLowerCase();
-    return (n ? products.filter((p) => `${p.name} ${p.sku}`.toLowerCase().includes(n)) : products).slice(0, 150);
+    return (n ? products.filter((p) => `${p.name} ${p.sku} ${p.itemCode || ''}`.toLowerCase().includes(n)) : products).slice(0, 150);
   }, [products, q]);
 
   const toggle = (sku) => onChange(chosen.has(sku) ? value.filter((s) => s !== sku) : [...value, sku]);
@@ -46,7 +46,7 @@ export default function RetailerProductPicker({ products, value, onChange }) {
                   <input type="checkbox" checked={chosen.has(p.sku)} onChange={() => toggle(p.sku)} className="h-4 w-4 shrink-0 accent-[#1f5c4a]" />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate font-semibold text-ink">{p.name}</span>
-                    <span className="font-mono text-[11px] text-ink-50">{p.sku}</span>
+                    <span className="font-mono text-[11px] text-ink-50">{itemCode(p)}</span>
                   </span>
                   <span className="tnum shrink-0 text-[12.5px] text-ink-70">{p.price > 0 ? money(p.price) : 'On request'}</span>
                 </label>

@@ -16,7 +16,7 @@ import { useAdminStore } from '../context/AdminStore';
 import { bulkOffersFor, describeBulk } from '../lib/pricing';
 import { useWishlist } from '../context/WishlistContext';
 import { useToast } from '../context/ToastContext';
-import { money, discount, deliveryBy, cx, onRequest, quoteLink } from '../lib/format';
+import { money, discount, deliveryBy, cx, onRequest, quoteLink, itemCode } from '../lib/format';
 import { usePointerTilt } from '../lib/motion';
 
 /* deterministic pseudo-reviews from the product's own numbers */
@@ -178,7 +178,7 @@ export default function ProductDetail() {
                 <span className="h-4 w-px bg-line" />
                 <span className="tnum text-ink-50">{product.reviewCount.toLocaleString('en-IN')} verified ratings</span>
               </span>
-              <span className="rounded-[12px] border border-line-soft px-3 py-2 font-mono text-[12px] font-semibold text-ink-50">SKU {product.sku}</span>
+              <span className="rounded-[12px] border border-line-soft px-3 py-2 font-mono text-[12px] font-semibold text-ink-50">Item code {itemCode(product)}</span>
               {product.badges.slice(1).map((b) => <Badge key={b} tone={b === 'Value' ? 'clay' : b === 'New' ? 'ok' : 'dark'}>{b}</Badge>)}
             </div>
 

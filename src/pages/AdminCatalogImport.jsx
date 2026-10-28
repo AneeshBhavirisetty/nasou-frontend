@@ -1,7 +1,5 @@
 import { useMemo, useState } from 'react';
-import Icon from '../components/Icon';
-import BulkImportDialog from '../components/admin/BulkImportDialog';
-import MasterSheetImport from '../components/admin/MasterSheetImport';
+import MasterSheetImport, { SampleFormatLink } from '../components/admin/MasterSheetImport';
 import { AdminPageHead, Kpi, Panel, ViewOnlyBanner, SELECT_CLS, LABEL_CLS } from '../components/admin/AdminUI';
 import { useIam } from '../context/IamStore';
 import { useAdminStore } from '../context/AdminStore';
@@ -10,42 +8,55 @@ import { useToast } from '../context/ToastContext';
 import { useRetailers } from '../store/retailers';
 import { categoryName } from '../data/catalog';
 import { departmentMeta } from '../data/departments';
-import { downloadSheet, isoDate } from '../lib/exportSheet';
+import { isoDate } from '../lib/exportSheet';
+import { MASTER_COLUMNS } from '../lib/masterSheet';
 import { audit } from '../lib/auditLog';
 
-/* Bulk catalog import and export (requirement 28): CSV or Excel, for one
-   retailer at a time. Imports go through the same checks as the product
-   form; exports are role-limited and written to the audit log. */
+/* Catalog import and export (requirement 28; client, Oct 2026): every upload
+   is the product sheet format (lib/masterSheet.js), one retailer at a time.
+   An export is written in the same format, so a retailer's catalogue can be
+   taken out, edited in Excel and brought back. Exports are role-limited and
+   written to the audit log. */
 
-const HEADERS = ['SKU', 'Name', 'Category', 'Sub-category', 'Material', 'Size', 'Brand', 'Price', 'MRP', 'Stock'];
+const SALE = { piece: 'Pieces', meter: 'Meters', number: 'Numbers' };
+const PACK = { piece: 'Pieces', bag: 'Bags', box: 'Boxes', bundle: 'Bundles', coil: 'Coils', 'coil-or-box': 'Coils/ Boxes' };
+
+/* one product as a sheet row, in MASTER_COLUMNS order */
+const sheetRow = (p) => [
+  p.sourceItemId ?? '', p.itemCode || p.sku, departmentMeta(p.department).name.toUpperCase(), p.subcategoryName || categoryName(p.category),
+  p.kind || '', p.form || '', p.itemSubtype2 || '', p.name, p.size || '', p.color || '', p.description || '',
+  p.supplierName || '', SALE[p.saleUnit] || '', PACK[p.packUnit] || '', p.stock, p.mrp, p.discount ? `${p.discount}%` : '',
+  p.price, p.images?.[0] ? new URL(p.images[0], window.location.origin).href : '',
+];
 
 export default function AdminCatalogImport() {
   const toast = useToast();
   const { can } = useIam();
-  const { products, importProducts } = useAdminStore();
+  const { products } = useAdminStore();
   const retailers = useRetailers().filter((r) => r.status === 'approved' || r.status === 'suspended');
   const [rid, setRid] = useState(retailers[0]?.id || '');
-  const [open, setOpen] = useState(false);
   const canEdit = can('catalog', 'edit');
   const seller = retailers.find((r) => r.id === rid);
   const mine = useMemo(() => products.filter((p) => p.retailerId === rid), [products, rid]);
 
-  const exportCsv = () => {
-    downloadSheet(`nivora-catalog-${seller?.name.replace(/\W+/g, '-').toLowerCase()}-${isoDate()}.csv`, HEADERS,
-      mine.map((p) => [p.sku, p.name, departmentMeta(p.department).name, p.subcategoryName || categoryName(p.category), p.material, p.size, p.supplierName, p.price, p.mrp, p.stock]));
-    audit({ action: 'export.csv', entity: 'catalog', entityId: rid, summary: `Exported ${mine.length} products of ${seller?.name}` });
+  const exportSheet = async () => {
+    const XLSX = await import('xlsx');
+    const ws = XLSX.utils.aoa_to_sheet([MASTER_COLUMNS.map(([, title]) => title), ...mine.map(sheetRow)]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Products');
+    XLSX.writeFile(wb, `nivora-products-${seller?.name.replace(/\W+/g, '-').toLowerCase()}-${isoDate()}.xlsx`);
+    audit({ action: 'export.xlsx', entity: 'catalog', entityId: rid, summary: `Exported ${mine.length} products of ${seller?.name}` });
     toast.success(`${mine.length} products exported`);
   };
-  const template = () => downloadSheet('nivora-catalog-template.csv', HEADERS, [['PL009001', 'PVC Elbow', 'Plumbing', 'PVC fittings', 'PVC', '1/2"', 'Astral', 45, 60, 120]]);
 
   return (
     <div className="space-y-5">
-      <AdminPageHead title="Catalog import & export" note="Bring a retailer’s whole price list in from CSV or Excel, or take it out again." />
+      <AdminPageHead title="Catalog import & export" note="Bring a retailer’s product sheet in, or take their catalogue out in the same format." />
       {!canEdit && <ViewOnlyBanner what="catalogue imports" />}
 
       <MasterSheetImport canEdit={canEdit} />
 
-      <Panel>
+      <Panel title="Export a retailer’s catalogue" note="An .xlsx in the product sheet format — edit it and import it again.">
         <div className="grid gap-4 sm:grid-cols-[1fr_auto] sm:items-end">
           <label className="block">
             <span className={LABEL_CLS}>Retailer</span>
@@ -53,44 +64,24 @@ export default function AdminCatalogImport() {
               {retailers.map((r) => <option key={r.id} value={r.id}>{r.name} — {r.city}</option>)}
             </select>
           </label>
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" icon="external" onClick={exportCsv} disabled={!mine.length}>Export CSV</Button>
-            {canEdit && <Button icon="upload" onClick={() => setOpen(true)} disabled={!rid}>Import for this retailer</Button>}
-          </div>
+          <Button variant="outline" icon="external" onClick={() => exportSheet().catch((x) => toast.error(x.message))} disabled={!mine.length}>Export .xlsx</Button>
+        </div>
+        <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <Kpi label="Products" value={mine.length.toLocaleString('en-IN')} icon="package" />
+          <Kpi label="In stock" value={mine.filter((p) => p.stock > 0).length.toLocaleString('en-IN')} icon="check" />
+          <Kpi label="Sub-categories" value={new Set(mine.map((p) => p.category)).size} icon="layers" />
+          <Kpi label="Brands" value={new Set(mine.map((p) => p.supplier)).size} icon="tag" />
         </div>
       </Panel>
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Kpi label="Products" value={mine.length.toLocaleString('en-IN')} icon="package" />
-        <Kpi label="In stock" value={mine.filter((p) => p.stock > 0).length.toLocaleString('en-IN')} icon="check" />
-        <Kpi label="Sub-categories" value={new Set(mine.map((p) => p.category)).size} icon="layers" />
-        <Kpi label="Brands" value={new Set(mine.map((p) => p.supplier)).size} icon="tag" />
-      </div>
-
-      <Panel title="File format" note="First row is the header. Existing SKUs are skipped; new ones are created for the chosen retailer and go live straight away.">
-        <div className="thin-bar overflow-x-auto">
-          <table className="w-full min-w-[640px] text-[12.5px]">
-            <thead><tr>{HEADERS.map((h) => <th key={h} className="border-b border-line px-2 py-2 text-left font-bold text-forest-800">{h}</th>)}</tr></thead>
-            <tbody><tr>{['PL009001', 'PVC Elbow', 'Plumbing', 'PVC fittings', 'PVC', '1/2"', 'Astral', '45', '60', '120'].map((v, i) => <td key={i} className="px-2 py-2 font-mono text-ink-70">{v}</td>)}</tr></tbody>
-          </table>
+      <Panel title="Product sheet format" note="The first row is these headings, in this order. Item Code is the retailer’s own (the category’s first two letters and a number, e.g. PL00001) — leave it blank and the next code is given. Image URL can be an Excel hyperlink.">
+        <div className="flex flex-wrap gap-1.5">
+          {MASTER_COLUMNS.map(([, title], i) => (
+            <span key={title} className="rounded-full bg-sunk px-3 py-1.5 text-[12px] font-bold text-forest-800"><span className="tnum text-ink-35">{i + 1}</span> {title}</span>
+          ))}
         </div>
-        <button onClick={template} className="mt-3 inline-flex items-center gap-1.5 text-[12.5px] font-bold text-forest hover:underline"><Icon name="fileText" size={14} /> Download the template</button>
+        <SampleFormatLink className="mt-4" />
       </Panel>
-
-      <BulkImportDialog
-        open={open}
-        onClose={() => setOpen(false)}
-        existingSkus={new Set(products.map((p) => p.sku))}
-        onImport={async (list) => {
-          try {
-            await importProducts(list, rid, 'bulk import');
-            audit({ action: 'catalog.import', entity: 'catalog', entityId: rid, summary: `Imported ${list.length} products for ${seller?.name}` });
-            toast.success(`${list.length} products added to ${seller?.name}`);
-          } catch (x) {
-            toast.error(x.message);
-          }
-        }}
-      />
     </div>
   );
 }

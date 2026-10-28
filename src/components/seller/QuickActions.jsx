@@ -10,7 +10,7 @@ import { photoOf } from '../../data/catalog';
 import { get, post } from '../../lib/api';
 import { LIVE } from '../../lib/config';
 import { refresh } from '../../lib/live';
-import { cx, digits10, isMobile10, money } from '../../lib/format';
+import { cx, digits10, isMobile10, money, itemCode } from '../../lib/format';
 
 /* Seller dashboard quick actions (client review 6: "restore dashboard-level
    quick actions such as Update Stock and Create Orders"). */
@@ -19,7 +19,7 @@ function ProductPicker({ products, onPick, placeholder = 'Search your products b
   const [q, setQ] = useState('');
   const needle = q.trim().toLowerCase();
   const hits = needle.length < 1 ? products.slice(0, 6)
-    : products.filter((p) => `${p.name} ${p.sku} ${p.size || ''}`.toLowerCase().includes(needle)).slice(0, 8);
+    : products.filter((p) => `${p.name} ${p.sku} ${p.itemCode || ''} ${p.size || ''}`.toLowerCase().includes(needle)).slice(0, 8);
   return (
     <div>
       <label className="flex h-11 items-center gap-2.5 rounded-md border border-line bg-white px-3.5 focus-within:border-forest">
@@ -33,7 +33,7 @@ function ProductPicker({ products, onPick, placeholder = 'Search your products b
               <span className="photo-bed grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-[10px]">
                 {photoOf(p) ? <img src={photoOf(p)} alt="" className="h-full w-full object-cover" /> : <Icon name="package" size={15} className="text-forest" />}
               </span>
-              <span className="min-w-0 flex-1"><span className="block truncate text-[13px] font-bold text-ink">{p.name}{p.size ? ` · ${p.size}` : ''}</span><span className="block text-[11.5px] text-ink-50">{p.sku} · {money(p.price)}</span></span>
+              <span className="min-w-0 flex-1"><span className="block truncate text-[13px] font-bold text-ink">{p.name}{p.size ? ` · ${p.size}` : ''}</span><span className="block text-[11.5px] text-ink-50">{itemCode(p)} · {money(p.price)}</span></span>
               <span className={cx('tnum shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold', p.stock <= 0 ? 'bg-clay-50 text-clay-600' : p.stock <= 8 ? 'bg-amber-50 text-amber' : 'bg-emerald-50 text-emerald-700')}>{p.stock} in stock</span>
             </button>
           </li>
@@ -77,7 +77,7 @@ export function UpdateStockDialog({ open, onClose }) {
         <div className="space-y-4">
           <div className="flex items-center gap-3 rounded-[14px] bg-sand-50 p-3">
             <span className="photo-bed grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-[12px]">{photoOf(p) ? <img src={photoOf(p)} alt="" className="h-full w-full object-cover" /> : <Icon name="package" size={16} />}</span>
-            <span className="min-w-0 flex-1"><b className="block truncate text-[14px] text-ink">{p.name}{p.size ? ` · ${p.size}` : ''}</b><span className="text-[12px] text-ink-50">{p.sku} · now {p.stock}</span></span>
+            <span className="min-w-0 flex-1"><b className="block truncate text-[14px] text-ink">{p.name}{p.size ? ` · ${p.size}` : ''}</b><span className="text-[12px] text-ink-50">{itemCode(p)} · now {p.stock}</span></span>
             <button onClick={() => setP(null)} className="text-[12px] font-bold text-forest">Change</button>
           </div>
           <div className="flex items-center gap-2">

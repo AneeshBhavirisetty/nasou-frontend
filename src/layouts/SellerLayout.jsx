@@ -13,7 +13,7 @@ import { useActor, useScopedOrders, useScopedProducts } from '../lib/useScoped';
 import { useOrders } from '../store/orders';
 import { useTickets } from '../store/support';
 import { staffRole } from '../lib/access';
-import { cx } from '../lib/format';
+import { cx, itemCode } from '../lib/format';
 import SellerStatus from '../pages/seller/Status';
 
 /* Retailer console — "Retailer commerce hub" (client review 6). Follows the
@@ -126,8 +126,8 @@ function ConsoleSearch() {
   const needle = q.trim().toLowerCase();
   const hits = useMemo(() => {
     if (needle.length < 2) return [];
-    const ps = products.filter((p) => `${p.name} ${p.sku} ${p.size || ''}`.toLowerCase().includes(needle)).slice(0, 5)
-      .map((p) => ({ key: `p${p.id}`, icon: 'package', title: p.name, sub: `${p.sku}${p.size ? ` · ${p.size}` : ''} · ${p.stock} in stock`, to: `/seller/products?q=${encodeURIComponent(p.sku)}` }));
+    const ps = products.filter((p) => `${p.name} ${p.sku} ${p.itemCode || ''} ${p.size || ''}`.toLowerCase().includes(needle)).slice(0, 5)
+      .map((p) => ({ key: `p${p.id}`, icon: 'package', title: p.name, sub: `${itemCode(p)}${p.size ? ` · ${p.size}` : ''} · ${p.stock} in stock`, to: `/seller/products?q=${encodeURIComponent(itemCode(p))}` }));
     const os = orders.filter((o) => `${o.id} ${o.customer} ${o.parts.map((x) => x.id).join(' ')}`.toLowerCase().includes(needle)).slice(0, 4)
       .map((o) => ({ key: `o${o.id}`, icon: 'truck', title: o.parts[0]?.id || o.id, sub: `${o.customer} · ${o.parts[0]?.status || ''}`, to: `/seller/orders/${o.id}` }));
     return [...os, ...ps];

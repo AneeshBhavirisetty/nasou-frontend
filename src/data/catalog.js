@@ -222,10 +222,10 @@ export function searchProducts(query, { limit = Infinity } = {}) {
   const terms = needle.split(/\s+/);
   const scored = [];
   for (const p of products) {
-    const hay = `${p.name} ${p.sku} ${p.supplierName} ${p.size} ${p.material} ${p.description}`.toLowerCase();
+    const hay = `${p.name} ${p.sku} ${p.itemCode || ''} ${p.supplierName} ${p.size} ${p.material} ${p.description}`.toLowerCase();
     if (!terms.every((t) => hay.includes(t))) continue;
     let score = 0;
-    if (p.sku.toLowerCase() === needle) score += 100;
+    if (p.sku.toLowerCase() === needle || String(p.itemCode || '').toLowerCase() === needle) score += 100;
     if (p.name.toLowerCase().includes(needle)) score += 20;
     if (p.name.toLowerCase().startsWith(needle)) score += 10;
     if (p.stock > 0) score += 3;

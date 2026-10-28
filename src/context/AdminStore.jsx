@@ -83,17 +83,6 @@ const live = {
     else await post(`${base()}/coupons`, body);
     return refresh('discounts');
   },
-  /* a whole sheet in one request (POST /admin|seller/products/import) */
-  async importProducts(list, retailerId) {
-    const rows = list.map((p) => ({
-      sku: p.sku, name: p.name, department: p.department, category: p.subcategoryName || p.category, material: p.material,
-      size: p.size, brand: p.supplierName, price: String(p.price), mrp: String(p.mrp ?? ''), stock: String(p.stock ?? 0),
-      art: p.art, imageUrl: (p.images || [])[0] || null,
-    }));
-    const report = await post(`${base()}/products/import`, { rows, retailerId, source: 'console import' });
-    await afterProducts();
-    return report;
-  },
   async saveBulkRule(r) {
     const body = { name: r.name, scopeType: r.scopeType, scopeValue: r.scopeValue, productSkus: r.scopeType === 'retailer' ? r.productSkus || [] : [], minQty: r.minQty, kind: r.kind, value: r.value, active: r.active !== false, version: r.version };
     const known = adminStore.get().bulkRules.some((x) => x.id === r.id);
@@ -216,13 +205,7 @@ export function useAdminStore() {
     audit({ action: 'catalog.reset', entity: 'catalog', summary: 'Restored the shipped catalogue' });
   }, []);
 
-  const importProducts = useCallback(async (list, retailerId, by) => {
-    if (LIVE) return live.importProducts(list, retailerId);
-    list.forEach((p) => saveProduct({ ...p, ...(retailerId ? { retailerId } : {}) }, by));
-    return { created: list.length };
-  }, [saveProduct]);
-
-  return { products, coupons, bulkRules, dirty, setStock, saveProduct, deleteProduct, importProducts, saveCoupon, deleteCoupon, saveBulkRule, deleteBulkRule, reset };
+  return { products, coupons, bulkRules, dirty, setStock, saveProduct, deleteProduct, saveCoupon, deleteCoupon, saveBulkRule, deleteBulkRule, reset };
 }
 
 /* Coupon math — used by admin preview and by checkout.

@@ -19,7 +19,7 @@ import { deleteRetailer, retailerFootprint, suspendRetailer } from '../../store/
 import { DOC_TYPES, retailerStatusLabel } from '../../lib/marketplace';
 import { categories, categoryName } from '../../data/catalog';
 import { formatOrderDate } from '../../data/orders';
-import { money, cx } from '../../lib/format';
+import { money, cx, itemCode } from '../../lib/format';
 import { act } from '../../lib/act';
 
 const mask = (acct = '') => (acct ? `•••• ${String(acct).slice(-4)}` : '—');
@@ -219,12 +219,12 @@ export default function RetailerDetail() {
           rows={mine}
           columns={[
             { key: 'name', label: 'Product', always: true, render: (p) => <span className="block min-w-[200px] font-bold text-ink">{p.name}</span> },
-            { key: 'sku', label: 'SKU', render: (p) => <span className="font-mono text-[12px]">{p.sku}</span> },
+            { key: 'sku', label: 'Item code', render: (p) => <span className="font-mono text-[12px]">{itemCode(p)}</span> },
             { key: 'category', label: 'Sub-category', value: (p) => categoryName(p.category) },
             { key: 'price', label: 'Price', align: 'right', render: (p) => money(p.price) },
             { key: 'stock', label: 'Stock', align: 'right' },
           ]}
-          searchText={(p) => `${p.name} ${p.sku}`}
+          searchText={(p) => `${p.name} ${p.sku} ${p.itemCode || ''}`}
           searchPlaceholder="Search this retailer’s products"
           exportName={`products-${r.id}`}
           canExport={can('catalog')}

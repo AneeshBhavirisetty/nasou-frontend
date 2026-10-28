@@ -24,7 +24,7 @@ import { discount as pctOff, money, cx } from '../../lib/format';
  *   Quantity · Price (MRP) · Discount · Selling price · photos
  *
  * Nobody types an item code: the server gives a new product the first two
- * letters of its category and the next number (PL02378, EL01464…), so a code
+ * letters of its category and the retailer's next number (PL02378, EL01464…), so a code
  * can never clash with a photo mapped to another product. The form shows the
  * code it will get. Sub-categories and item types are the ones that exist in
  * the chosen category, and change with it.
@@ -64,8 +64,9 @@ function Section({ n, title, children }) {
 }
 
 /* The code the next product in this category will get — from the server
-   (not reserved until saved), or worked out from the catalogue in the demo. */
-function useNextCode(department, enabled) {
+   (not reserved until saved), or worked out from the catalogue in the demo.
+   Codes are counted per retailer (each retailer's sheet starts at PL00001). */
+function useNextCode(department, enabled, retailerId) {
   const [code, setCode] = useState('');
   useEffect(() => {
     if (!enabled) return undefined;
@@ -74,7 +75,8 @@ function useNextCode(department, enabled) {
     const prefix = name.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 2);
     if (LIVE) {
       const base = getStoredSession()?.role === 'ADMIN' ? '/admin' : '/seller';
-      get(`${base}/products/next-code?department=${department}`).then((r) => live && setCode(r.sku)).catch(() => live && setCode(`${prefix}…`));
+      const who = base === '/admin' && retailerId ? `&retailerId=${retailerId}` : '';
+      get(`${base}/products/next-code?department=${department}${who}`).then((r) => live && setCode(r.sku)).catch(() => live && setCode(`${prefix}…`));
     } else {
       const max = allProducts.reduce((m, p) => {
         const hit = new RegExp(`^${prefix}(\\d+)$`).exec(p.sku || '');
@@ -83,7 +85,7 @@ function useNextCode(department, enabled) {
       setCode(`${prefix}${String(max + 1).padStart(5, '0')}`);
     }
     return () => { live = false; };
-  }, [department, enabled]);
+  }, [department, enabled, retailerId]);
   return code;
 }
 
@@ -112,7 +114,7 @@ export default function ProductForm({ open, product, onClose, onSave, retailerId
   const [picking, setPicking] = useState(false);
   const isNew = !product;
   const set = (k) => (v) => setF((s) => ({ ...s, [k]: v }));
-  const nextCode = useNextCode(f.department, isNew && open);
+  const nextCode = useNextCode(f.department, isNew && open, fixedRetailer || f.retailerId);
 
   /* the catalogue to draw choices from: everything we know about */
   const pool = useMemo(() => [...all, ...allProducts.filter((p) => !all.some((x) => x.id === p.id))], [all]);

@@ -10,7 +10,7 @@ import { useScopedProducts } from '../../lib/useScoped';
 import { useSeller } from '../../layouts/SellerLayout';
 import { categoryName, departmentName } from '../../data/catalog';
 import { act } from '../../lib/act';
-import { cx, money } from '../../lib/format';
+import { cx, money, itemCode } from '../../lib/format';
 
 /* ============================================================================
  * Seller › Discounts (client review 6, retailer items 7–8).
@@ -55,7 +55,7 @@ function TargetPicker({ value, onChange, products }) {
   }, [products]);
   const picked = new Set(value.skus);
   const needle = q.trim().toLowerCase();
-  const matches = products.filter((p) => !needle || `${p.name} ${p.sku} ${p.size || ''}`.toLowerCase().includes(needle)).slice(0, 40);
+  const matches = products.filter((p) => !needle || `${p.name} ${p.sku} ${p.itemCode || ''} ${p.size || ''}`.toLowerCase().includes(needle)).slice(0, 40);
   const count = value.target === 'all' ? products.length
     : value.target === 'dept' ? products.filter((p) => p.department === value.dept).length
       : value.target === 'sub' ? products.filter((p) => p.category === value.sub).length
@@ -89,7 +89,7 @@ function TargetPicker({ value, onChange, products }) {
                 <label className="flex cursor-pointer items-center gap-3 px-3 py-2 text-[13px] hover:bg-sunk/50">
                   <input type="checkbox" checked={picked.has(p.sku)} onChange={() => onChange({ ...value, skus: picked.has(p.sku) ? value.skus.filter((s) => s !== p.sku) : [...value.skus, p.sku] })} className="accent-[#1f5c4a]" />
                   <span className="min-w-0 flex-1 truncate"><b className="text-ink">{p.name}</b>{p.size ? ` · ${p.size}` : ''}</span>
-                  <span className="font-mono text-[11px] text-ink-50">{p.sku}</span>
+                  <span className="font-mono text-[11px] text-ink-50">{itemCode(p)}</span>
                 </label>
               </li>
             ))}

@@ -5,26 +5,43 @@ import { Button } from '../ui';
 import { useRetailers } from '../../store/retailers';
 import { useToast } from '../../context/ToastContext';
 import { post } from '../../lib/api';
+import { refresh } from '../../lib/live';
 import { LIVE } from '../../lib/config';
-import { masterRowsFromWorkbook, sendMasterRows, summarise } from '../../lib/masterSheet';
+import { masterRowsFromWorkbook, sendMasterRows, summarise, writeMasterTemplate } from '../../lib/masterSheet';
 
-/* The client's master product sheet (lib/masterSheet.js has the format). Read
-   in the browser — the .xlsx keeps the "Open Image" hyperlinks, a CSV does not
-   — checked by the API first, then imported 500 rows at a time. The sheet is
-   the master list: known Item Codes are updated, new ones created, and
-   "Remove items not in the sheet" retires the rest of the house catalogue. */
+/* The client's master product sheet (lib/masterSheet.js has the format) — the
+   one format every product upload accepts. Read in the browser — the .xlsx
+   keeps the "Open Image" hyperlinks, a CSV does not — checked by the API
+   first, then imported 500 rows at a time. Item Codes are the retailer's own
+   (PL00001 …); a blank one gets the retailer's next code.
+
+   Super Admin: chooses whose sheet it is (Nivora is a platform — every product
+   is a retailer's) and may remove that retailer's items the sheet no longer
+   lists. Seller (`seller`): always their own store. */
 
 const fmt = (n) => Number(n || 0).toLocaleString('en-IN');
 
-export default function MasterSheetImport({ canEdit }) {
+/* "Download the sample format": the header row only, as .xlsx */
+export async function downloadSampleFormat() {
+  writeMasterTemplate(await import('xlsx'));
+}
+
+export function SampleFormatLink({ className = '' }) {
+  return (
+    <button type="button" onClick={() => downloadSampleFormat().catch(() => {})} className={`inline-flex items-center gap-1.5 text-[12.5px] font-bold text-forest hover:underline ${className}`}>
+      <Icon name="fileText" size={14} /> Download the sample format (.xlsx)
+    </button>
+  );
+}
+
+export default function MasterSheetImport({ canEdit, seller = false, retailerId = '', panel = true }) {
   const toast = useToast();
-  /* whose sheet this is (client review, Oct 2026: one final sheet per retailer); '' = Nivora's own */
   const retailers = useRetailers().filter((r) => r.status === 'approved' || r.status === 'suspended');
-  const [owner, setOwner] = useState('');
-  const ownerName = owner ? retailers.find((r) => r.id === owner)?.name || 'this retailer' : 'Nivora’s own catalogue';
+  const [owner, setOwner] = useState(retailerId);
+  const ownerName = seller ? 'your store' : retailers.find((r) => r.id === owner)?.name || 'this retailer';
   const [sheet, setSheet] = useState(null);
   const [stock, setStock] = useState(100);
-  const [retire, setRetire] = useState(true);
+  const [retire, setRetire] = useState(false);
   const [busy, setBusy] = useState('');
   const [progress, setProgress] = useState(0);
   const [report, setReport] = useState(null);
@@ -38,7 +55,7 @@ export default function MasterSheetImport({ canEdit }) {
       const csv = /\.csv$/i.test(file.name);
       const wb = csv ? XLSX.read(await file.text(), { type: 'string', raw: true }) : XLSX.read(await file.arrayBuffer());
       const read = masterRowsFromWorkbook(XLSX, wb);
-      if (!read) return toast.error('This is not the master sheet — it needs Item Code, Category, Sub category, Item Name and Selling price columns.');
+      if (!read) return toast.error('This is not the product sheet format — it needs Item Code, Category, Sub category, Item Name and Selling price columns. Download the sample format to start from.');
       setSheet({ name: file.name, csv, ...read, summary: summarise(read.rows) });
     } catch (x) {
       toast.error(`Could not read that file: ${x.message}`);
@@ -46,16 +63,21 @@ export default function MasterSheetImport({ canEdit }) {
   };
 
   const run = async (dryRun) => {
+    if (!seller && !owner) return toast.error('Choose the retailer this sheet belongs to.');
     setBusy(dryRun ? 'check' : 'import');
     setProgress(0);
     try {
-      const retailerId = owner || null;
-      const rep = await sendMasterRows(sheet.rows, { post, dryRun, retailerId, defaultStock: Number(stock) || 0, onProgress: (d, t) => setProgress(Math.round((d / t) * 100)) });
-      if (retire) {
+      const rep = await sendMasterRows(sheet.rows, {
+        post, dryRun, defaultStock: Number(stock) || 0,
+        ...(seller ? { path: '/seller/catalog/master-import' } : { retailerId: owner }),
+        onProgress: (d, t) => setProgress(Math.round((d / t) * 100)),
+      });
+      if (retire && !seller) {
         const keep = sheet.rows.map((r) => r.itemCode).filter(Boolean);
-        rep.retire = await post('/admin/catalog/master-import/retire', { keep, dryRun, retailerId });
+        rep.retire = await post('/admin/catalog/master-import/retire', { keep, dryRun, retailerId: owner });
       }
       setReport(rep);
+      if (!dryRun) refresh('products', 'stock', 'catalog');
       toast.success(dryRun ? 'Checked — nothing was changed' : `Imported for ${ownerName}: ${fmt(rep.created)} new, ${fmt(rep.updated)} updated`);
     } catch (x) {
       toast.error(x.message);
@@ -64,27 +86,38 @@ export default function MasterSheetImport({ canEdit }) {
     }
   };
 
+  const Wrap = panel ? Panel : 'div';
+  const wrapProps = panel ? {
+    title: 'Product sheet import',
+    note: seller
+      ? 'Your products in the product sheet format (Item Code, Category, Sub category … Selling price, Image URL). Upload the .xlsx so the image links come with it.'
+      : 'One final sheet per retailer, in the product sheet format (Item Code, Category, Sub category … Selling price, Image URL). Upload the .xlsx so the image links come with it.',
+  } : {};
+
   if (!LIVE) {
-    return <Panel title="Master product sheet" note="Importing the master sheet needs the live API (it is not available in the browser demo)." />;
+    return <Wrap {...wrapProps}><p className="text-[13px] text-ink-50">Importing a product sheet needs the live API (it is not available in the browser demo).</p><SampleFormatLink className="mt-2" /></Wrap>;
   }
   const s = sheet?.summary;
   const problems = report?.lines.filter((l) => l.errors.length) || [];
   const notes = report?.lines.filter((l) => !l.errors.length && l.notes.some((n) => !n.startsWith('no selling price'))) || [];
 
   return (
-    <Panel title="Master product sheet" note="One final sheet per retailer, in the master format (Item Code, Category, Sub category … Selling price, Image URL). Upload the .xlsx so the image links come with it.">
+    <Wrap {...wrapProps}>
       <div className="space-y-4">
-        <label className="block">
-          <span className={LABEL_CLS}>Whose sheet is this?</span>
-          <select value={owner} onChange={(e) => { setOwner(e.target.value); setReport(null); }} disabled={!!busy} className={SELECT_CLS}>
-            <option value="">Nivora — own catalogue</option>
-            {retailers.map((r) => <option key={r.id} value={r.id}>{r.name}{r.city ? ` — ${r.city}` : ''}</option>)}
-          </select>
-          <span className="mt-1 block text-[11.5px] text-ink-50">Every row is added to, or updates, {ownerName}. An Item Code already used by someone else is reported and skipped.</span>
-        </label>
+        <SampleFormatLink />
+        {!seller && (
+          <label className="block">
+            <span className={LABEL_CLS}>Whose sheet is this?</span>
+            <select value={owner} onChange={(e) => { setOwner(e.target.value); setReport(null); }} disabled={!!busy} className={SELECT_CLS}>
+              <option value="">Choose a retailer…</option>
+              {retailers.map((r) => <option key={r.id} value={r.id}>{r.name}{r.city ? ` — ${r.city}` : ''}</option>)}
+            </select>
+            <span className="mt-1 block text-[11.5px] text-ink-50">Every row is added to, or updates, {owner ? ownerName : 'the chosen retailer'}. Item Codes are that retailer’s own, so each retailer’s sheet can start at PL00001.</span>
+          </label>
+        )}
         <label className="flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-[18px] border border-dashed border-forest/30 bg-emerald-50/40 px-4 py-6 text-center transition hover:border-forest">
           <Icon name="upload" size={22} className="text-forest" />
-          <span className="text-[14px] font-bold text-forest">{sheet ? sheet.name : 'Choose the master sheet (.xlsx or .csv)'}</span>
+          <span className="text-[14px] font-bold text-forest">{sheet ? sheet.name : 'Choose the product sheet (.xlsx or .csv)'}</span>
           <span className="text-[12px] text-ink-50">{sheet ? `${sheet.sheet} · ${fmt(s.rows)} rows` : 'Read here in your browser, nothing is sent until you check or import'}</span>
           <input type="file" accept=".xlsx,.xls,.csv" className="sr-only" disabled={!canEdit || !!busy} onChange={(e) => pick(e.target.files?.[0])} />
         </label>
@@ -109,19 +142,21 @@ export default function MasterSheetImport({ canEdit }) {
               <label className="block">
                 <span className={LABEL_CLS}>Stock for new items</span>
                 <input type="number" min="0" value={stock} onChange={(e) => setStock(e.target.value)} className="h-11 w-full rounded-md border border-line px-3 text-[14px] outline-none focus:border-forest" />
-                <span className="mt-1 block text-[11.5px] text-ink-50">The sheet’s Quantity column is empty. Existing items keep their stock.</span>
+                <span className="mt-1 block text-[11.5px] text-ink-50">Used where a row’s Quantity is blank. Existing items keep their stock.</span>
               </label>
-              <label className="flex items-start gap-2.5 rounded-[14px] border border-line px-3 py-2.5">
-                <input type="checkbox" checked={retire} onChange={(e) => setRetire(e.target.checked)} className="mt-1 h-4 w-4 accent-[#1f5c4a]" />
-                <span>
-                  <span className="block text-[13px] font-bold text-ink">Remove {owner ? 'their' : 'Nivora’s'} items not in the sheet</span>
-                  <span className="block text-[11.5px] text-ink-50">{ownerName} then matches the sheet exactly. Everyone else’s products are never touched.</span>
-                </span>
-              </label>
+              {!seller && (
+                <label className="flex items-start gap-2.5 rounded-[14px] border border-line px-3 py-2.5">
+                  <input type="checkbox" checked={retire} onChange={(e) => setRetire(e.target.checked)} className="mt-1 h-4 w-4 accent-[#1f5c4a]" />
+                  <span>
+                    <span className="block text-[13px] font-bold text-ink">Remove their items not in the sheet</span>
+                    <span className="block text-[11.5px] text-ink-50">{owner ? ownerName : 'The retailer'} then matches the sheet exactly. Other retailers’ products are never touched.</span>
+                  </span>
+                </label>
+              )}
             </div>
             <div className="flex flex-col gap-2 sm:flex-row">
               <Button variant="outline" icon="check" onClick={() => run(true)} disabled={!canEdit || !!busy}>{busy === 'check' ? `Checking… ${progress}%` : 'Check first'}</Button>
-              <Button icon="upload" onClick={() => run(false)} disabled={!canEdit || !!busy}>{busy === 'import' ? `Importing… ${progress}%` : `Import ${fmt(s.rows)} rows for ${owner ? ownerName : 'Nivora'}`}</Button>
+              <Button icon="upload" onClick={() => run(false)} disabled={!canEdit || !!busy || (!seller && !owner)}>{busy === 'import' ? `Importing… ${progress}%` : `Import ${fmt(s.rows)} rows${seller ? '' : owner ? ` for ${ownerName}` : ''}`}</Button>
             </div>
           </>
         )}
@@ -139,12 +174,12 @@ export default function MasterSheetImport({ canEdit }) {
             )}
             {notes.length > 0 && (
               <ul className="max-h-32 space-y-1 overflow-y-auto text-[12px] text-ink-70">
-                {notes.slice(0, 100).map((l) => <li key={l.line}>Line {l.line} {l.sku}: {l.notes.filter((n) => !n.startsWith('no selling price')).join('; ')}</li>)}
+                {notes.slice(0, 100).map((l) => <li key={l.line}>Line {l.line} {l.sku || ''}: {l.notes.filter((n) => !n.startsWith('no selling price')).join('; ')}</li>)}
               </ul>
             )}
           </div>
         )}
       </div>
-    </Panel>
+    </Wrap>
   );
 }
