@@ -38,7 +38,7 @@ function Ticker({ className = '' }) {
           transition={{ duration: 0.32, ease: EASE }}
           className="truncate text-right text-[12px] font-semibold text-emerald-100"
         >
-          {announcements[i]}
+          {announcements[i].replace('{skus}', products.length.toLocaleString('en-IN'))}
         </motion.p>
       </AnimatePresence>
     </div>

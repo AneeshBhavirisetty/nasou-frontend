@@ -205,7 +205,7 @@ export default function AdminUsers() {
                   <span className="min-w-0"><span className="flex items-center gap-1.5 font-bold text-ink">{u.fullName}{u.id === user?.id && <span className="rounded-full bg-emerald-50 px-1.5 text-[10px] text-emerald-700">You</span>}</span><span className="block truncate text-[11.5px] text-ink-50">{u.email}</span></span>
                 </span>
               ) },
-              { key: 'teamRole', label: 'Role', value: (u) => teamRoleLabel(u.teamRole), render: (u) => <span className={cx('rounded-full px-2.5 py-1 text-[11.5px] font-bold', u.teamRole === 'owner' ? 'bg-forest text-white' : 'bg-sunk text-forest')}>{u.teamRole === 'owner' ? 'Owner · IAM admin' : teamRoleLabel(u.teamRole)}</span> },
+              { key: 'teamRole', label: 'Role', value: (u) => teamRoleLabel(u.teamRole), render: (u) => <span className={cx('inline-block whitespace-nowrap rounded-full px-2.5 py-1 text-[11.5px] font-bold', u.teamRole === 'owner' ? 'bg-forest text-white' : 'bg-sunk text-forest')}>{u.teamRole === 'owner' ? 'Owner · IAM admin' : teamRoleLabel(u.teamRole)}</span> },
               { key: 'title', label: 'Title' },
               { key: 'phone', label: 'Mobile', render: (u) => (u.phone ? `+91 ${u.phone}` : '—') },
               { key: 'twofa', label: '2FA', sortable: false, value: () => 'On', render: () => <span className="flex items-center gap-1 text-[12px] font-bold text-emerald-700"><Icon name="shieldCheck" size={13} /> On</span> },

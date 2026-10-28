@@ -20,7 +20,7 @@ export const currency = { symbol: '₹', code: 'INR', locale: 'en-IN' };
 export const announcements = [
   'Nivora is now a marketplace — shop verified retailers in one cart',
   'Free delivery on orders above ₹999 · GST invoice on every order',
-  'Search by product code, size or supplier — 1,400+ SKUs live',
+  'Search by item code, size or supplier — {skus} products live',   // {skus}: the live catalogue size
   'Delivering across Tirupati · dispatch same day on in-stock items before 2pm',
 ];
 
