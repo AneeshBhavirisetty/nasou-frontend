@@ -95,7 +95,7 @@ function AvatarMenu({ readOnly, storeName }) {
             <Link to="/seller/profile" onClick={() => setOpen(false)} className="mt-1 flex items-center gap-2.5 rounded-[12px] px-3 py-2.5 text-[13px] font-semibold text-ink-70 hover:bg-sunk/70 hover:text-forest">
               <Icon name="store" size={15} className="text-ink-35" /> Store profile
             </Link>
-            <Link to="/" onClick={() => setOpen(false)} className="flex items-center gap-2.5 rounded-[12px] px-3 py-2.5 text-[13px] font-semibold text-ink-70 hover:bg-sunk/70 hover:text-forest">
+            <Link to="/home" onClick={() => setOpen(false)} className="flex items-center gap-2.5 rounded-[12px] px-3 py-2.5 text-[13px] font-semibold text-ink-70 hover:bg-sunk/70 hover:text-forest">
               <Icon name="external" size={15} className="text-ink-35" /> View storefront
             </Link>
             {!readOnly && (
@@ -136,7 +136,7 @@ function ConsoleSearch() {
 
   return (
     <div ref={ref} className="relative hidden w-full max-w-md md:block">
-      <label className="flex h-11 items-center gap-2.5 rounded-full border border-white/80 bg-white px-4 shadow-[0_8px_20px_rgba(9,81,67,0.06)] transition focus-within:border-forest/30">
+      <label className="flex h-11 items-center gap-2.5 rounded-full border border-white/80 bg-white px-4 shadow-[0_8px_20px_rgba(37,88,73,0.06)] transition focus-within:border-forest/30">
         <Icon name="search" size={16} className="text-ink-50" />
         <input
           value={q}
@@ -167,7 +167,7 @@ function ConsoleSearch() {
 }
 
 /* round icon button, like the reference header */
-const roundBtn = 'grid h-11 w-11 shrink-0 place-items-center rounded-full border border-white/80 bg-white text-forest shadow-[0_8px_20px_rgba(9,81,67,0.06)] transition hover:-translate-y-0.5';
+const roundBtn = 'grid h-11 w-11 shrink-0 place-items-center rounded-full border border-white/80 bg-white text-forest shadow-[0_8px_20px_rgba(37,88,73,0.06)] transition hover:-translate-y-0.5';
 
 export default function SellerLayout() {
   const { user, view, isAuthenticated, signedOut } = useAuth();

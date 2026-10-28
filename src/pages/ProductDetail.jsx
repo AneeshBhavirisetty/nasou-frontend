@@ -99,7 +99,7 @@ export default function ProductDetail() {
       <Breadcrumbs
         className="mb-5"
         items={[
-          { label: 'Home', to: '/' },
+          { label: 'Home', to: '/home' },
           { label: departmentName(product.department), to: `/shop?dept=${product.department}` },
           { label: categoryName(product.category), to: `/shop?dept=${product.department}&category=${product.category}` },
           { label: product.name },
@@ -278,7 +278,7 @@ export default function ProductDetail() {
                 content: (
                   <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                     {specs.map(([k, v]) => (
-                      <div key={k} className="rounded-[14px] bg-[#f4f7f5] p-3.5">
+                      <div key={k} className="rounded-[14px] bg-[#f3f6f4] p-3.5">
                         <dt className="text-[10.5px] font-bold uppercase tracking-[0.14em] text-ink-50">{k}</dt>
                         <dd className="mt-1 text-[14px] font-semibold capitalize text-ink">{v}</dd>
                       </div>
@@ -309,7 +309,7 @@ export default function ProductDetail() {
                 content: (
                   <div className="space-y-3">
                     {reviews.map((r, i) => (
-                      <div key={i} className="rounded-[16px] bg-[#f4f7f5] p-4">
+                      <div key={i} className="rounded-[16px] bg-[#f3f6f4] p-4">
                         <div className="flex items-center justify-between gap-3">
                           <span className="flex items-center gap-2.5 text-[13.5px] font-bold text-ink">
                             <span className="grid h-8 w-8 place-items-center rounded-full bg-forest text-[11px] font-black text-white">{r.name[0]}</span>

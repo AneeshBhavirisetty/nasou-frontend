@@ -124,7 +124,7 @@ export default function HeroCarousel({ slides }) {
         type="button"
         onClick={() => show(active - 1, -1)}
         aria-label="Previous slide"
-        className="absolute left-3 top-1/2 z-20 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/25 bg-[#063a30]/45 text-white backdrop-blur-lg transition hover:bg-[#063a30]/75 sm:left-5 lg:opacity-0 lg:group-hover:opacity-100"
+        className="absolute left-3 top-1/2 z-20 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/25 bg-[#1a4a3d]/45 text-white backdrop-blur-lg transition hover:bg-[#1a4a3d]/75 sm:left-5 lg:opacity-0 lg:group-hover:opacity-100"
       >
         <Icon name="chevronLeft" size={20} />
       </button>
@@ -132,12 +132,12 @@ export default function HeroCarousel({ slides }) {
         type="button"
         onClick={() => show(active + 1, 1)}
         aria-label="Next slide"
-        className="absolute right-3 top-1/2 z-20 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/25 bg-[#063a30]/45 text-white backdrop-blur-lg transition hover:bg-[#063a30]/75 sm:right-5 lg:opacity-0 lg:group-hover:opacity-100"
+        className="absolute right-3 top-1/2 z-20 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/25 bg-[#1a4a3d]/45 text-white backdrop-blur-lg transition hover:bg-[#1a4a3d]/75 sm:right-5 lg:opacity-0 lg:group-hover:opacity-100"
       >
         <Icon name="chevronRight" size={20} />
       </button>
 
-      <div className="absolute bottom-6 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/15 bg-[#063a30]/35 px-3 py-2 backdrop-blur-lg">
+      <div className="absolute bottom-6 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/15 bg-[#1a4a3d]/35 px-3 py-2 backdrop-blur-lg">
         {slides.map((x, i) => (
           <button
             key={x.id}

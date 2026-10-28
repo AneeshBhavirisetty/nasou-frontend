@@ -43,7 +43,7 @@ export default function RetailerProductPicker({ products, value, onChange }) {
             {hits.map((p) => (
               <li key={p.sku}>
                 <label className="flex cursor-pointer items-center gap-2.5 px-3 py-2 text-[13px] hover:bg-canvas/60">
-                  <input type="checkbox" checked={chosen.has(p.sku)} onChange={() => toggle(p.sku)} className="h-4 w-4 shrink-0 accent-[#095143]" />
+                  <input type="checkbox" checked={chosen.has(p.sku)} onChange={() => toggle(p.sku)} className="h-4 w-4 shrink-0 accent-[#1f5c4a]" />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate font-semibold text-ink">{p.name}</span>
                     <span className="font-mono text-[11px] text-ink-50">{p.sku}</span>

@@ -151,8 +151,8 @@ const SHAPES = {
     <g filter={`url(#${id}-sh)`}>
       <rect x="52" y="82" width="96" height="44" rx="10" fill={`url(#${id}-body)`} stroke={c.edge} strokeWidth="2" />
       <circle cx="100" cy="104" r="20" fill={c.shade} stroke={c.edge} strokeWidth="2" />
-      <rect x="92" y="40" width="16" height="42" rx="4" fill="#07473b" />
-      <rect x="72" y="30" width="56" height="14" rx="7" fill="#0f6e5e" />
+      <rect x="92" y="40" width="16" height="42" rx="4" fill="#194d3e" />
+      <rect x="72" y="30" width="56" height="14" rx="7" fill="#2f7a63" />
       <Socket id={id} c={c} cx={52} cy={104} rx={10} ry={22} />
       <Socket id={id} c={c} cx={148} cy={104} rx={10} ry={22} />
     </g>

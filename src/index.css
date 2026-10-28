@@ -3,50 +3,51 @@
 /* ============================================================
    NASOU HIVE — DESIGN TOKENS
    Visual language follows the NasouHive demo templates: linen
-   paper (#EFEAE1), forest #095143, sage ink, Manrope throughout
+   paper (#EFEAE1), forest #1f5c4a, sage ink, Manrope throughout
    (Sora for the big hero voice), soft white cards with green-
    tinted shadows. Rose / amber / sky are kept for status only.
    ============================================================ */
 @theme {
-  /* Neutrals — the reference's linen paper (#EEEAE2, sampled from the client's
-     reference screens in review 6; the old #efe7da had drifted yellow). */
-  --color-canvas: #eeeae2;
+  /* Palette from the NasouHive reference app (nasouhive repo, Oct 2026):
+     linen #EFEAE1 → cream #EFE7DA → mist #E6ECEA, sand #E5D8C7, forest
+     #1F5C4A / #255849, deep ink #1F3B34. The Nivora logo keeps its own
+     greens — it is an image and is never recoloured. */
+  --color-canvas: #efeae1;
   --color-surface: #ffffff;
   --color-sunk: #e6ecea;
-  --color-line: #e2dbcd;
+  --color-line: #e5dccf;
   --color-line-soft: #e6ecea;
 
-  /* Ink ramp — greened blacks */
+  /* Ink ramp — the reference's green-tinted text (#1F3B34 → #255849) */
   --color-ink: #1f3b34;
-  --color-ink-70: #526a62;
-  --color-ink-50: #61756e;
-  --color-ink-35: #82938d;
+  --color-ink-70: #3f6156;
+  --color-ink-50: #5b766d;
+  --color-ink-35: #849890;
 
   /* Sand — the reference's beige pill buttons and warm panels */
-  --color-sand: #e4dac6;
-  --color-sand-50: #f5f2ec;
-  /* The reference's sand-gold accent (charts, highlights, the "new" glow). */
+  --color-sand: #e5d8c7;
+  --color-sand-50: #f6f1e8;
+  /* Warm sand-gold accent (charts, highlights, the "new" glow). */
   --color-gold: #d4b879;
   --color-gold-50: #f6efdc;
-  /* The reference hero's deep greens, for dark bands only — brand surfaces
-     (buttons, links, the logo) keep the logo's forest below. */
-  --color-pine: #173f35;
-  --color-pine-600: #205c4a;
+  /* Deep greens for dark bands — the reference's chat header / dark stage. */
+  --color-pine: #1f3b34;
+  --color-pine-600: #255849;
 
-  /* One surface for the whole chat panel — header excepted — so the thread,
-     the inbox, the chips and the composer never sit on different fills
-     (review 6: "chatbot internal background mismatch"). */
-  --color-chat: #fbf9f5;
+  /* One surface for the whole chat panel — header excepted (review 6:
+     "chatbot internal background mismatch"); the reference's #F7F9F8. */
+  --color-chat: #f7f9f8;
 
-  /* Brand — the Nivora logo's two greens, exactly: forest #095143 (the
-     N's body) and emerald #0f6e5e (its two side strokes and the wordmark).
-     The rest of the ramp is darker or lighter steps of those two. */
-  --color-forest: #095143;
-  --color-forest-800: #07473b;
-  --color-emerald: #0f6e5e;
-  --color-emerald-600: #07473b;
-  --color-emerald-100: #c7ded9;
-  --color-emerald-50: #e8f3f0;
+  /* Brand — the reference's forest #1F5C4A and its softer partner #255849;
+     the rest of the ramp is darker or lighter steps of those. */
+  --color-forest: #1f5c4a;
+  --color-forest-600: #255849;
+  --color-forest-800: #194d3e;
+  --color-emerald: #2f7a63;
+  --color-emerald-600: #194d3e;
+  --color-emerald-100: #cfe0d9;
+  --color-emerald-50: #e9f1ee;
+  --color-mist: #e6ecea;
 
   /* Alert accent — errors, deals, destructive actions (Tailwind rose) */
   --color-clay: oklch(58.6% 0.253 17.585);
@@ -67,10 +68,11 @@
   --font-hero: "Sora", "Manrope", ui-sans-serif, system-ui, sans-serif;
 
   /* Elevation — soft and warm, never a hard grey drop */
-  --shadow-card: 0 16px 38px rgba(9, 81, 67, 0.09);
-  --shadow-lift: 0 24px 48px rgba(9, 81, 67, 0.12);
-  --shadow-pop: 0 28px 70px rgba(31, 59, 52, 0.18);
-  --shadow-btn: 0 10px 24px rgba(9, 81, 67, 0.18);
+  --shadow-card: 0 16px 34px rgba(37,88,73,0.08);
+  --shadow-lift: 0 24px 60px rgba(37,88,73,0.12);
+  --shadow-pop: 0 28px 80px rgba(31,59,52,0.24);
+  --shadow-btn: inset 0 1px 0 rgba(255,255,255,0.22), 0 16px 36px rgba(37,88,73,0.18);
+  --shadow-glow: 0 20px 50px rgba(31,92,74,0.35);
 
   --radius-xs: 6px;
   --radius-sm: 8px;
@@ -104,6 +106,7 @@
   body {
     min-height: 100dvh;
     background: var(--color-canvas);
+    text-rendering: optimizeLegibility;
     color: var(--color-ink);
     font-family: var(--font-sans);
     overflow-x: hidden;
@@ -114,6 +117,13 @@
     letter-spacing: -0.03em;
     line-height: 1.1;
     font-weight: 600;
+  }
+  /* Page and section titles speak in the reference's voice: Sora, lighter
+     and tighter (a class like font-bold still wins). */
+  h1, h2 {
+    font-family: var(--font-hero);
+    font-weight: 500;
+    letter-spacing: -0.04em;
   }
   /* Page and section titles carry the brand green (client review 2). */
   h1, h2 { color: var(--color-forest); }
@@ -132,7 +142,7 @@
   /* Height of the phone tab bar while it is mounted — floating widgets
      (chat, toasts, demo role pill) offset themselves by this. */
   @media (max-width: 1023.98px) {
-    html.has-tabbar { --tabbar-h: calc(76px + env(safe-area-inset-bottom)); }
+    html.has-tabbar { --tabbar-h: calc(80px + env(safe-area-inset-bottom)); }
   }
 
   /* Never let a wide child force a horizontal scrollbar on mobile. */
@@ -165,7 +175,7 @@
 
   /* Faint dotted field used behind the hero and dark bands. */
   .field-dots {
-    background-image: radial-gradient(rgba(9, 81, 67, 0.1) 1px, transparent 1px);
+    background-image: radial-gradient(rgba(37,88,73,0.1) 1px, transparent 1px);
     background-size: 22px 22px;
   }
   .field-dots-dark {
@@ -175,14 +185,14 @@
 
   .no-bar { scrollbar-width: none; -ms-overflow-style: none; }
   /* Slim, quiet scrollbar for tall side panels (filters). */
-  .thin-bar { scrollbar-width: thin; scrollbar-color: #c7ded9 transparent; }
+  .thin-bar { scrollbar-width: thin; scrollbar-color: #cfe0d9 transparent; }
   .thin-bar::-webkit-scrollbar { width: 6px; }
-  .thin-bar::-webkit-scrollbar-thumb { background: #c7ded9; border-radius: 999px; }
+  .thin-bar::-webkit-scrollbar-thumb { background: #cfe0d9; border-radius: 999px; }
   .no-bar::-webkit-scrollbar { display: none; }
 
   /* Product imagery bed under transparent / blown-out art. */
-  .photo-bed { background: linear-gradient(155deg, #f4f7f5 0%, #e6ecea 100%); }
-  .photo-bed-dark { background: linear-gradient(155deg, #063a30 0%, #04241e 100%); }
+  .photo-bed { background: linear-gradient(155deg, #f3f6f4 0%, #e6ecea 100%); }
+  .photo-bed-dark { background: linear-gradient(155deg, #1a4a3d 0%, #10332a 100%); }
 
   /* Hover sheen sweep for premium buttons / cards. */
   .sheen { position: relative; overflow: hidden; }
@@ -202,15 +212,50 @@
   .glass-panel {
     border: 1px solid rgba(229, 216, 199, 0.72);
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(239, 234, 225, 0.74));
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72), 0 24px 70px rgba(9, 81, 67, 0.18);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72), 0 24px 70px rgba(37,88,73,0.18);
     backdrop-filter: blur(24px);
   }
-  /* White product / content card (demo ProductCard + ThemeCard) */
+  /* Content card — the reference's story-card: sand hairline, white-to-linen
+     wash, an inner top highlight. */
   .card {
-    border: 1px solid rgba(255, 255, 255, 0.75);
-    background: #fff;
+    border: 1px solid rgba(229, 216, 199, 0.82);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(250, 248, 243, 0.9));
     border-radius: 18px;
-    box-shadow: var(--shadow-card);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72), var(--shadow-card);
+  }
+  /* Big framed section (the reference's .section-shell): linen with light
+     pooling in two corners. */
+  .section-shell {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    background:
+      radial-gradient(circle at 22% 18%, rgba(255, 255, 255, 0.72), transparent 26%),
+      radial-gradient(circle at 82% 10%, rgba(230, 236, 234, 0.72), transparent 24%),
+      linear-gradient(180deg, #efeae1 0%, #efe7da 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72), 0 30px 100px rgba(37, 88, 73, 0.14);
+  }
+  /* Primary button face (the reference's .button-primary) */
+  .button-primary {
+    border-color: rgba(37, 88, 73, 0.16);
+    background: linear-gradient(180deg, #1f5c4a 0%, #255849 100%);
+    color: #fff;
+    text-shadow: 0 1px 1px rgba(37, 88, 73, 0.16);
+  }
+  .button-primary:hover { filter: brightness(1.06); }
+  /* Sand → mist → forest wash for a highlighted word */
+  .text-gradient {
+    background: linear-gradient(120deg, #1f5c4a 0%, #2f7a63 45%, #8fb3a5 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  /* Faint blueprint grid (the reference's .dashboard-grid) */
+  .grid-lines {
+    background-image:
+      linear-gradient(rgba(37, 88, 73, 0.07) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(37, 88, 73, 0.07) 1px, transparent 1px);
+    background-size: 36px 36px;
   }
   /* Section label with leading hairline (demo .section-label) */
   .section-label {
@@ -221,19 +266,19 @@
     font-weight: 700;
     letter-spacing: 0.32em;
     text-transform: uppercase;
-    color: rgba(9, 81, 67, 0.76);
+    color: rgba(37,88,73,0.76);
   }
   .section-label::before {
     content: "";
     width: 2.5rem;
     height: 1px;
-    background: linear-gradient(90deg, rgba(9, 81, 67, 0), rgba(9, 81, 67, 0.72));
+    background: linear-gradient(90deg, rgba(37,88,73,0), rgba(37,88,73,0.72));
   }
   /* Deep forest campaign band (demo hero carousel / flash deals) */
   .forest-band {
     background:
       radial-gradient(circle at 85% 10%, rgba(72, 132, 112, 0.35), transparent 40%),
-      linear-gradient(120deg, #173f35 0%, #205c4a 100%);
+      linear-gradient(120deg, #1f3b34 0%, #1f5c4a 100%);
   }
 
   /* Review 5 refresh: warm mesh grounds, film grain, glass chips. */
@@ -248,7 +293,7 @@
     background:
       radial-gradient(55% 70% at 90% 0%, rgba(110, 168, 145, 0.35), transparent 60%),
       radial-gradient(45% 60% at 0% 100%, rgba(229, 216, 199, 0.18), transparent 60%),
-      linear-gradient(125deg, #173f35 0%, #1c4e40 55%, #205c4a 100%);
+      linear-gradient(125deg, #1f3b34 0%, #1f5340 55%, #1f5c4a 100%);
   }
   .grain::before {
     content: "";
@@ -267,7 +312,7 @@
     background: var(--color-sand);
     color: var(--color-forest);
     font-weight: 700;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 10px 24px rgba(9, 81, 67, 0.12);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 10px 24px rgba(37,88,73,0.12);
     transition: transform 0.2s var(--ease-out-quint), background 0.2s;
   }
   .pill-sand:hover { transform: translateY(-2px); background: #ddcdb8; }
@@ -280,10 +325,29 @@
 
   /* Skeleton shimmer */
   .shimmer {
-    background: linear-gradient(90deg, #e6ecea 25%, #f4f7f5 37%, #e6ecea 63%);
+    background: linear-gradient(90deg, #e6ecea 25%, #f3f6f4 37%, #e6ecea 63%);
     background-size: 400% 100%;
     animation: shimmer 1.4s ease-in-out infinite;
   }
+}
+
+/* The reference's page ground: linen → cream → mist, with soft light that
+   drifts very slowly behind everything (fixed, so it never repaints on scroll). */
+body::before {
+  content: "";
+  position: fixed;
+  inset: -12vmax;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(36vmax 28vmax at 14% 10%, rgba(255, 255, 255, 0.8), transparent 70%),
+    radial-gradient(32vmax 26vmax at 88% 16%, rgba(207, 224, 217, 0.6), transparent 70%),
+    radial-gradient(40vmax 30vmax at 72% 90%, rgba(229, 216, 199, 0.6), transparent 70%),
+    linear-gradient(180deg, #efeae1 0%, #efe7da 58%, #e6ecea 100%);
+  animation: aurora 28s ease-in-out infinite alternate;
+}
+@keyframes aurora {
+  to { transform: translate3d(2.5vmax, -2vmax, 0) scale(1.05); }
 }
 
 /* Entrance motion for above-the-fold content. Deliberately CSS, not JS. */
@@ -344,6 +408,12 @@
 .animate-pulse-ring { animation: pulse-ring 3s ease-in-out infinite; }
 .animate-float { animation: float-y 6s ease-in-out infinite; }
 .animate-shake { animation: shake-x 0.4s ease-in-out both; }
+/* chat button: a soft ring that breathes outward */
+@keyframes halo {
+  0%   { opacity: 0.55; transform: scale(1); }
+  100% { opacity: 0;    transform: scale(1.7); }
+}
+.animate-halo { animation: halo 2.6s var(--ease-out-quint) infinite; }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
@@ -352,5 +422,5 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-  .animate-marquee, .animate-float, .animate-drift, .animate-pulse-ring, .band-live { animation: none !important; }
+  .animate-marquee, .animate-float, .animate-drift, .animate-pulse-ring, .band-live, .animate-halo, body::before { animation: none !important; }
 }

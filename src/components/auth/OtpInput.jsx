@@ -52,7 +52,7 @@ export default function OtpInput({ value = '', onChange, length = 6, error = fal
           className={cx(
             'h-13 w-full rounded-md border bg-white/80 text-center text-[20px] font-bold tnum text-forest outline-none transition',
             error ? 'border-clay bg-clay-50/40 focus:border-clay focus:shadow-[0_0_0_2px_rgba(225,29,72,0.15)]'
-                  : 'border-line focus:border-forest focus:shadow-[0_8px_25px_rgba(9, 81, 67,0.14),0_0_0_2px_rgba(9, 81, 67,0.18)]'
+                  : 'border-line focus:border-forest focus:shadow-[0_8px_25px_rgba(37,88,73,0.14),0_0_0_2px_rgba(37,88,73,0.18)]'
           )}
         />
       ))}

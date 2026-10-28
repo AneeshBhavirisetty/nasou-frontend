@@ -72,7 +72,7 @@ export function landingFor(session, explicit) {
   const role = session?.role ?? parseJwt(session?.accessToken)?.role;
   if (role === 'ADMIN') return '/admin/dashboard';
   if (role === 'RETAILER') return '/seller';
-  return '/';
+  return '/home';
 }
 
 export function isTokenExpired(token) {

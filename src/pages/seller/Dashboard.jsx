@@ -159,7 +159,7 @@ export default function SellerDashboard() {
         <ChartCard title="Revenue distribution" note={`By sub-category, last ${range} days`} table={{ headers: ['Sub-category', 'Sales'], rows: d.revenue.map((r) => [r.label, money(r.value)]) }}>
           {d.revenue.length
             ? <Donut slices={d.revenue} format={money} center={{ value: rupeesCompact(d.sales), label: 'total revenue' }} />
-            : <p className="rounded-[12px] bg-[#f4f7f5] px-3 py-10 text-center text-[12.5px] text-ink-50">No sales in this range yet</p>}
+            : <p className="rounded-[12px] bg-[#f3f6f4] px-3 py-10 text-center text-[12.5px] text-ink-50">No sales in this range yet</p>}
         </ChartCard>
       </div>
 

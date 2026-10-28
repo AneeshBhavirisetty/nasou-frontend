@@ -30,11 +30,12 @@ export function Divider({ className = '' }) {
 /* ---------- Button ---------- */
 
 const BTN = {
-  primary: 'bg-forest text-white border-forest shadow-btn hover:-translate-y-0.5 hover:bg-forest-800 hover:border-forest-800',
-  accent: 'bg-forest text-white border-forest shadow-btn hover:-translate-y-0.5 hover:bg-forest-800 hover:border-forest-800',
+  /* the reference's forest gradient face, with a sheen sweep on hover */
+  primary: 'button-primary sheen shadow-btn hover:-translate-y-0.5',
+  accent: 'button-primary sheen shadow-btn hover:-translate-y-0.5',
   emerald: 'bg-emerald text-white border-emerald shadow-btn hover:-translate-y-0.5 hover:bg-emerald-600 hover:border-emerald-600',
   mint: 'bg-emerald-50 text-forest border-forest hover:bg-sunk',
-  outline: 'bg-white/80 text-forest border-line hover:border-forest hover:bg-white',
+  outline: 'bg-white/85 text-forest border-white shadow-card backdrop-blur hover:-translate-y-0.5 hover:border-forest/30 hover:bg-white',
   ghost: 'bg-transparent text-ink-70 border-transparent hover:bg-sunk hover:text-forest',
   light: 'bg-white text-forest border-white shadow-card hover:-translate-y-0.5',
 };
@@ -250,7 +251,7 @@ export function Field({ label, hint, error, className = '', inputMode, type = 't
           'placeholder:text-ink-35 disabled:cursor-not-allowed disabled:bg-sunk/60 disabled:text-ink-50',
           error
             ? 'border-clay bg-clay-50/40 focus:border-clay focus:shadow-[0_0_0_2px_rgba(225,29,72,0.15)]'
-            : 'border-line focus:border-forest focus:shadow-[0_8px_25px_rgba(9, 81, 67,0.14),0_0_0_2px_rgba(9, 81, 67,0.18)]'
+            : 'border-line focus:border-forest focus:shadow-[0_8px_25px_rgba(37,88,73,0.14),0_0_0_2px_rgba(37,88,73,0.18)]'
         )}
         {...rest}
       />

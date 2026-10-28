@@ -170,7 +170,7 @@ export default function DataTable({
                 <p className="px-2 pb-1 pt-1 text-[10.5px] font-bold uppercase tracking-[0.14em] text-ink-35">Show columns</p>
                 {columns.filter((c) => !c.always).map((c) => (
                   <label key={c.key} className="flex cursor-pointer items-center gap-2.5 rounded-[10px] px-2 py-1.5 text-[13px] font-semibold text-ink-70 hover:bg-sunk/60">
-                    <input type="checkbox" className="accent-[#095143]" checked={shown.includes(c.key)} onChange={(e) => setShown((s) => (e.target.checked ? [...s, c.key] : s.filter((k) => k !== c.key)))} />
+                    <input type="checkbox" className="accent-[#1f5c4a]" checked={shown.includes(c.key)} onChange={(e) => setShown((s) => (e.target.checked ? [...s, c.key] : s.filter((k) => k !== c.key)))} />
                     {c.label}
                   </label>
                 ))}
@@ -214,7 +214,7 @@ export default function DataTable({
             <tr>
               {bulkActions.length > 0 && (
                 <th className="w-10 px-3 py-2.5">
-                  <input type="checkbox" aria-label="Select all on this page" className="accent-[#095143]" checked={allOnPage} onChange={(e) => setSel((s) => { const n = new Set(s); slice.forEach((r) => (e.target.checked ? n.add(rowKey(r)) : n.delete(rowKey(r)))); return n; })} />
+                  <input type="checkbox" aria-label="Select all on this page" className="accent-[#1f5c4a]" checked={allOnPage} onChange={(e) => setSel((s) => { const n = new Set(s); slice.forEach((r) => (e.target.checked ? n.add(rowKey(r)) : n.delete(rowKey(r)))); return n; })} />
                 </th>
               )}
               {visibleCols.map((c) => (
@@ -241,7 +241,7 @@ export default function DataTable({
                 >
                   {bulkActions.length > 0 && (
                     <td className="px-3 py-3" onClick={(e) => e.stopPropagation()}>
-                      <input type="checkbox" aria-label="Select row" className="accent-[#095143]" checked={sel.has(k)} onChange={(e) => setSel((s) => { const n = new Set(s); if (e.target.checked) n.add(k); else n.delete(k); return n; })} />
+                      <input type="checkbox" aria-label="Select row" className="accent-[#1f5c4a]" checked={sel.has(k)} onChange={(e) => setSel((s) => { const n = new Set(s); if (e.target.checked) n.add(k); else n.delete(k); return n; })} />
                     </td>
                   )}
                   {visibleCols.map((c) => (

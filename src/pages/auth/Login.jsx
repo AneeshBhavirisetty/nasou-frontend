@@ -100,7 +100,7 @@ export default function Login() {
     <AuthCard
       title="Sign in"
       subtitle="Shoppers, retailers and the Nivora team all sign in here."
-      footer={<>New to Nivora? <Link to="/login/otp" className="font-bold text-forest hover:underline">Create an account</Link> · <Link to="/sell" className="font-bold text-forest hover:underline">Sell on Nivora</Link></>}
+      footer={<>New to Nivora? <Link to="/register" className="font-bold text-forest hover:underline">Sign up as a customer</Link> · <Link to="/sell/register" className="font-bold text-forest hover:underline">Sign up as a retailer</Link></>}
     >
       <form onSubmit={submit} noValidate className="space-y-4">
         <Field
@@ -135,7 +135,7 @@ export default function Login() {
       </div>
 
       {SHOW_DEMO && (
-        <details className="mt-5 rounded-[16px] border border-dashed border-[#c7ded9] bg-[#f6f3ed] px-3.5 py-3 text-[12px] text-ink-50" open>
+        <details className="mt-5 rounded-[16px] border border-dashed border-[#cfe0d9] bg-[#f6f3ed] px-3.5 py-3 text-[12px] text-ink-50" open>
           <summary className="cursor-pointer font-bold text-forest">Demo accounts — password <span className="font-mono">nivora123</span></summary>
           {groups.map((g) => (
             <div key={g} className="mt-2.5">

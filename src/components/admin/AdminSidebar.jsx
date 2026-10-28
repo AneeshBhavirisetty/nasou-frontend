@@ -78,7 +78,7 @@ function useBadges() {
 const link = ({ isActive }) =>
   cx(
     'flex min-h-[42px] items-center gap-3 rounded-[14px] px-3.5 text-[13.5px] font-bold transition',
-    isActive ? 'bg-forest text-white shadow-[0_12px_28px_rgba(9, 81, 67,0.22)]' : 'text-forest-800 hover:bg-white hover:text-forest'
+    isActive ? 'bg-forest text-white shadow-[0_12px_28px_rgba(37,88,73,0.22)]' : 'text-forest-800 hover:bg-white hover:text-forest'
   );
 
 function NavItem({ n, badges }) {
@@ -105,7 +105,7 @@ export function SideRail({ open, onClose, nav, badges = {}, home, subtitle, labe
   return (
     <aside
       className={cx(
-        'fixed inset-y-0 left-0 z-40 hidden w-[272px] flex-col gap-3 border-r border-white/70 bg-white/72 px-4 pb-6 pt-[calc(14px+env(safe-area-inset-top))] shadow-[18px_0_42px_rgba(9, 81, 67,0.08)] backdrop-blur-2xl transition-transform duration-200 lg:flex',
+        'fixed inset-y-0 left-0 z-40 hidden w-[272px] flex-col gap-3 border-r border-white/70 bg-white/72 px-4 pb-6 pt-[calc(14px+env(safe-area-inset-top))] shadow-[18px_0_42px_rgba(37,88,73,0.08)] backdrop-blur-2xl transition-transform duration-200 lg:flex',
         !open && '-translate-x-[105%]'
       )}
       aria-label={label}
@@ -135,7 +135,7 @@ export function SideRail({ open, onClose, nav, badges = {}, home, subtitle, labe
       </nav>
 
       <div className="mt-auto grid gap-1 border-t border-line pt-3">
-        <Link to="/" className="flex min-h-10 items-center gap-3 rounded-[14px] px-3.5 text-[13px] font-bold text-forest-800 transition hover:bg-white hover:text-forest">
+        <Link to="/home" className="flex min-h-10 items-center gap-3 rounded-[14px] px-3.5 text-[13px] font-bold text-forest-800 transition hover:bg-white hover:text-forest">
           <Icon name="store" size={16} /> View storefront
         </Link>
         <button onClick={() => { logout(); navigate('/login', { replace: true }); }} className="flex min-h-10 items-center gap-3 rounded-[14px] px-3.5 text-left text-[13px] font-bold text-clay-600 transition hover:bg-clay-50">
@@ -183,7 +183,7 @@ export function BottomNav({ nav, badges = {}, label }) {
               <p className="mb-2 px-1 text-[11px] font-bold uppercase tracking-[0.18em] text-ink-50">More</p>
               <div className="grid grid-cols-2 gap-1.5">
                 {rest.map((n) => <NavItem key={n.to} n={n} badges={badges} />)}
-                <Link to="/" className={link({ isActive: false })}><Icon name="store" size={17} /> Storefront</Link>
+                <Link to="/home" className={link({ isActive: false })}><Icon name="store" size={17} /> Storefront</Link>
                 <button onClick={() => { logout(); navigate('/login', { replace: true }); }} className="flex min-h-[42px] items-center gap-3 rounded-[14px] px-3.5 text-[13.5px] font-bold text-clay-600 hover:bg-clay-50">
                   <Icon name="logout" size={17} /> Sign out
                 </button>
@@ -193,7 +193,7 @@ export function BottomNav({ nav, badges = {}, label }) {
         )}
       </AnimatePresence>
 
-      <nav aria-label={label} className="fixed inset-x-0 bottom-0 z-[45] border-t border-white/70 bg-white/92 px-3 pb-[calc(8px+env(safe-area-inset-bottom))] pt-2 shadow-[0_-14px_34px_rgba(9, 81, 67,0.14)] backdrop-blur-2xl lg:hidden">
+      <nav aria-label={label} className="fixed inset-x-0 bottom-0 z-[45] border-t border-white/70 bg-white/92 px-3 pb-[calc(8px+env(safe-area-inset-bottom))] pt-2 shadow-[0_-14px_34px_rgba(37,88,73,0.14)] backdrop-blur-2xl lg:hidden">
         <div className="mx-auto grid max-w-lg gap-1" style={{ gridTemplateColumns: `repeat(${primary.length + (rest.length ? 1 : 0)}, minmax(0, 1fr))` }}>
           {primary.map((n) => (
             <NavLink key={n.to} to={n.to} end={n.exact} className={({ isActive }) => tab(isActive && !more)}>

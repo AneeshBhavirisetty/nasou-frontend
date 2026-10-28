@@ -14,7 +14,7 @@ export default function NotFound() {
       </p>
       <div className="mt-6 flex flex-wrap justify-center gap-3">
         <Button to="/shop" iconRight="arrowRight">Browse products</Button>
-        <Button to="/" variant="outline">Home</Button>
+        <Button to="/home" variant="outline">Home</Button>
       </div>
     </Container>
   );

@@ -222,7 +222,7 @@ export function ProductsManager({ seller = false }) {
 
       {!canEdit && <ViewOnlyBanner what="the catalogue" />}
 
-      <div className="flex flex-wrap gap-3 rounded-[20px] border border-line bg-white/86 p-3 shadow-[0_18px_40px_rgba(9, 81, 67,0.08)]">
+      <div className="flex flex-wrap gap-3 rounded-[20px] border border-line bg-white/86 p-3 shadow-[0_18px_40px_rgba(37,88,73,0.08)]">
         <SearchInput placeholder="Search name, SKU or brand" value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} />
         {!seller && (
           <select value={retailer} onChange={(e) => { setRetailer(e.target.value); setPage(1); }} aria-label="Retailer" className="h-12 rounded-[18px] border border-line bg-white px-4 text-[13px] font-semibold text-forest outline-none transition focus:border-forest/40">
@@ -245,7 +245,7 @@ export function ProductsManager({ seller = false }) {
         </select>
       </div>
 
-      <div className="overflow-hidden rounded-[20px] border border-line bg-white/86 shadow-[0_18px_40px_rgba(9, 81, 67,0.08)]">
+      <div className="overflow-hidden rounded-[20px] border border-line bg-white/86 shadow-[0_18px_40px_rgba(37,88,73,0.08)]">
         <div className={cx('hidden gap-3 border-b border-line bg-canvas px-4 py-3 text-[13px] font-medium text-forest-800 sm:grid', seller ? 'grid-cols-[1fr_92px_84px_132px_96px]' : 'grid-cols-[1fr_170px_92px_84px_132px_96px]')}>
           <span>Product</span>{!seller && <span>Retailer</span>}<span>Price</span><span>MRP</span><span>Stock</span><span className="text-right">Actions</span>
         </div>

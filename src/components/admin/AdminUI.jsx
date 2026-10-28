@@ -63,7 +63,7 @@ export function SearchInput({ value, onChange, placeholder }) {
         onChange={onChange}
         placeholder={placeholder}
         aria-label={placeholder}
-        className="h-12 w-full rounded-[18px] border border-line bg-white/82 pl-11 pr-4 text-[14px] font-semibold text-forest shadow-[0_10px_24px_rgba(9, 81, 67,0.08)] outline-none transition placeholder:font-medium placeholder:text-forest-800/55 focus:border-forest/40"
+        className="h-12 w-full rounded-[18px] border border-line bg-white/82 pl-11 pr-4 text-[14px] font-semibold text-forest shadow-[0_10px_24px_rgba(37,88,73,0.08)] outline-none transition placeholder:font-medium placeholder:text-forest-800/55 focus:border-forest/40"
       />
     </label>
   );
@@ -135,7 +135,7 @@ export function Kpi({ label, value, note, icon, tone = 'forest', onClick }) {
   const Tag = onClick ? 'button' : 'div';
   return (
     <Tag onClick={onClick} className={cx('group relative min-w-0 overflow-hidden rounded-[20px] border border-line bg-white p-4 text-left shadow-card transition sm:p-5', onClick && 'hover:-translate-y-0.5 hover:shadow-lift')}>
-      <span className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-[radial-gradient(circle,rgba(9, 81, 67,0.10),transparent_70%)]" />
+      <span className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-[radial-gradient(circle,rgba(37,88,73,0.10),transparent_70%)]" />
       <span className="relative flex items-start justify-between gap-2">
         <span className="text-[12.5px] font-bold text-ink-50">{label}</span>
         {icon && <span className={cx('grid h-8 w-8 shrink-0 place-items-center rounded-[10px]', tone === 'clay' ? 'bg-clay-50 text-clay-600' : tone === 'amber' ? 'bg-amber-50 text-amber' : 'bg-sunk text-forest')}><Icon name={icon} size={15} /></span>}
@@ -169,7 +169,7 @@ export function DetailList({ rows }) {
 export function Tabs({ value, onChange, options }) {
   return (
     <div role="tablist" className="no-bar -mx-1 flex gap-1 overflow-x-auto px-1">
-      <div className="flex gap-1 rounded-full border border-line bg-white/80 p-1 shadow-[0_8px_20px_rgba(9, 81, 67,0.06)]">
+      <div className="flex gap-1 rounded-full border border-line bg-white/80 p-1 shadow-[0_8px_20px_rgba(37,88,73,0.06)]">
         {options.map((o) => (
           <button
             key={o.value}
@@ -190,7 +190,7 @@ export function Tabs({ value, onChange, options }) {
 
 export function EmptyNote({ icon = 'check', title, body }) {
   return (
-    <div className="rounded-[20px] border border-dashed border-[#c7ded9] bg-[#f6f3ed] px-5 py-12 text-center">
+    <div className="rounded-[20px] border border-dashed border-[#cfe0d9] bg-[#f6f3ed] px-5 py-12 text-center">
       <span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-white text-forest shadow-card"><Icon name={icon} size={20} /></span>
       <p className="mt-3 text-[14.5px] font-bold text-forest">{title}</p>
       {body && <p className="mx-auto mt-1 max-w-sm text-[13px] text-ink-50">{body}</p>}
@@ -198,9 +198,9 @@ export function EmptyNote({ icon = 'check', title, body }) {
   );
 }
 
-export const SELECT_CLS = 'h-11 w-full rounded-md border border-line bg-white/80 px-3.5 text-[14px] text-ink outline-none transition focus:border-forest focus:shadow-[0_0_0_2px_rgba(9, 81, 67,0.18)] disabled:bg-sunk/60';
+export const SELECT_CLS = 'h-11 w-full rounded-md border border-line bg-white/80 px-3.5 text-[14px] text-ink outline-none transition focus:border-forest focus:shadow-[0_0_0_2px_rgba(37,88,73,0.18)] disabled:bg-sunk/60';
 export const LABEL_CLS = 'mb-1.5 block text-[11.5px] font-semibold uppercase tracking-[0.16em] text-forest-800';
-export const TEXTAREA_CLS = 'min-h-[92px] w-full rounded-md border border-line bg-white/80 px-3.5 py-3 text-[14px] text-ink outline-none transition placeholder:text-ink-35 focus:border-forest focus:shadow-[0_0_0_2px_rgba(9, 81, 67,0.18)]';
+export const TEXTAREA_CLS = 'min-h-[92px] w-full rounded-md border border-line bg-white/80 px-3.5 py-3 text-[14px] text-ink outline-none transition placeholder:text-ink-35 focus:border-forest focus:shadow-[0_0_0_2px_rgba(37,88,73,0.18)]';
 
 export function BackLinkInline({ to, children }) {
   return (

@@ -56,7 +56,7 @@ function CouponForm({ open, coupon, onClose, onSave }) {
           <Field label="Code" value={c.code} onChange={(e) => set('code', e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))} placeholder="MONSOON10" required />
           <label className="block">
             <span className="mb-1.5 block text-[11.5px] font-semibold uppercase tracking-[0.16em] text-forest-800">Type</span>
-            <select value={c.kind} onChange={(e) => set('kind', e.target.value)} className="h-12 w-full rounded-md border border-line bg-white/80 px-4 text-[14px] text-ink outline-none transition focus:border-forest focus:shadow-[0_0_0_2px_rgba(9, 81, 67,0.18)]">
+            <select value={c.kind} onChange={(e) => set('kind', e.target.value)} className="h-12 w-full rounded-md border border-line bg-white/80 px-4 text-[14px] text-ink outline-none transition focus:border-forest focus:shadow-[0_0_0_2px_rgba(37,88,73,0.18)]">
               <option value="percent">Percent off (%)</option>
               <option value="flat">Flat amount off (₹)</option>
             </select>
@@ -68,7 +68,7 @@ function CouponForm({ open, coupon, onClose, onSave }) {
           )}
           <label className="block">
             <span className="mb-1.5 block text-[11.5px] font-semibold uppercase tracking-[0.16em] text-forest-800">Applies to</span>
-            <select value={c.scope} onChange={(e) => set('scope', e.target.value)} className="h-12 w-full rounded-md border border-line bg-white/80 px-4 text-[14px] text-ink outline-none transition focus:border-forest focus:shadow-[0_0_0_2px_rgba(9, 81, 67,0.18)]">
+            <select value={c.scope} onChange={(e) => set('scope', e.target.value)} className="h-12 w-full rounded-md border border-line bg-white/80 px-4 text-[14px] text-ink outline-none transition focus:border-forest focus:shadow-[0_0_0_2px_rgba(37,88,73,0.18)]">
               <option value="">Whole cart</option>
               <optgroup label="A whole category">
                 {DEPARTMENTS.map((d) => <option key={d.slug} value={`dept:${d.slug}`}>{d.name} only</option>)}
@@ -80,7 +80,7 @@ function CouponForm({ open, coupon, onClose, onSave }) {
           </label>
           <label className="block">
             <span className="mb-1.5 block text-[11.5px] font-semibold uppercase tracking-[0.16em] text-forest-800">Expiry (optional)</span>
-            <input type="date" value={c.expiry} onChange={(e) => set('expiry', e.target.value)} className="h-12 w-full rounded-md border border-line bg-white/80 px-4 text-[14px] text-ink outline-none transition focus:border-forest focus:shadow-[0_0_0_2px_rgba(9, 81, 67,0.18)]" />
+            <input type="date" value={c.expiry} onChange={(e) => set('expiry', e.target.value)} className="h-12 w-full rounded-md border border-line bg-white/80 px-4 text-[14px] text-ink outline-none transition focus:border-forest focus:shadow-[0_0_0_2px_rgba(37,88,73,0.18)]" />
           </label>
         </div>
 
@@ -92,7 +92,7 @@ function CouponForm({ open, coupon, onClose, onSave }) {
           <span className="text-[13px] font-semibold">{c.active ? 'Active — customers can use it' : 'Inactive'}</span>
         </label>
         <label className={cx('flex items-start gap-2.5', c.scope ? 'cursor-pointer' : 'opacity-50')}>
-          <input type="checkbox" disabled={!c.scope} checked={!!c.autoApply && !!c.scope} onChange={(e) => set('autoApply', e.target.checked)} className="mt-0.5 accent-[#095143]" />
+          <input type="checkbox" disabled={!c.scope} checked={!!c.autoApply && !!c.scope} onChange={(e) => set('autoApply', e.target.checked)} className="mt-0.5 accent-[#1f5c4a]" />
           <span className="text-[13px]"><span className="font-semibold">Apply automatically</span><span className="block text-[12px] text-ink-50">{c.scope ? `Checkout applies this code by itself when the cart has ${scopeName(c.scope)} items — shoppers can still type it.` : 'Pick a category above to auto-apply the code there.'}</span></span>
         </label>
 
@@ -252,7 +252,7 @@ export default function AdminDiscounts() {
           </AnimatePresence>
         </div>
       ) : (
-        <div className="rounded-[20px] border border-dashed border-[#c7ded9] bg-[#f4f7f5] px-4 py-12 text-center">
+        <div className="rounded-[20px] border border-dashed border-[#cfe0d9] bg-[#f3f6f4] px-4 py-12 text-center">
           <span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-sunk text-ink-35"><Icon name="tag" size={22} /></span>
           <p className="mt-3 text-[13px] text-ink-50">{owner === 'stores' ? 'No retailer has made its own code yet.' : 'No discount codes yet.'}</p>
           {canEdit && owner === 'nivora' && <div className="mt-4"><Button size="sm" icon="plus" onClick={() => setEditing(null)}>Create your first code</Button></div>}

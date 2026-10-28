@@ -46,7 +46,7 @@ export default function Cart() {
 
   return (
     <Container className="pb-12 pt-5">
-      <Breadcrumbs className="mb-4" items={[{ label: 'Home', to: '/' }, { label: 'Cart' }]} />
+      <Breadcrumbs className="mb-4" items={[{ label: 'Home', to: '/home' }, { label: 'Cart' }]} />
       <h1 className="text-[clamp(1.5rem,4vw,1.75rem)] font-semibold text-forest">Shopping cart</h1>
       <p className="mt-1 text-[14px] text-ink-50">
         <span className="tnum font-semibold text-ink">{totals.count}</span> item{totals.count !== 1 && 's'} ready for checkout
@@ -142,7 +142,7 @@ export default function Cart() {
             {totals.savings > 0 && <p className="mt-3"><Badge tone="ok" icon="check">You save {money(totals.savings + totals.bulk)} vs MRP</Badge></p>}
             <div className="mt-5"><Button to="/checkout" size="lg" full iconRight="arrowRight" disabled={groups.some((g) => !g.listed)}>Checkout</Button></div>
             <Link to="/shop" className="mt-3 block text-center text-[13px] font-bold text-forest transition hover:underline">Continue shopping</Link>
-            <p className="mt-5 flex items-start gap-2 rounded-[14px] bg-[#f4f7f5] p-3 text-[11.5px] leading-relaxed text-ink-50">
+            <p className="mt-5 flex items-start gap-2 rounded-[14px] bg-[#f3f6f4] p-3 text-[11.5px] leading-relaxed text-ink-50">
               <Icon name="shieldCheck" size={14} className="mt-px shrink-0" />
               GST invoice generated on checkout. 7-day returns on unused fittings.
             </p>

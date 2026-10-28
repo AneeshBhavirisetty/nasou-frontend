@@ -56,7 +56,7 @@ export default function Modal({ open, onClose, title, size = 'md', children }) {
     >
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-[#063a30]/55 backdrop-blur-md"
+        className="absolute inset-0 bg-[#1a4a3d]/55 backdrop-blur-md"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -67,7 +67,7 @@ export default function Modal({ open, onClose, title, size = 'md', children }) {
         className={cx(
           /* capped height + scrolling body, so long forms stay usable; a
              bottom sheet on phones, a centred card from sm up */
-          'relative flex max-h-[92dvh] w-full flex-col rounded-t-[22px] border border-white/80 bg-white shadow-[0_24px_48px_rgba(9, 81, 67,0.16)] sm:max-h-[calc(100dvh-2rem)] sm:rounded-[22px]',
+          'relative flex max-h-[92dvh] w-full flex-col rounded-t-[22px] border border-white/80 bg-white shadow-[0_24px_48px_rgba(37,88,73,0.16)] sm:max-h-[calc(100dvh-2rem)] sm:rounded-[22px]',
           'animate-[rise_.26s_cubic-bezier(.22,1,.36,1)_both]',
           SIZE[size]
         )}

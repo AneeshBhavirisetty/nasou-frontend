@@ -37,6 +37,7 @@ import { api } from '../../lib/api';
 const KEY = 'nasou_chat_v1';
 export const OPEN_CHAT = 'nivora:open-chat';
 const AGENT = { name: 'Nivora support', sub: 'Replies in a few minutes' };
+const TEASER_KEY = 'nivora_chat_teaser';
 const QUICK = ['Where is my order?', 'Bulk price for 500 pcs?', 'GST invoice copy', 'Is this size in stock?'];
 const SHOW = { Pending: 'placed', Processing: 'being packed', Shipped: 'on the way', Delivered: 'delivered', Cancelled: 'cancelled' };
 
@@ -193,19 +194,84 @@ function useLiveChatStore(enabled, isAdmin) {
 
 const clock = (ms) => new Date(ms).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' });
 
+/* The assistant's face, from the NasouHive reference chatbot. */
+function AssistantGlyph({ size = 22 }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M8.5 10.5a3.5 3.5 0 1 1 7 0v3.5h-7v-3.5Z" />
+      <circle cx="10.2" cy="11.2" r="0.8" fill="currentColor" stroke="none" />
+      <circle cx="13.8" cy="11.2" r="0.8" fill="currentColor" stroke="none" />
+      <path d="M9.5 15.8c.7.6 1.5.9 2.5.9s1.8-.3 2.5-.9" />
+      <path d="M12 3v2.2" />
+    </svg>
+  );
+}
+
+function Typing() {
+  return (
+    <div className="flex justify-start">
+      <span className="flex gap-1 rounded-[14px] rounded-bl-[4px] bg-white px-3.5 py-3 shadow-sm" aria-label="Typing">
+        {[0, 1, 2].map((i) => <span key={i} className="h-1.5 w-1.5 animate-bounce rounded-full bg-forest/50" style={{ animationDelay: `${i * 0.12}s` }} />)}
+      </span>
+    </div>
+  );
+}
+
+/* Quick questions — the reference's mint capability chips */
+function Chips({ items, onPick }) {
+  return (
+    <div className="no-bar flex gap-2 overflow-x-auto border-t border-[#e1e8e5] bg-chat px-3 py-2.5">
+      {items.map((q, i) => (
+        <motion.button
+          key={q}
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 + i * 0.05, duration: 0.25, ease: EASE }}
+          onClick={() => onPick(q)}
+          className="shrink-0 rounded-full bg-mist px-3 py-1.5 text-[11.5px] font-bold text-forest transition-colors hover:bg-forest hover:text-white"
+        >
+          {q}
+        </motion.button>
+      ))}
+    </div>
+  );
+}
+
+/* Opening card of an empty thread */
+function Hello({ name, children }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, ease: EASE }}
+      className="relative overflow-hidden rounded-[18px] border border-white bg-white p-4 text-[13px] leading-relaxed text-ink-70 shadow-[0_10px_26px_rgba(37,88,73,0.08)]"
+    >
+      <span className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,#1f5c4a,#7fd1ae,#e5d8c7)]" />
+      <p className="font-hero relative text-[17px] font-medium tracking-[-0.03em] text-forest">Hi{name ? ` ${name}` : ''} 👋</p>
+      <p className="relative mt-1">{children}</p>
+    </motion.div>
+  );
+}
+
 function Bubble({ m, mine }) {
   return (
-    <div className={cx('flex', mine ? 'justify-end' : 'justify-start')}>
+    <motion.div
+      initial={{ opacity: 0, y: 8, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.22, ease: EASE }}
+      className={cx('flex', mine ? 'justify-end' : 'justify-start')}
+    >
       <div
         className={cx(
           'max-w-[78%] rounded-[14px] px-3.5 py-2.5 text-[13px] leading-snug',
-          mine ? 'rounded-br-[4px] bg-forest text-white shadow-[0_8px_20px_rgba(9,81,67,0.22)]' : 'rounded-bl-[4px] border border-line-soft bg-white text-ink shadow-[0_4px_12px_rgba(9,81,67,0.06)]'
+          mine ? 'button-primary rounded-br-[4px] shadow-[0_8px_20px_rgba(37,88,73,0.22)]' : 'rounded-bl-[4px] bg-white text-ink shadow-sm'
         )}
       >
         {m.text}
-        <span className={cx('mt-1 block text-[10.5px]', mine ? 'text-white/50' : 'text-ink-35')}>{clock(m.at)}</span>
+        <span className={cx('mt-1 block text-[10.5px]', mine ? 'text-white/55' : 'text-ink-35')}>{clock(m.at)}</span>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -219,19 +285,19 @@ function Composer({ onSend, placeholder = 'Type a message…' }) {
     setV('');
   };
   return (
-    <form onSubmit={submit} className="flex items-center gap-2 border-t border-line-soft bg-chat p-3">
+    <form onSubmit={submit} className="flex items-center gap-2 border-t border-[#e1e8e5] bg-chat p-3">
       <input
         value={v}
         onChange={(e) => setV(e.target.value)}
         placeholder={placeholder}
         aria-label="Message"
-        className="h-11 min-w-0 flex-1 rounded-full border border-line bg-white px-4 text-[13px] text-ink outline-none transition placeholder:text-ink-35 focus:border-forest/50 focus:bg-white"
+        className="h-11 min-w-0 flex-1 rounded-xl border border-[#dce5e1] bg-white px-4 text-[13px] text-ink outline-none transition placeholder:text-ink-35 focus:border-forest/50 focus:shadow-[0_0_0_4px_rgba(31,92,74,0.08)]"
       />
       <button
         type="submit"
         disabled={!v.trim()}
         aria-label="Send message"
-        className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-forest text-white shadow-btn transition hover:bg-forest-800 disabled:opacity-40"
+        className="button-primary grid h-11 w-11 shrink-0 place-items-center rounded-xl shadow-btn transition hover:-translate-y-0.5 disabled:opacity-40"
       >
         <Icon name="send" size={16} />
       </button>
@@ -248,39 +314,32 @@ function CustomerChat({ store, threadId, who }) {
   useEffect(() => { endRef.current?.scrollIntoView({ block: 'end' }); }, [msgs.length]);
   useEffect(() => { if (thread?.unreadUser) store.markRead(threadId, 'user'); }, [thread?.unreadUser, threadId, store]);
 
+  const [typing, setTyping] = useState(false);
+  useEffect(() => { if (typing) endRef.current?.scrollIntoView({ block: 'end' }); }, [typing]);
   const send = (text) => {
     store.send(threadId, 'user', text, who);
     /* instant answer from live data (LIVE: the server answers in the same call) */
-    if (!store.live) setTimeout(() => store.send(threadId, 'agent', autoReply(text, who?.id), who), 900);
+    if (!store.live) {
+      setTyping(true);
+      setTimeout(() => { setTyping(false); store.send(threadId, 'agent', autoReply(text, who?.id), who); }, 900);
+    }
   };
 
   return (
     <>
       <div className="thin-bar flex-1 space-y-3 overflow-y-auto bg-chat p-4">
         {msgs.length === 0 && (
-          <div className="rounded-[18px] border border-white/80 bg-white p-4 text-[13px] leading-relaxed text-ink-70 shadow-[0_6px_16px_rgba(9, 81, 67,0.08)]">
-            <p className="font-hero text-[16px] font-semibold text-forest">Hi{who?.name && who.name !== 'Guest' ? ` ${who.name.split(' ')[0]}` : ''} 👋</p>
-            <p className="mt-1">Ask about stock, sizes, bulk pricing or an order — the quick questions below answer instantly.</p>
-          </div>
+          <Hello name={who?.name && who.name !== 'Guest' ? who.name.split(' ')[0] : ''}>
+            Ask about stock, sizes, bulk pricing or an order — the quick questions below answer instantly.
+          </Hello>
         )}
         {msgs.map((m) => <Bubble key={m.id} m={m} mine={m.from === 'user'} />)}
+        {typing && <Typing />}
         <div ref={endRef} />
       </div>
-      {msgs.length === 0 && (
-        <div className="no-bar flex gap-2 overflow-x-auto border-t border-line-soft bg-chat px-3 py-2.5">
-          {QUICK.map((q) => (
-            <button
-              key={q}
-              onClick={() => send(q)}
-              className="pill-sand shrink-0 px-3 py-1.5 text-[11.5px]"
-            >
-              {q}
-            </button>
-          ))}
-        </div>
-      )}
+      {msgs.length === 0 && <Chips items={QUICK} onPick={send} />}
       {store.live && !who?.id
-        ? <p className="border-t border-line-soft bg-chat p-3 text-center text-[12.5px] text-ink-50"><a href="/login" className="font-bold text-forest">Sign in</a> to chat with Nivora support.</p>
+        ? <p className="border-t border-[#e1e8e5] bg-chat p-3 text-center text-[12.5px] text-ink-50"><a href="/login" className="font-bold text-forest">Sign in</a> to chat with Nivora support.</p>
         : <Composer onSend={send} />}
     </>
   );
@@ -321,24 +380,15 @@ function AssistantChat({ who }) {
     <>
       <div className="thin-bar flex-1 space-y-3 overflow-y-auto bg-chat p-4">
         {msgs.length === 0 && (
-          <div className="rounded-[18px] border border-line-soft bg-white p-4 text-[13px] leading-relaxed text-ink-70 shadow-[0_4px_12px_rgba(9,81,67,0.06)]">
-            <p className="font-hero text-[16px] font-semibold text-forest">Hi {who?.name?.split(' ')[0] || 'there'} 👋</p>
-            <p className="mt-1">I’m the Nivora assistant. Ask about orders to pack, stock, sales, discounts or support — I answer from your store’s live data.</p>
-          </div>
+          <Hello name={who?.name?.split(' ')[0] || 'there'}>
+            I’m the Nivora assistant. Ask about orders to pack, stock, sales, discounts or support — I answer from your store’s live data.
+          </Hello>
         )}
         {msgs.map((m) => <Bubble key={m.id} m={m} mine={m.from === 'user'} />)}
-        {thinking && (
-          <div className="flex justify-start"><span className="flex gap-1 rounded-[14px] rounded-bl-[4px] border border-line-soft bg-white px-3.5 py-3">
-            {[0, 1, 2].map((i) => <span key={i} className="h-1.5 w-1.5 animate-bounce rounded-full bg-forest/50" style={{ animationDelay: `${i * 0.12}s` }} />)}
-          </span></div>
-        )}
+        {thinking && <Typing />}
         <div ref={endRef} />
       </div>
-      {msgs.length === 0 && (
-        <div className="no-bar flex gap-2 overflow-x-auto border-t border-line-soft bg-chat px-3 py-2.5">
-          {ASSIST_QUICK.map((q) => <button key={q} onClick={() => send(q)} className="pill-sand shrink-0 px-3 py-1.5 text-[11.5px]">{q}</button>)}
-        </div>
-      )}
+      {msgs.length === 0 && <Chips items={ASSIST_QUICK} onPick={send} />}
       <Composer onSend={send} placeholder="Ask the assistant…" />
     </>
   );
@@ -363,7 +413,7 @@ function AdminChat({ store }) {
           <button
             key={t.id}
             onClick={() => setOpenId(t.id)}
-            className="flex w-full items-center gap-3 border-b border-line-soft bg-chat px-3.5 py-3 text-left transition hover:bg-white"
+            className="flex w-full items-center gap-3 border-b border-[#e1e8e5] bg-chat px-3.5 py-3 text-left transition hover:bg-white"
           >
             <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-emerald-50 text-[12px] font-bold text-emerald-600">
               {t.name[0]}
@@ -395,7 +445,7 @@ function AdminChat({ store }) {
     <>
       <button
         onClick={() => setOpenId(null)}
-        className="flex items-center gap-1.5 border-b border-line-soft bg-chat px-3.5 py-2.5 text-[12px] font-bold text-forest transition hover:bg-white"
+        className="flex items-center gap-1.5 border-b border-[#e1e8e5] bg-chat px-3.5 py-2.5 text-[12px] font-bold text-forest transition hover:bg-white"
       >
         <Icon name="arrowLeft" size={13} /> All conversations
       </button>
@@ -416,6 +466,21 @@ export default function ChatWidget() {
   const remote = useLiveChatStore(LIVE && isAuthenticated && !(isRetailer && !isAdmin), isAdmin);
   const store = LIVE ? remote : local;
   const [open, setOpen] = useState(false);
+  /* a one-line hello beside the button, once per visit, until it's used */
+  const [teaser, setTeaser] = useState(false);
+  useEffect(() => {
+    let seen = false;
+    try { seen = sessionStorage.getItem(TEASER_KEY) === '1'; } catch { /* private mode */ }
+    if (seen || isAdmin) return undefined;
+    const on = setTimeout(() => setTeaser(true), 3500);
+    const off = setTimeout(() => setTeaser(false), 11000);
+    return () => { clearTimeout(on); clearTimeout(off); };
+  }, [isAdmin]);
+  useEffect(() => {
+    if (!open) return;
+    setTeaser(false);
+    try { sessionStorage.setItem(TEASER_KEY, '1'); } catch { /* private mode */ }
+  }, [open]);
   useEffect(() => {
     const show = () => setOpen(true);
     window.addEventListener(OPEN_CHAT, show);
@@ -441,21 +506,24 @@ export default function ChatWidget() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.96 }}
             transition={{ duration: 0.22, ease: EASE }}
-            className="fixed bottom-[calc(var(--tabbar-h,0px)+5rem)] right-4 z-[190] flex h-[min(72dvh,520px)] w-[calc(100vw-2rem)] max-w-[392px] flex-col overflow-hidden rounded-[26px] border border-white/80 bg-chat shadow-[0_30px_90px_rgba(31,59,52,0.28)] sm:bottom-[calc(var(--tabbar-h,0px)+6rem)] sm:right-6"
+            style={{ transformOrigin: 'bottom right' }}
+            className="fixed bottom-[calc(var(--tabbar-h,0px)+5rem)] right-4 z-[190] flex h-[min(72dvh,520px)] w-[calc(100vw-2rem)] max-w-[392px] flex-col overflow-hidden rounded-[22px] border border-white/70 bg-chat/95 shadow-[0_28px_80px_rgba(31,59,52,0.24)] backdrop-blur-2xl sm:bottom-[calc(var(--tabbar-h,0px)+6rem)] sm:right-6"
             role="dialog"
             aria-label={isAdmin ? 'Support inbox' : assistant ? 'Nivora AI assistant' : 'Chat with Nivora support'}
           >
-            <header className="mesh-forest relative flex items-center gap-2.5 overflow-hidden px-4 py-4 text-white">
-              <span className="field-dots-dark pointer-events-none absolute inset-0 opacity-30" />
-              <span className="relative grid h-10 w-10 place-items-center rounded-full bg-white text-forest">
-                <Icon name={isAdmin ? 'headset' : assistant ? 'bot' : 'chat'} size={16} />
+            {/* the reference's deep-ink header, mint light pooling top-right */}
+            <header className="relative flex items-center gap-2.5 overflow-hidden bg-pine bg-[radial-gradient(60%_120%_at_100%_0%,rgba(110,168,145,0.35),transparent_60%),radial-gradient(40%_90%_at_0%_100%,rgba(229,216,199,0.14),transparent_60%)] px-4 py-4 text-white">
+              <span className="field-dots-dark pointer-events-none absolute inset-0 opacity-25" />
+              <span className="relative grid h-10 w-10 place-items-center rounded-full bg-white text-forest shadow-[0_6px_18px_rgba(0,0,0,0.18)]">
+                {isAdmin ? <Icon name="headset" size={16} /> : <AssistantGlyph size={20} />}
+                <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-pine bg-[#7fd1ae]" />
               </span>
               <span className="relative min-w-0 flex-1">
                 <span className="block truncate text-[14px] font-bold">
                   {isAdmin ? 'Support inbox' : assistant ? 'Nivora AI assistant' : AGENT.name}
                 </span>
                 <span className="flex min-w-0 items-center gap-1.5 text-[11px] text-white/60">
-                  <span className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-emerald-50" />
+                  <span className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-[#7fd1ae]" />
                   <span className="truncate">{isAdmin ? `${store.threads.length} conversation${store.threads.length === 1 ? '' : 's'}` : assistant ? 'Answers from your store’s live data' : AGENT.sub}</span>
                 </span>
               </span>
@@ -485,12 +553,30 @@ export default function ChatWidget() {
         )}
       </AnimatePresence>
 
+      <AnimatePresence>
+        {teaser && !open && (
+          <motion.button
+            initial={{ opacity: 0, x: 12, scale: 0.95 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: 12, scale: 0.95 }}
+            transition={{ duration: 0.25, ease: EASE }}
+            onClick={() => setOpen(true)}
+            className="fixed bottom-[calc(var(--tabbar-h,0px)+1.35rem)] right-[4.25rem] z-[190] rounded-full rounded-br-[6px] border border-white/80 bg-white/95 px-3.5 py-2 text-[12px] font-bold text-forest shadow-[0_12px_30px_rgba(37,88,73,0.16)] backdrop-blur sm:bottom-[calc(var(--tabbar-h,0px)+2.4rem)] sm:right-[5.5rem]"
+          >
+            {assistant ? 'Ask your store assistant' : 'Need a size or price? Ask us'}
+          </motion.button>
+        )}
+      </AnimatePresence>
+
       <motion.button
         onClick={() => setOpen((v) => !v)}
+        whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.92 }}
         aria-label={open ? 'Close chat' : 'Open chat'}
-        className="fixed bottom-[calc(var(--tabbar-h,0px)+0.75rem)] right-3 z-[190] grid h-12 w-12 place-items-center sm:h-14 sm:w-14 rounded-full bg-forest text-white shadow-[0_18px_40px_rgba(9, 81, 67,0.35)] ring-4 ring-white/70 transition hover:-translate-y-0.5 hover:bg-forest-800 sm:bottom-[calc(var(--tabbar-h,0px)+1.5rem)] sm:right-6"
+        title={assistant ? 'AI Assistant' : 'Chat with us'}
+        className="button-primary fixed bottom-[calc(var(--tabbar-h,0px)+0.75rem)] right-3 z-[190] grid h-12 w-12 place-items-center rounded-full border border-white/30 shadow-glow sm:bottom-[calc(var(--tabbar-h,0px)+1.5rem)] sm:right-6 sm:h-14 sm:w-14"
       >
+        {!open && <span className="animate-halo pointer-events-none absolute inset-0 rounded-full border-2 border-forest/40" />}
         <AnimatePresence mode="wait" initial={false}>
           <motion.span
             key={open ? 'x' : 'c'}
@@ -499,11 +585,11 @@ export default function ChatWidget() {
             exit={{ opacity: 0, rotate: 45, scale: 0.7 }}
             transition={{ duration: 0.16 }}
           >
-            <Icon name={open ? 'close' : isAdmin ? 'headset' : assistant ? 'bot' : 'chat'} size={22} />
+            {open ? <Icon name="close" size={22} /> : isAdmin ? <Icon name="headset" size={22} /> : <AssistantGlyph size={24} />}
           </motion.span>
         </AnimatePresence>
         {!open && unread > 0 && (
-          <span className="tnum absolute -right-0.5 -top-0.5 grid h-5 min-w-5 place-items-center rounded-full border-2 border-forest bg-white px-1 text-[10.5px] font-bold text-forest">
+          <span className="tnum absolute -right-0.5 -top-0.5 grid h-5 min-w-5 place-items-center rounded-full border-2 border-white bg-clay px-1 text-[10.5px] font-bold text-white">
             {unread}
           </span>
         )}

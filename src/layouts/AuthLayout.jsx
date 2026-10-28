@@ -11,14 +11,14 @@ export default function AuthLayout() {
         <div className="flex w-full max-w-md flex-col items-stretch">
           <div className="mb-4 flex items-center gap-3">
             <Link
-              to="/"
+              to="/home"
               className="inline-flex items-center gap-2 text-sm font-semibold text-forest-800 transition hover:-translate-x-1 hover:text-forest"
             >
               <span aria-hidden="true">&lt;</span>
               <span>Back to shop</span>
             </Link>
           </div>
-          <Link to="/" aria-label="Nivora home" className="mx-auto mb-6">
+          <Link to="/home" aria-label="Nivora home" className="mx-auto mb-6">
             <Logo variant="stacked" size={148} />
           </Link>
           <Outlet />

@@ -7,7 +7,7 @@ import { cx } from '../lib/format';
 
    Usage:
      <Breadcrumb items={[
-       { label: 'Home', to: '/' },
+       { label: 'Home', to: '/home' },
        { label: 'PVC Fittings', to: '/shop?category=pvc-fittings' },
        { label: 'PVC Elbow' },   // last item — no `to`, shown as current
      ]} />

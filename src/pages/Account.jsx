@@ -106,7 +106,7 @@ export default function Account() {
 
   return (
     <Container className="pb-12 pt-5">
-      <Breadcrumbs className="mb-4" items={[{ label: 'Home', to: '/' }, { label: 'My profile' }]} />
+      <Breadcrumbs className="mb-4" items={[{ label: 'Home', to: '/home' }, { label: 'My profile' }]} />
 
       <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mesh-forest grain relative flex items-center gap-4 overflow-hidden rounded-[28px] p-5 text-white shadow-pop sm:p-8">
         <span className="font-hero grid h-16 w-16 shrink-0 place-items-center rounded-full bg-white text-xl font-semibold text-forest sm:h-20 sm:w-20 sm:text-2xl">{initials}</span>
@@ -173,8 +173,8 @@ export default function Account() {
               </Section>
               <Section title="Sign out" note="End this session, or every session on every device.">
                 <div className="flex flex-wrap gap-2">
-                  <Button variant="outline" icon="logout" onClick={() => { logout(); navigate('/'); }}>Sign out</Button>
-                  <Button variant="outline" icon="shield" onClick={() => { logout({ everywhere: true }); toast.success('Signed out of every device'); navigate('/'); }}>Sign out of all devices</Button>
+                  <Button variant="outline" icon="logout" onClick={() => { logout(); navigate('/home'); }}>Sign out</Button>
+                  <Button variant="outline" icon="shield" onClick={() => { logout({ everywhere: true }); toast.success('Signed out of every device'); navigate('/home'); }}>Sign out of all devices</Button>
                 </div>
               </Section>
             </>
@@ -206,7 +206,7 @@ export default function Account() {
               <Icon name="chevronRight" size={16} className="text-ink-35" />
             </Link>
           ))}
-          <button onClick={() => { logout(); navigate('/'); }} className="flex w-full items-center justify-center gap-2 rounded-[18px] border border-clay/20 bg-white p-3.5 text-[14px] font-bold text-clay-600 transition hover:bg-clay-50">
+          <button onClick={() => { logout(); navigate('/home'); }} className="flex w-full items-center justify-center gap-2 rounded-[18px] border border-clay/20 bg-white p-3.5 text-[14px] font-bold text-clay-600 transition hover:bg-clay-50">
             <Icon name="logout" size={16} /> Sign out
           </button>
         </aside>
@@ -215,7 +215,7 @@ export default function Account() {
       {editing && (
         <Modal open onClose={() => setEditing(null)} title={editing.id ? `Edit ${editing.label} address` : 'Add an address'} size="lg">
           <AddressForm value={editing} onChange={setEditing} />
-          <label className="mt-4 flex items-center gap-2 text-[13px] font-semibold text-ink-70"><input type="checkbox" checked={!!editing.isDefault} onChange={(e) => setEditing((s) => ({ ...s, isDefault: e.target.checked }))} className="accent-[#095143]" /> Use as my default address</label>
+          <label className="mt-4 flex items-center gap-2 text-[13px] font-semibold text-ink-70"><input type="checkbox" checked={!!editing.isDefault} onChange={(e) => setEditing((s) => ({ ...s, isDefault: e.target.checked }))} className="accent-[#1f5c4a]" /> Use as my default address</label>
           <div className="mt-5 flex justify-end gap-2 border-t border-line pt-4">
             <Button variant="outline" onClick={() => setEditing(null)}>Cancel</Button>
             <Button icon="check" onClick={saveAddress}>Save address</Button>
@@ -236,8 +236,8 @@ export default function Account() {
           <div className="mt-5 flex justify-end gap-2">
             <Button variant="outline" size="sm" onClick={() => setDanger(null)}>Keep my account</Button>
             {danger === 'delete'
-              ? <Button size="sm" className="!border-clay !bg-clay" disabled={typed.trim().toUpperCase() !== 'DELETE'} onClick={() => { deleteAccount(reason); toast.success('Your account was deleted'); navigate('/'); }}>Delete forever</Button>
-              : <Button size="sm" onClick={() => { deactivateAccount(reason); toast.success('Account deactivated — sign in any time to come back'); navigate('/'); }}>Deactivate</Button>}
+              ? <Button size="sm" className="!border-clay !bg-clay" disabled={typed.trim().toUpperCase() !== 'DELETE'} onClick={() => { deleteAccount(reason); toast.success('Your account was deleted'); navigate('/home'); }}>Delete forever</Button>
+              : <Button size="sm" onClick={() => { deactivateAccount(reason); toast.success('Account deactivated — sign in any time to come back'); navigate('/home'); }}>Deactivate</Button>}
           </div>
         </Modal>
       )}

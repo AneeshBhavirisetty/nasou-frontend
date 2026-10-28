@@ -50,7 +50,7 @@ export default function NotificationBell({ tone = 'light' }) {
         onClick={() => setOpen((v) => !v)}
         aria-label={unread ? `Notifications, ${unread} new` : 'Notifications'}
         aria-expanded={open}
-        className={cx('relative grid h-11 w-11 place-items-center rounded-full transition hover:-translate-y-0.5', tone === 'dark' ? 'bg-white/10 text-white' : 'border border-white/72 bg-white text-forest shadow-[0_8px_20px_rgba(9, 81, 67,0.08)]')}
+        className={cx('relative grid h-11 w-11 place-items-center rounded-full transition hover:-translate-y-0.5', tone === 'dark' ? 'bg-white/10 text-white' : 'border border-white/72 bg-white text-forest shadow-[0_8px_20px_rgba(37,88,73,0.08)]')}
       >
         <Icon name="bell" size={19} />
         {unread > 0 && (

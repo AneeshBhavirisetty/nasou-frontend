@@ -55,7 +55,7 @@ export default function DemoSwitch() {
               </div>
             ))}
             {user && (
-              <button onClick={() => { logout(); setOpen(false); navigate('/'); }} className="mt-2 flex w-full items-center gap-2 rounded-[10px] border-t border-line-soft px-2 py-2 text-[12.5px] font-bold text-clay-600 hover:bg-clay-50">
+              <button onClick={() => { logout(); setOpen(false); navigate('/home'); }} className="mt-2 flex w-full items-center gap-2 rounded-[10px] border-t border-line-soft px-2 py-2 text-[12.5px] font-bold text-clay-600 hover:bg-clay-50">
                 <Icon name="logout" size={13} /> Sign out
               </button>
             )}

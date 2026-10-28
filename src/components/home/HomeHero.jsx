@@ -52,13 +52,16 @@ export default function HomeHero({ banners, stats }) {
 
   return (
     <section
-      className="mesh-cream grain relative isolate overflow-hidden rounded-[28px] border border-white/70 shadow-[0_30px_80px_rgba(9, 81, 67,0.14)] sm:rounded-[36px]"
+      className="section-shell grain relative isolate overflow-hidden rounded-[28px] border border-sand/80 sm:rounded-[36px]"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       aria-roledescription="carousel"
       aria-label="Featured"
     >
       <div className="field-dots pointer-events-none absolute inset-0 opacity-50" />
+      {/* slow mint and sand light drifting behind the copy (the reference's hero glow) */}
+      <div className="animate-drift pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-[radial-gradient(circle,rgba(207,224,217,0.95),transparent_68%)] sm:h-[420px] sm:w-[420px]" />
+      <div className="animate-float pointer-events-none absolute -bottom-28 -left-20 h-64 w-64 rounded-full bg-[radial-gradient(circle,rgba(229,216,199,0.8),transparent_68%)]" />
       <div className="relative grid min-h-[520px] items-center gap-6 px-5 pb-8 pt-7 sm:px-10 sm:pb-12 sm:pt-10 lg:grid-cols-[1.05fr_0.95fr] lg:px-14">
         <div className="relative z-10 max-w-2xl">
           <span className="chip-glass inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.28em] text-forest">
@@ -67,21 +70,21 @@ export default function HomeHero({ banners, stats }) {
           <AnimatePresence mode="wait">
             <motion.div key={s.id} initial={{ opacity: 0, y: 22 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -14 }} transition={{ duration: 0.55, ease: EASE }}>
               <p className="section-label mt-7">{s.eyebrow}</p>
-              <h1 className="font-hero text-balance mt-4 text-[clamp(2.4rem,6.6vw,4.6rem)] font-semibold leading-[0.98] text-forest">{s.title}</h1>
+              <h1 className="font-hero text-balance mt-4 text-[clamp(2.4rem,6.6vw,4.6rem)] font-normal leading-[0.98] tracking-[-0.05em] text-forest">{s.title}</h1>
               {s.sub && <p className="mt-5 max-w-xl text-[15px] leading-7 text-ink-70 sm:text-[16px]">{s.sub}</p>}
               <div className="mt-8 flex flex-wrap items-center gap-3">
-                <Link to={s.to} className="inline-flex items-center gap-2 rounded-full bg-forest px-6 py-3.5 text-[14px] font-bold text-white shadow-btn transition hover:-translate-y-0.5 hover:bg-forest-800">
+                <Link to={s.to} className="button-primary sheen inline-flex items-center gap-2 rounded-full border px-6 py-3.5 text-[14px] font-bold shadow-btn transition hover:-translate-y-0.5">
                   {s.cta} <Icon name="arrowRight" size={16} />
                 </Link>
-                <Link to="/sell" className="pill-sand px-6 py-3.5 text-[14px]">Sell on Nivora</Link>
+                <Link to="/sell" className="pill-sand border border-white px-6 py-3.5 text-[14px]">Sell on Nivora</Link>
               </div>
             </motion.div>
           </AnimatePresence>
           <dl className="mt-9 grid max-w-lg grid-cols-3 gap-3">
             {stats.map((x) => (
-              <div key={x.label} className="rounded-[18px] border border-white/70 bg-white/55 px-3 py-3 backdrop-blur">
+              <div key={x.label} className="rounded-[18px] border border-white bg-white/70 px-3 py-3 shadow-[0_12px_30px_rgba(37,88,73,0.06)] backdrop-blur">
                 <dt className="text-[10.5px] font-bold uppercase tracking-[0.14em] text-ink-50">{x.label}</dt>
-                <dd className="font-hero tnum mt-1 text-[clamp(1.2rem,3vw,1.6rem)] font-semibold text-forest">{x.value}</dd>
+                <dd className="font-hero tnum mt-1 text-[clamp(1.2rem,3vw,1.6rem)] font-medium tracking-[-0.03em] text-forest">{x.value}</dd>
               </div>
             ))}
           </dl>

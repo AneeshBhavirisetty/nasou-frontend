@@ -50,15 +50,15 @@ export default function OrderConfirmed() {
 
         {state?.total != null && (
           <dl className="mx-auto mt-8 grid max-w-md grid-cols-3 gap-3">
-            <div className="rounded-[16px] bg-[#f4f7f5] px-4 py-3">
+            <div className="rounded-[16px] bg-[#f3f6f4] px-4 py-3">
               <dt className="text-[10.5px] font-bold uppercase tracking-[0.14em] text-ink-50">Items</dt>
               <dd className="tnum mt-1 text-[16px] font-bold text-ink">{state.count}</dd>
             </div>
-            <div className="rounded-[16px] bg-[#f4f7f5] px-4 py-3">
+            <div className="rounded-[16px] bg-[#f3f6f4] px-4 py-3">
               <dt className="text-[10.5px] font-bold uppercase tracking-[0.14em] text-ink-50">{cod ? 'Payment' : 'Paid via'}</dt>
               <dd className="mt-1 text-[16px] font-bold text-ink">{cod ? 'On delivery' : state.pay}</dd>
             </div>
-            <div className="rounded-[16px] bg-[#f4f7f5] px-4 py-3">
+            <div className="rounded-[16px] bg-[#f3f6f4] px-4 py-3">
               <dt className="text-[10.5px] font-bold uppercase tracking-[0.14em] text-ink-50">Total</dt>
               <dd className="tnum mt-1 text-[16px] font-bold text-forest">{money(state.total)}</dd>
             </div>

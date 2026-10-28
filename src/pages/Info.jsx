@@ -37,7 +37,7 @@ function ContactForm() {
       <Field label="Email or phone" required placeholder="How we reach you" />
       <label className="block">
         <span className="mb-1.5 block text-[11.5px] font-semibold uppercase tracking-[0.16em] text-forest-800">Message</span>
-        <textarea required rows={4} className="w-full rounded-md border border-line bg-white/80 px-4 py-3 text-[14px] text-ink outline-none transition placeholder:text-ink-35 focus:border-forest focus:shadow-[0_8px_25px_rgba(9, 81, 67,0.14),0_0_0_2px_rgba(9, 81, 67,0.18)]" placeholder="Tell us what you need" />
+        <textarea required rows={4} className="w-full rounded-md border border-line bg-white/80 px-4 py-3 text-[14px] text-ink outline-none transition placeholder:text-ink-35 focus:border-forest focus:shadow-[0_8px_25px_rgba(37,88,73,0.14),0_0_0_2px_rgba(37,88,73,0.18)]" placeholder="Tell us what you need" />
       </label>
       <Button type="submit" iconRight="arrowRight">Send message</Button>
     </form>
@@ -48,7 +48,7 @@ export default function Info({ slug = 'about' }) {
   const c = CONTENT[slug] ?? CONTENT.about;
   return (
     <Container className="pb-12 pt-5">
-      <Breadcrumbs className="mb-4" items={[{ label: 'Home', to: '/' }, { label: c.title }]} />
+      <Breadcrumbs className="mb-4" items={[{ label: 'Home', to: '/home' }, { label: c.title }]} />
       <div className="rounded-[24px] border border-white/80 bg-white/70 p-6 shadow-card backdrop-blur sm:p-8">
         <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-ink-50">Nivora · by Nasou Hive</p>
         <h1 className="mt-2 text-[clamp(1.8rem,5vw,2.4rem)] font-semibold text-forest">{c.title}</h1>
@@ -69,8 +69,8 @@ export default function Info({ slug = 'about' }) {
 
       {slug === 'contact' && (
         <div className="mt-5 grid gap-5 lg:grid-cols-2">
-          <div className="space-y-3 rounded-[24px] bg-ink p-6 text-[14px] text-white sm:p-7 [&_a:hover]:!text-white [&_svg]:!text-[#c7ded9]">
-            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#c7ded9]">Reach us</p>
+          <div className="space-y-3 rounded-[24px] bg-ink p-6 text-[14px] text-white sm:p-7 [&_a:hover]:!text-white [&_svg]:!text-[#cfe0d9]">
+            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#cfe0d9]">Reach us</p>
             <p className="flex items-center gap-2.5"><Icon name="phone" size={16} className="text-emerald-600" /> <a href={`tel:${brand.phone.replace(/\s/g, '')}`} className="font-semibold hover:text-emerald-600">{brand.phone}</a></p>
             <p className="flex items-center gap-2.5"><Icon name="phone" size={16} className="text-emerald-600" /> Toll-free {brand.toll}</p>
             <p className="flex items-center gap-2.5"><Icon name="mail" size={16} className="text-emerald-600" /> <a href={`mailto:${brand.email}`} className="font-semibold hover:text-emerald-600">{brand.email}</a></p>

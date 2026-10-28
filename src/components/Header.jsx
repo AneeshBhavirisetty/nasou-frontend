@@ -78,7 +78,7 @@ function SearchBox({ onDone }) {
   return (
     <div ref={boxRef} className="relative w-full">
       <form onSubmit={submit}>
-        <label className="flex min-h-12 w-full items-center gap-3 rounded-[16px] border border-white/80 bg-white px-4 shadow-[0_10px_24px_rgba(9, 81, 67,0.07)] transition focus-within:border-forest/40 focus-within:shadow-[0_12px_28px_rgba(9, 81, 67,0.12)]">
+        <label className="flex min-h-12 w-full items-center gap-3 rounded-full border border-sand/80 bg-white/90 px-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.8),0_10px_24px_rgba(37,88,73,0.07)] transition focus-within:border-forest/40 focus-within:shadow-[0_12px_28px_rgba(37,88,73,0.12)]">
           <Icon name="search" size={19} className="shrink-0 text-ink-50" />
           <input
             value={q}
@@ -212,7 +212,7 @@ function AccountMenu() {
               ))}
             </div>
             <button
-              onClick={() => { setOpen(false); logout(); navigate('/'); }}
+              onClick={() => { setOpen(false); logout(); navigate('/home'); }}
               className="flex w-full items-center gap-2.5 rounded-[12px] border-t border-line px-3 py-2.5 text-[13px] font-bold text-clay-600 transition hover:bg-clay-50"
             >
               <Icon name="logout" size={15} /> Sign out
@@ -301,7 +301,7 @@ function MegaMenu({ onClose }) {
               ))}
             </div>
           ) : (
-            <div className="mt-4 rounded-[18px] border border-dashed border-[#c7ded9] bg-[#f4f7f5] px-5 py-8 text-center">
+            <div className="mt-4 rounded-[18px] border border-dashed border-[#cfe0d9] bg-[#f3f6f4] px-5 py-8 text-center">
               <span className="mx-auto grid h-11 w-11 place-items-center rounded-full bg-white text-forest shadow-card"><Icon name={d.icon} size={18} /></span>
               <p className="mt-3 text-[14px] font-bold text-forest">{d.name} is coming soon</p>
               <p className="mt-1 text-[12.5px] text-ink-50">We are adding products to this department. Send an enquiry for anything you need now.</p>
@@ -347,7 +347,7 @@ function CountBadge({ n }) {
 /* Tab row sits on a forest band; the active tab gets a white underline. */
 const TAB = ({ isActive }) =>
   cx(
-    "relative py-3 text-[14px] font-bold transition after:absolute after:inset-x-0 after:bottom-1.5 after:h-0.5 after:rounded-full after:bg-white after:transition-transform after:content-['']",
+    "relative py-3 text-[14px] font-bold transition after:absolute after:inset-x-0 after:bottom-1.5 after:h-0.5 after:rounded-full after:bg-sand after:shadow-[0_0_12px_rgba(229,216,199,0.9)] after:transition-transform after:content-['']",
     isActive ? 'text-white after:scale-x-100' : 'text-white/75 hover:text-white after:scale-x-0'
   );
 
@@ -367,10 +367,10 @@ export default function Header() {
   const closeMega = () => { closeTimer.current = setTimeout(() => setMega(false), 120); };
 
   return (
-    <header className="sticky top-0 z-50 border-b border-white/70 bg-canvas/90 backdrop-blur-2xl">
+    <header className="sticky top-0 z-50 border-b border-sand/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.8),rgba(239,234,225,0.78))] shadow-[inset_0_-1px_0_rgba(255,255,255,0.6),0_12px_40px_rgba(37,88,73,0.08)] backdrop-blur-2xl">
       <div className="mx-auto flex min-h-[72px] max-w-[1440px] items-center gap-3 px-4 sm:min-h-[76px] sm:gap-4 sm:px-6 lg:px-8">
         <button
-          className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white text-forest shadow-[0_6px_16px_rgba(9, 81, 67,0.08)] lg:hidden"
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white text-forest ring-1 ring-sand/80 shadow-[0_6px_16px_rgba(37,88,73,0.08)] lg:hidden"
           onClick={() => setMobile((v) => !v)}
           aria-label="Menu"
           aria-expanded={mobile}
@@ -378,7 +378,7 @@ export default function Header() {
           <Icon name={mobile ? 'close' : 'menu'} size={20} />
         </button>
 
-        <Link to="/" className="shrink-0" aria-label="Nivora home">
+        <Link to="/home" className="shrink-0" aria-label="Nivora home">
           <Logo size={38} />
         </Link>
 
@@ -392,7 +392,7 @@ export default function Header() {
         <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2 md:ml-0">
           <Link
             to="/wishlist"
-            className="relative hidden h-11 w-11 place-items-center rounded-full bg-white text-forest transition hover:-translate-y-0.5 sm:grid"
+            className="relative hidden h-11 w-11 place-items-center rounded-full bg-white text-forest ring-1 ring-sand/80 shadow-[0_6px_16px_rgba(37,88,73,0.08)] transition hover:-translate-y-0.5 hover:ring-forest/25 sm:grid"
             aria-label={`Wishlist, ${wishlist.count} items`}
           >
             <Icon name="heart" size={19} />
@@ -401,7 +401,7 @@ export default function Header() {
           <NotificationBell />
           <button
             onClick={() => setOpen(true)}
-            className="relative grid h-11 w-11 place-items-center rounded-full bg-white text-forest transition hover:-translate-y-0.5"
+            className="relative grid h-11 w-11 place-items-center rounded-full bg-white text-forest ring-1 ring-sand/80 shadow-[0_6px_16px_rgba(37,88,73,0.08)] transition hover:-translate-y-0.5 hover:ring-forest/25"
             aria-label={`Cart, ${totals.count} items`}
           >
             <Icon name="cart" size={19} />
@@ -417,9 +417,9 @@ export default function Header() {
       </div>
 
       {/* tab row */}
-      <nav className="forest-band relative hidden lg:block" aria-label="Primary">
+      <nav className="forest-band band-live relative hidden shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] lg:block" aria-label="Primary">
         <div className="mx-auto flex max-w-[1440px] items-center gap-7 px-8">
-          <NavLink to="/" end className={TAB}>Home</NavLink>
+          <NavLink to="/home" end className={TAB}>Home</NavLink>
           <NavLink to="/shop" className={TAB}>Shop</NavLink>
           <button
             onMouseEnter={openMega}

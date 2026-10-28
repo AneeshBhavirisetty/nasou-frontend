@@ -23,7 +23,7 @@ export default function OtpLogin() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const explicit = params.get('redirect');
-  const redirect = explicit || '/';
+  const redirect = explicit || '/home';
 
   const [step, setStep] = useState(0);
   const [phone, setPhone] = useState('');

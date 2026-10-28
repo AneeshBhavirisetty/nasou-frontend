@@ -32,7 +32,7 @@ import { act } from '../../lib/act';
  * limited to a retailer, so that choice is for "Set a discount here" only.
  * ==========================================================================*/
 
-const SELECT = 'h-12 w-full rounded-md border border-line bg-white/80 px-4 text-[14px] text-ink outline-none transition focus:border-forest focus:shadow-[0_0_0_2px_rgba(9, 81, 67,0.18)]';
+const SELECT = 'h-12 w-full rounded-md border border-line bg-white/80 px-4 text-[14px] text-ink outline-none transition focus:border-forest focus:shadow-[0_0_0_2px_rgba(37,88,73,0.18)]';
 const LABEL = 'mb-1.5 block text-[11.5px] font-semibold uppercase tracking-[0.16em] text-forest-800';
 
 export default function CategoryDiscountDialog({ open, onClose, products, department = '', category = '', retailer = '' }) {

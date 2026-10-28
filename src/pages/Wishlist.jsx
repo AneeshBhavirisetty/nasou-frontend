@@ -106,7 +106,7 @@ export default function Wishlist() {
 
   return (
     <Container className="pb-12 pt-5">
-      <Breadcrumbs className="mb-4" items={[{ label: 'Home', to: '/' }, { label: 'Wishlist' }]} />
+      <Breadcrumbs className="mb-4" items={[{ label: 'Home', to: '/home' }, { label: 'Wishlist' }]} />
 
       <motion.section initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} className="mesh-cream grain relative overflow-hidden rounded-[28px] border border-white/70 p-6 shadow-card sm:p-9">
         <div className="field-dots pointer-events-none absolute inset-0 opacity-40" />
@@ -121,7 +121,7 @@ export default function Wishlist() {
       </motion.section>
 
       {/* high-level filters */}
-      <div className="mt-6 grid grid-cols-2 gap-2.5 rounded-[22px] border border-white/70 bg-white/55 p-3 shadow-[0_10px_30px_rgba(9,81,67,0.06)] backdrop-blur md:grid-cols-[repeat(4,minmax(0,1fr))_auto] md:items-center">
+      <div className="mt-6 grid grid-cols-2 gap-2.5 rounded-[22px] border border-white/70 bg-white/55 p-3 shadow-[0_10px_30px_rgba(37,88,73,0.06)] backdrop-blur md:grid-cols-[repeat(4,minmax(0,1fr))_auto] md:items-center">
         <Dropdown
           label="Category" icon="layers" value={dept}
           onChange={(v) => { setDept(v); setSub(''); }}
@@ -155,7 +155,7 @@ export default function Wishlist() {
       </div>
 
       {items.length === 0 ? (
-        <div className="rounded-[24px] border border-dashed border-[#c7ded9] bg-[#f6f3ed] py-16 text-center">
+        <div className="rounded-[24px] border border-dashed border-[#cfe0d9] bg-[#f6f3ed] py-16 text-center">
           <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-white text-forest shadow-card"><Icon name="heart" size={24} /></span>
           <p className="mt-4 text-[18px] font-semibold text-forest">Nothing saved yet</p>
           <p className="mt-1.5 text-[13px] text-ink-50">Tap the heart on any product to keep it here.</p>

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { Suspense, lazy, useEffect } from 'react';
 import { Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom';
 import CartDrawer from './components/CartDrawer';
 import DemoSwitch from './components/admin/RoleSwitch';
@@ -68,6 +68,9 @@ import PublicLayout from './layouts/PublicLayout';
 import ProtectedLayout from './layouts/ProtectedLayout';
 import AdminLayout from './layouts/AdminLayout';
 
+/* the NasouHive landing (3D, gsap) — its own chunk, loaded only on "/" */
+const LandingPage = lazy(() => import('./landing/LandingPage'));
+
 function ScrollToTop() {
   const { pathname } = useLocation();
   useEffect(() => {
@@ -77,15 +80,22 @@ function ScrollToTop() {
 }
 
 export default function App() {
+  const { pathname } = useLocation();
+  const onLanding = pathname === '/';
   return (
     <>
       <ScrollToTop />
       <Routes>
+        {/* The NasouHive landing page; the shop's home is /home */}
+        <Route path="/" element={<Suspense fallback={<div className="min-h-dvh bg-[#efe7da]" />}><LandingPage /></Suspense>} />
+        {/* the landing's "Get Started" buttons point at /app/auth */}
+        <Route path="/app/auth" element={<Navigate to="/join" replace />} />
+
         {/* "Who am I" between the landing page and signing in (review 6) */}
         <Route path="/join" element={<Join />} />
 
         <Route element={<PublicLayout />}>
-          <Route path="/" element={<Home />} />
+          <Route path="/home" element={<Home />} />
           <Route path="/shop" element={<Shop />} />
           <Route path="/deals" element={<Deals />} />
           <Route path="/product/:id" element={<ProductDetail />} />
@@ -161,7 +171,8 @@ export default function App() {
         </Route>
       </Routes>
       <CartDrawer />
-      <ChatWidget />
+      {/* the landing brings its own chat bubble */}
+      {!onLanding && <ChatWidget />}
       <DemoSwitch />
     </>
   );

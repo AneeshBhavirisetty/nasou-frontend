@@ -87,7 +87,7 @@ function TargetPicker({ value, onChange, products }) {
             {matches.map((p) => (
               <li key={p.id}>
                 <label className="flex cursor-pointer items-center gap-3 px-3 py-2 text-[13px] hover:bg-sunk/50">
-                  <input type="checkbox" checked={picked.has(p.sku)} onChange={() => onChange({ ...value, skus: picked.has(p.sku) ? value.skus.filter((s) => s !== p.sku) : [...value.skus, p.sku] })} className="accent-[#095143]" />
+                  <input type="checkbox" checked={picked.has(p.sku)} onChange={() => onChange({ ...value, skus: picked.has(p.sku) ? value.skus.filter((s) => s !== p.sku) : [...value.skus, p.sku] })} className="accent-[#1f5c4a]" />
                   <span className="min-w-0 flex-1 truncate"><b className="text-ink">{p.name}</b>{p.size ? ` · ${p.size}` : ''}</span>
                   <span className="font-mono text-[11px] text-ink-50">{p.sku}</span>
                 </label>
@@ -158,8 +158,8 @@ function CodeDialog({ coupon, onClose, products, prefix }) {
           <TargetPicker value={t} onChange={setT} products={products} />
         </div>
         <div className="flex flex-wrap gap-4 text-[13px] text-ink-70">
-          <label className="flex items-center gap-2"><input type="checkbox" checked={f.active} onChange={set('active')} className="accent-[#095143]" /> Active</label>
-          <label className="flex items-center gap-2"><input type="checkbox" checked={f.autoApply} onChange={set('autoApply')} className="accent-[#095143]" /> Apply by itself in the cart (no typing)</label>
+          <label className="flex items-center gap-2"><input type="checkbox" checked={f.active} onChange={set('active')} className="accent-[#1f5c4a]" /> Active</label>
+          <label className="flex items-center gap-2"><input type="checkbox" checked={f.autoApply} onChange={set('autoApply')} className="accent-[#1f5c4a]" /> Apply by itself in the cart (no typing)</label>
         </div>
         <div className="flex justify-end gap-2 border-t border-line pt-4">
           <Button variant="outline" onClick={onClose}>Cancel</Button>
@@ -236,7 +236,7 @@ function RuleDialog({ rule, onClose, products }) {
           </label>
         </div>
         <div><span className={LABEL_CLS}>Applies to</span><TargetPicker value={t} onChange={setT} products={products} /></div>
-        <label className="flex items-center gap-2 text-[13px] text-ink-70"><input type="checkbox" checked={f.active} onChange={(e) => setF((s) => ({ ...s, active: e.target.checked }))} className="accent-[#095143]" /> Active</label>
+        <label className="flex items-center gap-2 text-[13px] text-ink-70"><input type="checkbox" checked={f.active} onChange={(e) => setF((s) => ({ ...s, active: e.target.checked }))} className="accent-[#1f5c4a]" /> Active</label>
         <div className="flex justify-end gap-2 border-t border-line pt-4">
           <Button variant="outline" onClick={onClose}>Cancel</Button>
           <Button type="submit" loading={busy} icon="check">Save</Button>

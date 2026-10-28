@@ -55,7 +55,7 @@ export default function InviteAccept() {
   };
 
   return (
-    <AuthCard title={`Join ${store?.name || 'your store'}`} subtitle={`${inv.invitedBy} invited ${inv.email} as ${staffRole(inv.staffRole).label}.`} footer={<>Wrong person? <Link to="/" className="font-bold text-forest">Go to the shop</Link></>}>
+    <AuthCard title={`Join ${store?.name || 'your store'}`} subtitle={`${inv.invitedBy} invited ${inv.email} as ${staffRole(inv.staffRole).label}.`} footer={<>Wrong person? <Link to="/home" className="font-bold text-forest">Go to the shop</Link></>}>
       <form onSubmit={submit} noValidate className="space-y-4">
         <Field label="Your name" value={f.fullName} onChange={(e) => setF((s) => ({ ...s, fullName: e.target.value }))} autoComplete="name" />
         <Field label="Mobile" inputMode="numeric" value={f.phone} onChange={(e) => setF((s) => ({ ...s, phone: e.target.value.replace(/\D/g, '').slice(0, 10) }))} />

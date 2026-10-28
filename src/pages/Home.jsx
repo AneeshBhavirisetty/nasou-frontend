@@ -25,7 +25,7 @@ function Head({ label, title, note, to, cta = 'View all' }) {
     <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
       <div className="max-w-2xl">
         {label && <p className="section-label">{label}</p>}
-        <h2 className="font-hero mt-3 text-[clamp(1.6rem,3.6vw,2.4rem)] font-semibold leading-[1.05] text-forest">{title}</h2>
+        <h2 className="font-hero mt-3 text-[clamp(1.6rem,3.6vw,2.4rem)] font-normal tracking-[-0.045em] leading-[1.05] text-forest">{title}</h2>
         {note && <p className="mt-2 text-[14.5px] leading-relaxed text-ink-50">{note}</p>}
       </div>
       {to && <Link to={to} className="group inline-flex items-center gap-1.5 rounded-full border border-forest/15 bg-white/70 px-4 py-2 text-[13px] font-bold text-forest transition hover:bg-white">{cta} <Icon name="arrowRight" size={14} className="transition group-hover:translate-x-0.5" /></Link>}
@@ -118,7 +118,7 @@ export default function Home() {
         <div className="relative grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
           <div>
             <p className="text-[11px] font-extrabold uppercase tracking-[0.28em] text-emerald-100">How Nivora works</p>
-            <h2 className="font-hero mt-4 text-[clamp(1.9rem,4.5vw,3.2rem)] font-semibold leading-[1.02] text-white">One cart. Many counters. Every part tracked.</h2>
+            <h2 className="font-hero mt-4 text-[clamp(1.9rem,4.5vw,3.2rem)] font-normal tracking-[-0.045em] leading-[1.02] text-white">One cart. Many counters. Every part tracked.</h2>
             <p className="mt-4 max-w-md text-[15px] leading-7 text-emerald-100">Add fittings from different shops, pay once, and watch each seller pack and ship their part — with one GST invoice per order.</p>
             <Link to="/shop" className="mt-7 inline-flex items-center gap-2 rounded-full bg-white px-6 py-3.5 text-[14px] font-bold text-forest">Start shopping <Icon name="arrowRight" size={15} /></Link>
           </div>
@@ -203,7 +203,7 @@ export default function Home() {
       <section className="grid gap-6 lg:grid-cols-[0.8fr_1.2fr]">
         <div>
           <p className="section-label">Help &amp; support</p>
-          <h2 className="font-hero mt-3 text-[clamp(1.6rem,4vw,2.4rem)] font-semibold text-forest">Questions, answered</h2>
+          <h2 className="font-hero mt-3 text-[clamp(1.6rem,4vw,2.4rem)] font-normal tracking-[-0.045em] text-forest">Questions, answered</h2>
           <p className="mt-2 max-w-sm text-[14px] text-ink-50">Delivery, GST, returns and trade pricing — the things contractors ask first.</p>
         </div>
         <Accordion>{faqs.map((f, i) => <AccordionItem key={i} title={f.q} defaultOpen={i === 0}>{f.a}</AccordionItem>)}</Accordion>

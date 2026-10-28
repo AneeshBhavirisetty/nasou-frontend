@@ -72,7 +72,7 @@ export default function SellerBilling() {
           <p className="mt-3 text-[12.5px] text-ink-50">Your share in the last {days} days: <b className="text-ink">{money(share)}</b>. Payout history is under <Link to="/seller/payouts" className="font-bold text-forest hover:underline">Payouts</Link>.</p>
         </Panel>
         <ChartCard title="Payment methods" note={`Share of billed value, last ${days} days`} table={{ headers: ['Method', 'Billed'], rows: byMethod.map((m) => [m.label, money(m.value)]) }}>
-          {byMethod.length ? <Donut slices={byMethod} format={money} center={{ value: rupeesCompact(billed), label: 'billed' }} /> : <p className="rounded-[12px] bg-[#f4f7f5] px-3 py-10 text-center text-[12.5px] text-ink-50">No orders in this range</p>}
+          {byMethod.length ? <Donut slices={byMethod} format={money} center={{ value: rupeesCompact(billed), label: 'billed' }} /> : <p className="rounded-[12px] bg-[#f3f6f4] px-3 py-10 text-center text-[12.5px] text-ink-50">No orders in this range</p>}
         </ChartCard>
       </div>
 

@@ -100,7 +100,7 @@ export default function Orders() {
 
   return (
     <Container className="pb-12 pt-5">
-      <Breadcrumbs className="mb-4" items={[{ label: 'Home', to: '/' }, { label: 'Orders' }]} />
+      <Breadcrumbs className="mb-4" items={[{ label: 'Home', to: '/home' }, { label: 'Orders' }]} />
       {!o ? (
         <div className="mx-auto max-w-md rounded-[24px] bg-white p-10 text-center shadow-card">
           <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-sunk text-forest"><Icon name="package" size={24} /></span>

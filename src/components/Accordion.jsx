@@ -8,7 +8,7 @@ import { EASE } from '../lib/motion';
 export function AccordionItem({ title, children, defaultOpen = false, className = '' }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className={cx('rounded-md bg-[#f4f7f5] px-4 transition-colors', open && 'bg-sunk/70', className)}>
+    <div className={cx('rounded-md bg-[#f3f6f4] px-4 transition-colors', open && 'bg-sunk/70', className)}>
       <button
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}

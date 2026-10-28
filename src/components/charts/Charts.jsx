@@ -16,11 +16,11 @@ import { cx } from '../../lib/format';
  * Every chart has a hover/focus tooltip and its ChartCard a Table view.
  * ==========================================================================*/
 
-export const SERIES = ['#0f6e5e', '#0284c7', '#d97706', '#e11d48', '#7c3aed'];
-export const DONUT = ['#0f6e5e', '#0284c7', '#d97706', '#7c3aed'];
-export const OTHER = '#c7ded9';
-export const FOREST = '#095143';
-export const STATUS = { good: '#0f6e5e', warning: '#d97706', critical: '#e11d48', info: '#0284c7', neutral: '#82938d' };
+export const SERIES = ['#2f7a63', '#0284c7', '#d97706', '#e11d48', '#7c3aed'];
+export const DONUT = ['#2f7a63', '#0284c7', '#d97706', '#7c3aed'];
+export const OTHER = '#cfe0d9';
+export const FOREST = '#1f5c4a';
+export const STATUS = { good: '#2f7a63', warning: '#d97706', critical: '#e11d48', info: '#0284c7', neutral: '#82938d' };
 
 const INK = { primary: '#1f3b34', secondary: '#61756e', muted: '#82938d', grid: '#e6ecea' };
 
@@ -85,7 +85,7 @@ export function DataTable({ headers, rows }) {
   return (
     <div className="max-h-[320px] overflow-auto rounded-[12px] border border-line-soft">
       <table className="w-full min-w-[320px] border-collapse text-left text-[12.5px]">
-        <thead className="sticky top-0 bg-[#f4f7f5]">
+        <thead className="sticky top-0 bg-[#f3f6f4]">
           <tr>{headers.map((h, i) => <th key={h} className={cx('px-3 py-2 font-bold text-forest-800', i > 0 && 'text-right')}>{h}</th>)}</tr>
         </thead>
         <tbody>
@@ -275,7 +275,7 @@ export function BarList({ rows, format = (v) => v, color = FOREST, detail, max: 
           </li>
         );
       })}
-      {rows.length === 0 && <li className="rounded-[12px] bg-[#f4f7f5] px-3 py-6 text-center text-[12.5px] text-ink-50">No data in this range</li>}
+      {rows.length === 0 && <li className="rounded-[12px] bg-[#f3f6f4] px-3 py-6 text-center text-[12.5px] text-ink-50">No data in this range</li>}
     </ul>
   );
 }
@@ -345,7 +345,7 @@ export function Donut({ slices, format = (v) => v, center, size = 168, colors = 
             onPointerLeave={() => setHover(null)}
             onFocus={() => setHover(i)}
             onBlur={() => setHover(null)}
-            className={cx('flex items-center gap-2.5 rounded-[10px] px-2 py-1.5 text-[12.5px] outline-none transition', hover === i ? 'bg-[#f4f7f5]' : '', 'focus-visible:ring-2 focus-visible:ring-forest/30')}
+            className={cx('flex items-center gap-2.5 rounded-[10px] px-2 py-1.5 text-[12.5px] outline-none transition', hover === i ? 'bg-[#f3f6f4]' : '', 'focus-visible:ring-2 focus-visible:ring-forest/30')}
           >
             <span className="h-2.5 w-2.5 shrink-0 rounded-[3px]" style={{ background: s.color }} />
             <span className="min-w-0 flex-1 truncate font-semibold text-ink-70">{s.label}</span>

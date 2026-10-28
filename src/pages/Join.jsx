@@ -8,9 +8,10 @@ import { cx } from '../lib/format';
 
 /* "Who am I" — the page between the landing page and signing in (client
    review 6, from the reference repo and Vismaye's requirement). Each kind of
-   visitor goes to their own door: a retailer to Sell on Nivora (apply, or
-   seller sign-in), a customer to the usual sign-in. Manufacturers are not on
-   the marketplace yet, so their card leads to the trade desk. */
+   visitor goes to their own sign-up: a retailer to the seller application,
+   a customer to the customer sign-up. Signing in is one page for both
+   (/login sends each role to its own home). Manufacturers are not on the
+   marketplace yet, so their card leads to the trade desk. */
 
 const ROLES = [
   {
@@ -27,18 +28,18 @@ const ROLES = [
     icon: 'cube',
     title: 'Retailer',
     body: 'Source products directly from manufacturers and grow your business.',
-    to: '/sell',
-    cta: 'Get started',
-    note: 'Apply to sell, or sign in to your store',
+    to: '/sell/register',
+    cta: 'Sign up',
+    note: 'Register your store — GST, PAN and bank details',
   },
   {
     key: 'customer',
     icon: 'user',
     title: 'Customer',
     body: 'Browse and purchase products from trusted retailers.',
-    to: '/login',
-    cta: 'Get started',
-    note: 'Sign in or create an account',
+    to: '/register',
+    cta: 'Sign up',
+    note: 'Create your account with your mobile number',
   },
 ];
 
@@ -47,17 +48,17 @@ export default function Join() {
   const [params] = useSearchParams();
   const redirect = params.get('redirect');
   if (isAuthenticated) return <Navigate to={landingFor(user, redirect)} replace />;
-  const withRedirect = (to) => (redirect && to === '/login' ? `/login?redirect=${encodeURIComponent(redirect)}` : to);
+  const withRedirect = (to) => (redirect && (to === '/login' || to === '/register') ? `${to}?redirect=${encodeURIComponent(redirect)}` : to);
 
   return (
     <div className="relative min-h-dvh overflow-hidden bg-canvas text-forest">
       {/* soft light from the corners, like the reference */}
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_10%,rgba(255,255,255,0.75),transparent_35%),radial-gradient(circle_at_85%_90%,rgba(9,81,67,0.08),transparent_40%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_10%,rgba(255,255,255,0.75),transparent_35%),radial-gradient(circle_at_85%_90%,rgba(37,88,73,0.08),transparent_40%)]" />
       <div className="field-dots pointer-events-none absolute inset-0 opacity-30" />
 
       <div className="relative mx-auto flex min-h-dvh max-w-6xl flex-col px-4 py-6 sm:px-6">
         <div className="flex items-center justify-between">
-          <Link to="/" className="inline-flex items-center gap-2 text-sm font-semibold text-forest-800 transition hover:-translate-x-1 hover:text-forest">
+          <Link to="/home" className="inline-flex items-center gap-2 text-sm font-semibold text-forest-800 transition hover:-translate-x-1 hover:text-forest">
             <Icon name="arrowLeft" size={15} /> Back to shop
           </Link>
           <Link to="/" aria-label="Nivora home"><Logo size={30} /></Link>
@@ -101,7 +102,7 @@ export default function Join() {
           </div>
 
           <p className="mt-8 text-center text-[13px] text-ink-50">
-            Part of the Nivora team? <Link to="/login" className="font-bold text-forest hover:underline">Sign in here</Link>
+            Already have an account? <Link to={withRedirect('/login')} className="font-bold text-forest hover:underline">Sign in</Link>
           </p>
         </div>
       </div>
