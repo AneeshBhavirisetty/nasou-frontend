@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import ProductCard from '../components/ProductCard';
@@ -17,7 +16,7 @@ import { cx } from '../lib/format';
 
 /* Home, review 5 refresh: the reference's cream "cinematic" hero, banners
    managed in Content & settings, a category bento, the marketplace story
-   (one cart, many counters, every part tracked), verified retailers, then
+   (one cart, many counters, every part tracked), then
    the product rails. */
 
 function Head({ label, title, note, to, cta = 'View all' }) {
@@ -41,11 +40,6 @@ export default function Home() {
   const retailers = useRetailers();
   const active = banners.filter((b) => b.active);
   const sellers = retailers.filter((r) => r.status === 'approved');
-  const counts = useMemo(() => {
-    const m = new Map();
-    products.forEach((p) => m.set(p.retailerId, (m.get(p.retailerId) || 0) + 1));
-    return m;
-  }, []);
   const bento = [...featured.map((slug) => departments.find((d) => d.slug === slug)).filter(Boolean), ...departments.filter((d) => !featured.includes(d.slug))];
 
   return (
@@ -115,24 +109,6 @@ export default function Home() {
           </ol>
         </div>
       </section>
-
-      {/* verified retailers */}
-      {sellers.length > 0 && (
-        <section>
-          <Head label="Verified retailers" title="Counters you can trust." note="Every store is checked — business, GST, PAN and bank — before it can sell." to="/sell" cta="Sell on Nivora" />
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {sellers.map((r, k) => (
-              <motion.div key={r.id} initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: k * 0.06 }} className="flex items-center gap-4 rounded-[22px] bg-white p-4 shadow-card">
-                <span className="font-hero grid h-14 w-14 shrink-0 place-items-center rounded-[18px] bg-sand-50 text-[18px] font-semibold text-forest">{r.name.split(' ').slice(0, 2).map((w) => w[0]).join('')}</span>
-                <div className="min-w-0 flex-1">
-                  <p className="flex items-center gap-1.5 truncate text-[15px] font-bold text-ink">{r.name} <Icon name="shieldCheck" size={15} className="shrink-0 text-emerald-700" /></p>
-                  <p className="text-[12.5px] text-ink-50">{r.city} · {(counts.get(r.id) || 0).toLocaleString('en-IN')} products · on Nivora since {new Date(r.joinedAt).getFullYear()}</p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </section>
-      )}
 
       {/* deals */}
       {dealProducts.length > 0 && (

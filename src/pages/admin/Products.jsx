@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Icon from '../../components/Icon';
 import ProductArt from '../../components/ProductArt';
@@ -19,7 +19,7 @@ import { useRetailers } from '../../store/retailers';
 import { Badge, Button } from '../../components/ui';
 import { useToast } from '../../context/ToastContext';
 import { useAdminStore } from '../../context/AdminStore';
-import { catalogBase as CATALOG, categoryName, photoOf, suppliers } from '../../data/catalog';
+import { catalogBase as CATALOG, categoryName, photoOf, typeKey, typeLabel } from '../../data/catalog';
 import { DEPARTMENTS, DEFAULT_DEPARTMENT, departmentMeta } from '../../data/departments';
 import { money, cx, itemCode } from '../../lib/format';
 import { act } from '../../lib/act';
@@ -133,6 +133,7 @@ export function ProductsManager({ seller = false }) {
   const [dept, setDept] = useState('');
   const [cat, setCat] = useState('');
   const [brand, setBrand] = useState('');
+  const [kind, setKind] = useState('');
   const [page, setPage] = useState(1);
   const [editing, setEditing] = useState(undefined); // undefined = closed, null = new, object = edit
   const [bulk, setBulk] = useState(false);
@@ -156,10 +157,26 @@ export function ProductsManager({ seller = false }) {
       if (dept && (p.department || DEFAULT_DEPARTMENT) !== dept) return false;
       if (cat && p.category !== cat) return false;
       if (brand && p.supplier !== brand) return false;
+      if (kind && typeKey(p.kind) !== kind) return false;
       if (n && !`${p.name} ${p.sku} ${p.itemCode || ''} ${p.supplierName}`.toLowerCase().includes(n)) return false;
       return true;
     });
-  }, [rows, q, dept, cat, brand]);
+  }, [rows, q, dept, cat, brand, kind]);
+
+  /* brands and item types (the sheet's Item type, client review 7) among what the other filters leave */
+  const optionsOf = (key, label) => {
+    const m = new Map();
+    rows.forEach((p) => {
+      if (dept && (p.department || DEFAULT_DEPARTMENT) !== dept) return;
+      if (cat && p.category !== cat) return;
+      const k = key(p);
+      if (k) m.set(k, { label: label(p, k), n: (m.get(k)?.n || 0) + 1 });
+    });
+    return [...m.entries()].sort((a, b) => a[1].label.localeCompare(b[1].label));
+  };
+  const brandOptions = optionsOf((p) => p.supplier, (p) => p.supplierName || p.supplier);
+  const kindOptions = optionsOf((p) => typeKey(p.kind), (p, k) => typeLabel(k));
+  const picked = !seller && retailer && retailer !== OWN ? retailers.find((r) => r.id === retailer) : null;
 
   /* sub-categories present in the chosen department (live, includes admin-created ones) */
   const subOptions = useMemo(() => {
@@ -221,16 +238,35 @@ export function ProductsManager({ seller = false }) {
 
       {!canEdit && <ViewOnlyBanner what="the catalogue" />}
 
+      {/* the chosen retailer, then their products below (client review 7) */}
+      {picked && (
+        <div className="flex flex-wrap items-center gap-4 rounded-[22px] border border-white/80 bg-[linear-gradient(120deg,#1f3b34,#1f5c4a)] p-4 text-white shadow-card sm:p-5">
+          <Avatar name={picked.name} tone="dark" />
+          <div className="min-w-0 flex-1">
+            <p className="flex flex-wrap items-center gap-2 text-[17px] font-bold">{picked.name} <StatusPill status={picked.status} /></p>
+            <p className="text-[12.5px] text-white/70">{[picked.city, picked.contact, picked.email].filter(Boolean).join(' · ')}</p>
+          </div>
+          <div className="flex gap-2 text-center">
+            {[['Products', rows.length], ['In stock', rows.filter((p) => p.stock > 0).length], ['Out of stock', rows.filter((p) => p.stock <= 0).length]].map(([l, n]) => (
+              <span key={l} className="rounded-[14px] bg-white/10 px-3 py-2"><b className="tnum block text-[16px]">{n.toLocaleString('en-IN')}</b><span className="block text-[10.5px] font-semibold text-white/70">{l}</span></span>
+            ))}
+          </div>
+          <div className="flex gap-2">
+            <Link to={`/admin/retailers/${picked.id}`} className="rounded-full bg-white px-4 py-2 text-[12.5px] font-bold text-forest">Retailer page</Link>
+            <button type="button" onClick={() => { setRetailer(''); setPage(1); }} className="rounded-full bg-white/10 px-4 py-2 text-[12.5px] font-bold text-white hover:bg-white/20">All retailers</button>
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-wrap gap-3 rounded-[20px] border border-line bg-white/86 p-3 shadow-[0_18px_40px_rgba(37,88,73,0.08)]">
         <SearchInput placeholder="Search name, item code or brand" value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} />
         {!seller && (
           <select value={retailer} onChange={(e) => { setRetailer(e.target.value); setPage(1); }} aria-label="Retailer" className="h-12 rounded-[18px] border border-line bg-white px-4 text-[13px] font-semibold text-forest outline-none transition focus:border-forest/40">
             <option value="">All retailers</option>
-            <option value={OWN}>Nivora — own catalogue</option>
             {retailers.filter((r) => r.status !== 'pending' && r.status !== 'needs_changes').map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
           </select>
         )}
-        <select value={dept} onChange={(e) => { setDept(e.target.value); setCat(''); setPage(1); }} aria-label="Category" className="h-12 rounded-[18px] border border-line bg-white px-4 text-[13px] font-semibold text-forest outline-none transition focus:border-forest/40">
+        <select value={dept} onChange={(e) => { setDept(e.target.value); setCat(''); setKind(''); setPage(1); }} aria-label="Category" className="h-12 rounded-[18px] border border-line bg-white px-4 text-[13px] font-semibold text-forest outline-none transition focus:border-forest/40">
           <option value="">All categories</option>
           {DEPARTMENTS.map((d) => <option key={d.slug} value={d.slug}>{d.name}</option>)}
         </select>
@@ -240,7 +276,11 @@ export function ProductsManager({ seller = false }) {
         </select>
         <select value={brand} onChange={(e) => { setBrand(e.target.value); setPage(1); }} aria-label="Brand" className="h-12 rounded-[18px] border border-line bg-white px-4 text-[13px] font-semibold text-forest outline-none transition focus:border-forest/40">
           <option value="">All brands</option>
-          {suppliers.map((s) => <option key={s.slug} value={s.slug}>{s.name}</option>)}
+          {brandOptions.map(([k, o]) => <option key={k} value={k}>{o.label} ({o.n})</option>)}
+        </select>
+        <select value={kind} onChange={(e) => { setKind(e.target.value); setPage(1); }} aria-label="Item type" className="h-12 rounded-[18px] border border-line bg-white px-4 text-[13px] font-semibold text-forest outline-none transition focus:border-forest/40">
+          <option value="">All item types</option>
+          {kindOptions.map(([k, o]) => <option key={k} value={k}>{o.label} ({o.n})</option>)}
         </select>
       </div>
 

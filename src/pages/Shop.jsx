@@ -411,12 +411,8 @@ export default function Shop() {
         </button>
       </Group>
 
-      <Group title="Material" active={mats.length} defaultOpen={false}>
-        {materialList.map((m) => (
-          <Check key={m} label={m} checked={mats.includes(m)} onChange={() => toggle(mats, setMats)(m)} count={counts.mat.get(m) || 0} />
-        ))}
-      </Group>
-
+      {/* no Material group (client review 7): for plumbing it repeated the
+          PVC / CPVC / UPVC sub-categories */}
       <Group title="Brand tier" active={tiers.length} defaultOpen={false}>
         {TIERS.map((t) => (
           <Check key={t.key} label={t.label} note={t.note} checked={tiers.includes(t.key)} onChange={() => toggle(tiers, setTiers)(t.key)} count={counts.tier.get(t.key) || 0} />

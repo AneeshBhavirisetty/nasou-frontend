@@ -11,6 +11,7 @@ import { useToast } from '../context/ToastContext';
 import { categoryName, departments } from '../data/catalog';
 import { DEPARTMENTS } from '../data/departments';
 import { cx, money } from '../lib/format';
+import FilterDropdown from '../components/FilterDropdown';
 
 /* Wishlist (client review 6, customer item 12): high-level dropdowns —
    Category, then its Sub-category, Brand and Availability — instead of rows of
@@ -35,28 +36,6 @@ const SORTS = [
   ['discount', 'Biggest discount'],
   ['name', 'Name A–Z'],
 ];
-
-/* A labelled dropdown that reads as a pill, with the number of matches per option.
-   `options`: [value, label, count?, disabled?]; `groups` (optional): [[groupLabel, options]]. */
-function Dropdown({ label, icon, value, onChange, options, groups, disabled }) {
-  const all = groups ? [...options, ...groups.flatMap(([, o]) => o)] : options;
-  const opt = ([v, l, n, off]) => <option key={v || 'all'} value={v} disabled={off}>{n != null ? `${l} (${n})` : l}</option>;
-  const current = all.find((o) => o[0] === value) || options[0];
-  return (
-    <label className={cx('relative flex h-12 min-w-0 items-center gap-2.5 rounded-[16px] border bg-white pl-3.5 pr-8 transition', value ? 'border-forest shadow-btn' : 'border-line hover:border-forest/40', disabled && 'opacity-50')}>
-      <span className={cx('hidden h-7 w-7 shrink-0 place-items-center rounded-full sm:grid', value ? 'bg-forest text-white' : 'bg-sunk text-forest')}><Icon name={icon} size={14} /></span>
-      <span className="min-w-0 leading-tight">
-        <span className="block truncate text-[10px] font-bold uppercase tracking-[0.12em] text-ink-50">{label}</span>
-        <span className="block truncate text-[13.5px] font-bold text-ink">{current[1]}</span>
-      </span>
-      <select value={value} disabled={disabled} onChange={(e) => onChange(e.target.value)} className="absolute inset-0 cursor-pointer opacity-0" aria-label={label}>
-        {options.map(opt)}
-        {groups?.map(([g, o]) => <optgroup key={g} label={g}>{o.map(opt)}</optgroup>)}
-      </select>
-      <Icon name="chevronDown" size={14} className="pointer-events-none absolute right-3 text-ink-50" />
-    </label>
-  );
-}
 
 export default function Wishlist() {
   const { ids, items, toggle } = useWishlist();
@@ -137,22 +116,22 @@ export default function Wishlist() {
 
       {/* high-level filters */}
       <div className="mt-6 grid grid-cols-2 gap-2.5 rounded-[22px] border border-white/70 bg-white/55 p-3 shadow-[0_10px_30px_rgba(37,88,73,0.06)] backdrop-blur md:grid-cols-[repeat(4,minmax(0,1fr))_auto] md:items-center">
-        <Dropdown
+        <FilterDropdown
           label="Category" icon="layers" value={dept}
           onChange={(v) => { setDept(v); setSub(''); }}
           options={[['', 'All', items.length], ...DEPARTMENTS.filter((d) => deptCounts.get(d.slug) || dept === d.slug).map((d) => [d.slug, d.name, deptCounts.get(d.slug) || 0])]}
         />
-        <Dropdown
+        <FilterDropdown
           label="Sub-category" icon="grid" value={sub}
           onChange={(v) => { setSub(v); if (v && !dept) setDept(deptOfSub(v) || ''); }}
           options={[['', 'All'], ...subList]}
           groups={subGroups}
         />
-        <Dropdown
+        <FilterDropdown
           label="Brand" icon="shieldCheck" value={brand} onChange={setBrand}
           options={[['', 'All'], ...[...brandCounts.keys()].filter(Boolean).sort((a, b) => String(brandNames.get(a)).localeCompare(String(brandNames.get(b)))).map((b) => [b, brandNames.get(b) || b, brandCounts.get(b)])]}
         />
-        <Dropdown
+        <FilterDropdown
           label="Availability" icon="check" value={avail} onChange={setAvail}
           options={AVAILABILITY.map(([v, l]) => [v, l, v ? items.filter((p) => pass(p, 'avail') && AVAIL_TEST[v](p)).length : undefined])}
         />

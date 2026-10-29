@@ -8,7 +8,8 @@ import { useAdminStore } from '../../context/AdminStore';
 import { useToast } from '../../context/ToastContext';
 import { useScopedProducts } from '../../lib/useScoped';
 import { useSeller } from '../../layouts/SellerLayout';
-import { categoryName, departmentName } from '../../data/catalog';
+import { categoryName, departmentName, typeKey, typeLabel } from '../../data/catalog';
+import { DEPARTMENTS } from '../../data/departments';
 import { act } from '../../lib/act';
 import { cx, money, itemCode } from '../../lib/format';
 
@@ -44,10 +45,23 @@ const describeTarget = (c) => {
 };
 const valueText = (c) => (c.kind === 'percent' ? `${c.value}% off` : `${money(c.value)} off`);
 
-/* Picks what a discount applies to, from this store's own products. */
+/* Picks what a discount applies to, from this store's own products. Every
+   category is listed (client review 7: "only Electrical is coming") — those
+   the store sells nothing in are greyed. Picked products can be narrowed by
+   category, sub-category, brand and item type, then selected all at once. */
 function TargetPicker({ value, onChange, products }) {
   const [q, setQ] = useState('');
-  const depts = useMemo(() => [...new Set(products.map((p) => p.department))], [products]);
+  const [f, setF] = useState({ dept: '', sub: '', brand: '', kind: '' });
+  const deptCount = useMemo(() => {
+    const m = new Map();
+    products.forEach((p) => m.set(p.department, (m.get(p.department) || 0) + 1));
+    return m;
+  }, [products]);
+  const countBy = (list, key) => {
+    const m = new Map();
+    list.forEach((p) => { const k = key(p); if (k) m.set(k, (m.get(k) || 0) + 1); });
+    return [...m.entries()].sort((a, b) => b[1] - a[1]);
+  };
   const subs = useMemo(() => {
     const m = new Map();
     products.forEach((p) => m.set(p.category, (m.get(p.category) || 0) + 1));
@@ -55,7 +69,12 @@ function TargetPicker({ value, onChange, products }) {
   }, [products]);
   const picked = new Set(value.skus);
   const needle = q.trim().toLowerCase();
-  const matches = products.filter((p) => !needle || `${p.name} ${p.sku} ${p.itemCode || ''} ${p.size || ''}`.toLowerCase().includes(needle)).slice(0, 40);
+  const inDept = products.filter((p) => !f.dept || p.department === f.dept);
+  const narrowed = inDept.filter((p) => (!f.sub || p.category === f.sub) && (!f.brand || p.supplier === f.brand) && (!f.kind || typeKey(p.kind) === f.kind)
+    && (!needle || `${p.name} ${p.sku} ${p.itemCode || ''} ${p.size || ''}`.toLowerCase().includes(needle)));
+  const matches = narrowed.slice(0, 60);
+  const pickAll = () => onChange({ ...value, skus: [...new Set([...value.skus, ...narrowed.map((p) => p.sku)])] });
+  const SMALL = 'h-10 min-w-0 rounded-[12px] border border-line bg-white px-2.5 text-[12.5px] font-semibold text-ink outline-none focus:border-forest';
   const count = value.target === 'all' ? products.length
     : value.target === 'dept' ? products.filter((p) => p.department === value.dept).length
       : value.target === 'sub' ? products.filter((p) => p.category === value.sub).length
@@ -71,7 +90,7 @@ function TargetPicker({ value, onChange, products }) {
       {value.target === 'dept' && (
         <select value={value.dept} onChange={(e) => onChange({ ...value, dept: e.target.value })} className={SELECT_CLS}>
           <option value="">Choose a category…</option>
-          {depts.map((d) => <option key={d} value={d}>{departmentName(d)}</option>)}
+          {DEPARTMENTS.map((d) => <option key={d.slug} value={d.slug} disabled={!deptCount.get(d.slug)}>{d.name} ({deptCount.get(d.slug) || 0})</option>)}
         </select>
       )}
       {value.target === 'sub' && (
@@ -83,6 +102,31 @@ function TargetPicker({ value, onChange, products }) {
       {value.target === 'picked' && (
         <div className="rounded-[14px] border border-line">
           <label className="flex h-11 items-center gap-2 border-b border-line px-3"><Icon name="search" size={14} className="text-ink-50" /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search your products" className="min-w-0 flex-1 bg-transparent text-[13.5px] outline-none" /></label>
+          <div className="grid grid-cols-2 gap-2 border-b border-line p-2 sm:grid-cols-4">
+            <select value={f.dept} onChange={(e) => setF({ dept: e.target.value, sub: '', brand: f.brand, kind: '' })} className={SMALL} aria-label="Category">
+              <option value="">All categories</option>
+              {DEPARTMENTS.map((d) => <option key={d.slug} value={d.slug} disabled={!deptCount.get(d.slug)}>{d.name} ({deptCount.get(d.slug) || 0})</option>)}
+            </select>
+            <select value={f.sub} onChange={(e) => setF({ ...f, sub: e.target.value })} className={SMALL} aria-label="Sub-category">
+              <option value="">All sub-categories</option>
+              {countBy(inDept, (p) => p.category).map(([k, n]) => <option key={k} value={k}>{categoryName(k)} ({n})</option>)}
+            </select>
+            <select value={f.brand} onChange={(e) => setF({ ...f, brand: e.target.value })} className={SMALL} aria-label="Brand">
+              <option value="">All brands</option>
+              {countBy(inDept, (p) => p.supplier).map(([k, n]) => <option key={k} value={k}>{inDept.find((p) => p.supplier === k)?.supplierName || k} ({n})</option>)}
+            </select>
+            <select value={f.kind} onChange={(e) => setF({ ...f, kind: e.target.value })} className={SMALL} aria-label="Item type">
+              <option value="">All item types</option>
+              {countBy(inDept, (p) => typeKey(p.kind)).map(([k, n]) => <option key={k} value={k}>{typeLabel(k)} ({n})</option>)}
+            </select>
+          </div>
+          <div className="flex items-center justify-between gap-2 border-b border-line px-3 py-2 text-[12px]">
+            <span className="text-ink-50">{narrowed.length.toLocaleString('en-IN')} shown · {picked.size} picked</span>
+            <span className="flex gap-3">
+              <button type="button" onClick={pickAll} disabled={!narrowed.length} className="font-bold text-forest hover:underline disabled:opacity-40">Select all shown</button>
+              {picked.size > 0 && <button type="button" onClick={() => onChange({ ...value, skus: [] })} className="font-bold text-clay-600 hover:underline">Clear</button>}
+            </span>
+          </div>
           <ul className="max-h-[220px] divide-y divide-line-soft overflow-y-auto">
             {matches.map((p) => (
               <li key={p.id}>
