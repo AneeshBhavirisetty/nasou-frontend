@@ -34,9 +34,10 @@
   --color-pine: #1f3b34;
   --color-pine-600: #255849;
 
-  /* One surface for the whole chat panel — header excepted (review 6:
-     "chatbot internal background mismatch"); the reference's #F7F9F8. */
-  --color-chat: #f7f9f8;
+  /* One surface for the whole chat panel — header excepted — and it is the
+     website's own background (review 6: "chatbot internal background
+     mismatch"; client, 29 Oct: same colour as the site). */
+  --color-chat: #efeae1;
 
   /* Brand — the reference's forest #1F5C4A and its softer partner #255849;
      the rest of the ramp is darker or lighter steps of those. */

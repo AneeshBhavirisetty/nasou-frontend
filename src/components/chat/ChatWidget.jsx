@@ -221,7 +221,7 @@ function Typing() {
 /* Quick questions — the reference's mint capability chips */
 function Chips({ items, onPick }) {
   return (
-    <div className="no-bar flex gap-2 overflow-x-auto border-t border-[#e1e8e5] bg-chat px-3 py-2.5">
+    <div className="no-bar flex gap-2 overflow-x-auto border-t border-line bg-chat px-3 py-2.5">
       {items.map((q, i) => (
         <motion.button
           key={q}
@@ -285,13 +285,13 @@ function Composer({ onSend, placeholder = 'Type a message…' }) {
     setV('');
   };
   return (
-    <form onSubmit={submit} className="flex items-center gap-2 border-t border-[#e1e8e5] bg-chat p-3">
+    <form onSubmit={submit} className="flex items-center gap-2 border-t border-line bg-chat p-3">
       <input
         value={v}
         onChange={(e) => setV(e.target.value)}
         placeholder={placeholder}
         aria-label="Message"
-        className="h-11 min-w-0 flex-1 rounded-xl border border-[#dce5e1] bg-white px-4 text-[13px] text-ink outline-none transition placeholder:text-ink-35 focus:border-forest/50 focus:shadow-[0_0_0_4px_rgba(31,92,74,0.08)]"
+        className="h-11 min-w-0 flex-1 rounded-xl border border-line bg-white px-4 text-[13px] text-ink outline-none transition placeholder:text-ink-35 focus:border-forest/50 focus:shadow-[0_0_0_4px_rgba(31,92,74,0.08)]"
       />
       <button
         type="submit"
@@ -339,7 +339,7 @@ function CustomerChat({ store, threadId, who }) {
       </div>
       {msgs.length === 0 && <Chips items={QUICK} onPick={send} />}
       {store.live && !who?.id
-        ? <p className="border-t border-[#e1e8e5] bg-chat p-3 text-center text-[12.5px] text-ink-50"><a href="/login" className="font-bold text-forest">Sign in</a> to chat with Nivora support.</p>
+        ? <p className="border-t border-line bg-chat p-3 text-center text-[12.5px] text-ink-50"><a href="/login" className="font-bold text-forest">Sign in</a> to chat with Nivora support.</p>
         : <Composer onSend={send} />}
     </>
   );
@@ -413,7 +413,7 @@ function AdminChat({ store }) {
           <button
             key={t.id}
             onClick={() => setOpenId(t.id)}
-            className="flex w-full items-center gap-3 border-b border-[#e1e8e5] bg-chat px-3.5 py-3 text-left transition hover:bg-white"
+            className="flex w-full items-center gap-3 border-b border-line bg-chat px-3.5 py-3 text-left transition hover:bg-white"
           >
             <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-emerald-50 text-[12px] font-bold text-emerald-600">
               {t.name[0]}
@@ -445,7 +445,7 @@ function AdminChat({ store }) {
     <>
       <button
         onClick={() => setOpenId(null)}
-        className="flex items-center gap-1.5 border-b border-[#e1e8e5] bg-chat px-3.5 py-2.5 text-[12px] font-bold text-forest transition hover:bg-white"
+        className="flex items-center gap-1.5 border-b border-line bg-chat px-3.5 py-2.5 text-[12px] font-bold text-forest transition hover:bg-white"
       >
         <Icon name="arrowLeft" size={13} /> All conversations
       </button>
