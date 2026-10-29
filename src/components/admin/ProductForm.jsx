@@ -283,7 +283,7 @@ export default function ProductForm({ open, product, onClose, onSave, retailerId
               </label>
               <label className="block">
                 <span className={LABEL}>Item name</span>
-                <input list="pf-names" value={f.name} onChange={(e) => set('name')(e.target.value)} placeholder={names[0] ? `e.g. ${names[0]}` : 'e.g. cPVC Elbow'} className={SELECT} />
+                <input list="pf-names" value={f.name} onChange={(e) => set('name')(e.target.value)} placeholder={names[0] ? `e.g. ${names[0]}` : 'e.g. CPVC Elbow'} className={SELECT} />
                 {list('pf-names', names)}
               </label>
               <label className="block">

@@ -3,19 +3,19 @@
  * type in the catalog. No external images, crisp at any size, consistent
  * across all 1,472 products. Swap for real photos later without a data change.
  *
- *   <ProductArt kind="elbow" material="cPVC" />
+ *   <ProductArt kind="elbow" material="CPVC" />
  * ==========================================================================*/
 
 /* All three read as cream — differentiated by warmth, never by grey/blue. */
 const MATERIAL = {
   PVC: { body: '#fbf6ea', shade: '#e6dcc5', edge: '#c2b699', ring: '#d9cdb2' },
-  uPVC: { body: '#f4f4e6', shade: '#dbdcc2', edge: '#b3b593', ring: '#cbcdae' },
-  cPVC: { body: '#f9f0e0', shade: '#e8d7ba', edge: '#c9ae86', ring: '#dec9a6' },
+  UPVC: { body: '#f4f4e6', shade: '#dbdcc2', edge: '#b3b593', ring: '#cbcdae' },
+  CPVC: { body: '#f9f0e0', shade: '#e8d7ba', edge: '#c9ae86', ring: '#dec9a6' },
   Brass: { body: '#e7cf9c', shade: '#caa86a', edge: '#a5843f', ring: '#d4b477' },
 };
 
 function palette(material) {
-  return MATERIAL[material] || MATERIAL.PVC;
+  return MATERIAL[material] || MATERIAL[String(material || '').toUpperCase()] || MATERIAL.PVC;
 }
 
 /* Shared defs: soft body gradient + drop shadow for a "studio render" feel. */

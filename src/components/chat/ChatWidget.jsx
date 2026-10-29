@@ -83,7 +83,7 @@ function seedThreads() {
     {
       id: 'demo-ravi', name: 'Ravi Kumar', role: 'CUSTOMER', unreadAdmin: 1, unreadUser: 0, lastAt: t - 1000 * 60 * 8,
       messages: [
-        { id: 'm1', from: 'user', text: 'Do you have 2 inch cPVC elbows in stock?', at: t - 1000 * 60 * 9 },
+        { id: 'm1', from: 'user', text: 'Do you have 2 inch CPVC elbows in stock?', at: t - 1000 * 60 * 9 },
         { id: 'm2', from: 'agent', text: 'Checking that for you now.', at: t - 1000 * 60 * 8.5 },
         { id: 'm3', from: 'user', text: 'Need about 120 pieces by Friday.', at: t - 1000 * 60 * 8 },
       ],

@@ -112,7 +112,7 @@ function rebuild() {
   }
   categories = [...baseSubs, ...extra].map((c) => ({ ...c, count: products.filter((p) => p.category === c.slug).length }));
   /* Shoppers only see sub-categories that have products — the master sheet's
-     own (PVC, cPVC, uPVC under Plumbing…), not empty legacy ones (review 6). */
+     own (PVC, CPVC, UPVC under Plumbing…), not empty legacy ones (review 6). */
   departments = DEPARTMENTS.map((d) => ({
     ...d,
     subs: categories.filter((c) => c.department === d.slug && c.count > 0).sort((a, b) => b.count - a.count),
@@ -164,7 +164,7 @@ export function typeKey(kind) {
   return k;
 }
 export const typeLabel = (key) => key.replace(/\b([a-z])/g, (m) => m.toUpperCase())
-  .replace(/\b(Pvc|Upvc|Cpvc|Mta|Fta|Led|Mcb|Rccb)\b/g, (m) => ({ Pvc: 'PVC', Upvc: 'uPVC', Cpvc: 'cPVC' }[m] || m.toUpperCase()));
+  .replace(/\b(Pvc|Upvc|Cpvc|Mta|Fta|Led|Mcb|Rccb)\b/g, (m) => ({ Pvc: 'PVC', Upvc: 'UPVC', Cpvc: 'CPVC' }[m] || m.toUpperCase()));
 function masterSubs() {
   try { return settingsStore.get().catalog?.subs || []; } catch { return []; }
 }

@@ -10,7 +10,7 @@
  * ==========================================================================*/
 
 export const DEPARTMENTS = [
-  { slug: 'plumbing', name: 'Plumbing', icon: 'droplet', blurb: 'PVC, cPVC and uPVC pipes, fittings and valves' },
+  { slug: 'plumbing', name: 'Plumbing', icon: 'droplet', blurb: 'PVC, CPVC and UPVC pipes, fittings and valves' },
   { slug: 'electrical', name: 'Electrical', icon: 'bolt', blurb: 'Wires, switches, sockets, protection and lighting' },
   { slug: 'interior-designing', name: 'Interior Designing', icon: 'roller', blurb: 'Paints, home interior and decor improvement' },
   { slug: 'hardware', name: 'Hardware', icon: 'hammer', blurb: 'Fasteners, tools and fabrication supplies' },

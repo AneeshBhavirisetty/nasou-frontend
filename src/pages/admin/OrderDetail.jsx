@@ -136,7 +136,7 @@ export default function AdminOrderDetail() {
           <Panel title="Internal notes" note="Team only — never shown to the customer or seller.">
             {canEdit && (
               <form onSubmit={(e) => { e.preventDefault(); if (note.trim().length < 3) return; act(toast, () => addOrderNote(o.id, note.trim(), by)); setNote(''); }} className="mb-3 space-y-2">
-                <textarea value={note} onChange={(e) => setNote(e.target.value)} className={TEXTAREA_CLS} placeholder="e.g. Called customer — happy to wait for the cPVC part." />
+                <textarea value={note} onChange={(e) => setNote(e.target.value)} className={TEXTAREA_CLS} placeholder="e.g. Called customer — happy to wait for the CPVC part." />
                 <Button size="sm" type="submit" icon="plus">Add note</Button>
               </form>
             )}

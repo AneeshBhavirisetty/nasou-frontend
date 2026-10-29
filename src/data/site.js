@@ -27,8 +27,8 @@ export const announcements = [
 export const primaryNav = [
   { label: 'Shop all', to: '/shop' },
   { label: 'PVC fittings', to: '/shop?category=pvc-fittings' },
-  { label: 'cPVC fittings', to: '/shop?category=cpvc-fittings' },
-  { label: 'uPVC fittings', to: '/shop?category=upvc-fittings' },
+  { label: 'CPVC fittings', to: '/shop?category=cpvc-fittings' },
+  { label: 'UPVC fittings', to: '/shop?category=upvc-fittings' },
   { label: 'Pipes', to: '/shop?category=pvc-pipes' },
   { label: 'Valves & accessories', to: '/shop?category=plumbing-accessories' },
 ];
@@ -43,7 +43,7 @@ export const valueProps = [
 export const testimonials = [
   { quote: 'I stopped calling three shops for one elbow. The size and supplier filters find the exact fitting in seconds.', name: 'Ravi Kumar', role: 'Plumbing contractor, Kukatpally' },
   { quote: 'Prices match the invoice every time. For a site running 40 flats that predictability is worth more than a discount.', name: 'S. Anjaneyulu', role: 'Site supervisor, My Home Group' },
-  { quote: 'Ordered cPVC fittings at 11am, they were on site by the evening. First time an online supplier actually did that.', name: 'Farhan Sheikh', role: 'MEP subcontractor, Gachibowli' },
+  { quote: 'Ordered CPVC fittings at 11am, they were on site by the evening. First time an online supplier actually did that.', name: 'Farhan Sheikh', role: 'MEP subcontractor, Gachibowli' },
 ];
 
 export const faqs = [
@@ -60,8 +60,8 @@ export const footerColumns = [
     links: [
       { label: 'All products', to: '/shop' },
       { label: 'PVC fittings', to: '/shop?category=pvc-fittings' },
-      { label: 'cPVC fittings', to: '/shop?category=cpvc-fittings' },
-      { label: 'uPVC fittings', to: '/shop?category=upvc-fittings' },
+      { label: 'CPVC fittings', to: '/shop?category=cpvc-fittings' },
+      { label: 'UPVC fittings', to: '/shop?category=upvc-fittings' },
       { label: 'Pipes', to: '/shop?category=pvc-pipes' },
     ],
   },
