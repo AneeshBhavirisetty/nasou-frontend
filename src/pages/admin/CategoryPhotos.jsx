@@ -102,7 +102,7 @@ export default function CategoryPhotos() {
       <AdminPageHead title="Category photos" note="The photo on each card of the home page’s “Everything a site needs” section." />
       {!can('sitePhotos', 'edit') && <ViewOnlyBanner what="category photos" />}
       {!LIVE && <p className="rounded-[14px] bg-amber-50 px-3 py-2 text-[12.5px] font-semibold text-amber">Uploading needs the live API (not available in the browser demo).</p>}
-      <Panel title="How it works" note="Upload a landscape photo, ideally 5:4 and at least 1200 × 960 px (JPEG, PNG or WebP, up to 5 MB). Every card shows its photo edge to edge in the same frame (5:4 on computers, 4:5 on phones), so keep the subject in the middle. Each photo is stored in Azure Blob Storage at the path under it — replacing that file there works too (cards update within a few minutes). Without an upload, a card uses a photo from the category’s products." />
+      <Panel title="How it works" note="Upload a landscape photo, ideally 5:4 and at least 1200 × 960 px (JPEG, PNG or WebP, up to 5 MB). Every card shows its photo edge to edge in the same frame (5:4 on computers, square on phones), so keep the subject in the middle. Each photo is stored in Azure Blob Storage at the path under it — replacing that file there works too (cards update within a few minutes). Without an upload, a card uses a photo from the category’s products." />
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {departments.map((d, i) => <PhotoRow key={d.slug} dept={d} index={i} entry={photos[d.slug]} canEdit={canEdit} />)}
       </div>

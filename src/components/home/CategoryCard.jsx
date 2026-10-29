@@ -6,7 +6,7 @@ import { EASE } from '../../lib/motion';
 
 /* One card of the home page's "Everything a site needs" section (client,
    29 Oct 2026: "images are unequal", then "too simple — make it modern").
-   Every card has the same shape and the photo fills it edge to edge — the
+   Every card has the same shape (square on phones, 5:4 above) and the photo fills it edge to edge — the
    one uploaded in Super Admin › Category photos, or the automatic one from the
    category's products. The name sits on frosted glass over a forest fade;
    on hover (larger screens) the top sub-categories slide up as chips, the
@@ -26,7 +26,7 @@ export default function CategoryCard({ dept, photo, to, index = 0, className = '
     >
       <Box
         {...(to ? { to } : {})}
-        className="sheen group relative block aspect-[4/5] overflow-hidden rounded-[26px] bg-pine shadow-card ring-1 ring-white/60 transition duration-500 hover:-translate-y-1.5 hover:shadow-[0_28px_60px_rgba(31,59,52,0.28)] sm:aspect-[5/4]"
+        className="sheen group relative block aspect-square overflow-hidden rounded-[26px] bg-pine shadow-card ring-1 ring-white/60 transition duration-500 hover:-translate-y-1.5 hover:shadow-[0_28px_60px_rgba(31,59,52,0.28)] sm:aspect-[5/4]"
       >
         {photo ? (
           <img
