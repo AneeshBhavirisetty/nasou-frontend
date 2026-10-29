@@ -28,6 +28,7 @@ export const ADMIN_MODULES = [
   { key: 'refunds', label: 'Refunds', note: 'Start, approve and process refunds' },
   { key: 'audit', label: 'Audit logs', note: 'Read-only trail of every action' },
   { key: 'content', label: 'Content and settings', note: 'Banners, tax, shipping, message templates' },
+  { key: 'sitePhotos', label: 'Category photos', note: 'Photos on the home page category cards' },
   { key: 'team', label: 'Admin users and roles', note: 'Team members, role presets, 2FA' },
 ];
 
@@ -56,6 +57,8 @@ const MATRIX = {
   dashboards: row('view', 'view', 'view'),
   audit: row('view', 'view', 'view'),
   content: row('edit', 'edit', 'none'),
+  /* client, 29 Oct 2026: the whole team, Management included, keeps these photos current */
+  sitePhotos: row('edit', 'edit', 'edit'),
   team: row('edit', 'none', 'none'),
 };
 

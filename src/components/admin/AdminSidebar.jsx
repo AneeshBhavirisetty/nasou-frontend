@@ -31,6 +31,7 @@ export const ADMIN_NAV = [
   { group: 'Commerce', to: '/admin/products', label: 'Products', short: 'Products', icon: 'package', module: 'catalog' },
   { group: 'Commerce', to: '/admin/catalog', label: 'Master catalog', short: 'Catalog', icon: 'layers', module: 'catalog', exact: true, off: true },
   { group: 'Commerce', to: '/admin/discounts', label: 'Discounts', short: 'Discounts', icon: 'tag', module: 'catalog' },
+  { group: 'Commerce', to: '/admin/category-photos', label: 'Category photos', short: 'Photos', icon: 'image', module: 'sitePhotos' },
   { group: 'Finance', to: '/admin/payouts', label: 'Payouts', short: 'Payouts', icon: 'rupee', module: 'payouts' },
   { group: 'Finance', to: '/admin/reconciliation', label: 'Reconciliation', short: 'Recon', icon: 'check', module: 'payouts' },
   { group: 'Finance', to: '/admin/billing', label: 'Billing & payments', short: 'Billing', icon: 'card', module: 'payouts' },

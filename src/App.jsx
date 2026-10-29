@@ -61,6 +61,7 @@ import AdminProducts from './pages/admin/Products';
 import AdminUsers from './pages/admin/Users';
 import AdminOrders from './pages/admin/Orders';
 import AdminDiscounts from './pages/admin/Discounts';
+import AdminCategoryPhotos from './pages/admin/CategoryPhotos';
 import AdminBilling from './pages/admin/Billing';
 import AdminReports from './pages/admin/Reports';
 import AuthLayout from './layouts/AuthLayout';
@@ -149,6 +150,7 @@ export default function App() {
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin/products" element={<AdminProducts />} />
           <Route path="/admin/discounts" element={<AdminDiscounts />} />
+          <Route path="/admin/category-photos" element={<AdminCategoryPhotos />} />
           <Route path="/admin/users" element={<AdminUsers />} />
           <Route path="/admin/orders" element={<AdminOrders />} />
           <Route path="/admin/orders/:id" element={<AdminOrderDetail />} />

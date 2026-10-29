@@ -4,6 +4,7 @@ import { defaultPresets } from '../lib/access';
 import { DEFAULT_COMMISSION, DEFAULT_PLANS } from '../lib/marketplace';
 import { LIVE } from '../lib/config';
 import { put, refresh } from '../lib/live';
+import { API_ORIGIN } from '../lib/api';
 
 /* ============================================================================
  * Platform settings the Super Admin owns (requirements 3, 10, 16, 18, 24–27)
@@ -58,6 +59,8 @@ function seed() {
       { key: 'payout_paid', channel: 'email', subject: 'Payout {{cycle}} sent', body: '{{amount}} has been paid to your bank. UTR {{utr}}.' },
     ],
     catalog: { subs: [], attributes: ATTRS },
+    /* { [departmentSlug]: { path, url, updatedAt, updatedBy } } — Super Admin › Category photos */
+    categoryPhotos: {},
   };
 }
 
@@ -66,6 +69,14 @@ function seed() {
 export const settingsStore = createStore('nivora_settings_v1', seed, seed);
 export const useSettings = (sel = (s) => s) => useStore(settingsStore, sel);
 export const getSettings = () => settingsStore.get();
+
+/* The photo uploaded for a category (Super Admin › Category photos), or null.
+   Its url is relative to the API, which serves it from blob storage. */
+export function categoryPhotoUrl(photos, slug) {
+  const url = photos?.[slug]?.url;
+  if (!url) return null;
+  return url.startsWith('/') ? API_ORIGIN + url : url;
+}
 
 /* update one top-level section, with an audit entry */
 export function saveSetting(section, value, summary) {
