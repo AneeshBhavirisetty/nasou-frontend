@@ -9,8 +9,9 @@ import { EASE } from '../../lib/motion';
    Every card has the same shape and the photo fills it edge to edge — the
    one uploaded in Super Admin › Category photos, or the automatic one from the
    category's products. The name sits on frosted glass over a forest fade;
-   on larger screens the top sub-categories show as chips. Hover: the photo
-   eases in, light sweeps across, the arrow turns.
+   on hover (larger screens) the top sub-categories slide up as chips, the
+   photo eases in, light sweeps across and the arrow turns. The panel stays
+   compact so the photo, nudged up, is seen.
    `to` makes it a link; without it (the admin preview) it is a plain card. */
 export default function CategoryCard({ dept, photo, to, index = 0, className = '' }) {
   const Box = to ? Link : 'div';
@@ -32,14 +33,14 @@ export default function CategoryCard({ dept, photo, to, index = 0, className = '
             src={photo}
             alt=""
             loading="lazy"
-            className="absolute inset-0 h-full w-full bg-white object-cover transition duration-[1200ms] ease-out group-hover:scale-110"
+            className="absolute inset-0 h-full w-full bg-white object-cover object-[50%_30%] transition duration-[1200ms] ease-out group-hover:scale-110"
           />
         ) : (
           <span className="mesh-forest absolute inset-0 grid place-items-center text-white/20"><Icon name={dept.icon} size={96} strokeWidth={0.8} /></span>
         )}
 
         {/* the fade the text sits on */}
-        <span className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(31,59,52,0)_38%,rgba(31,59,52,0.55)_68%,rgba(23,52,44,0.92)_100%)]" />
+        <span className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(31,59,52,0)_58%,rgba(31,59,52,0.45)_78%,rgba(23,52,44,0.9)_100%)]" />
 
         {/* number and icon */}
         <span className="absolute left-3 top-3 rounded-full bg-white/85 px-2.5 py-1 font-mono text-[10.5px] font-bold tracking-[0.12em] text-forest shadow-card backdrop-blur sm:left-4 sm:top-4">
@@ -50,10 +51,10 @@ export default function CategoryCard({ dept, photo, to, index = 0, className = '
         </span>
 
         {/* name on frosted glass */}
-        <span className="absolute inset-x-2.5 bottom-2.5 rounded-[18px] border border-white/20 bg-white/10 p-3 backdrop-blur-md sm:inset-x-3.5 sm:bottom-3.5 sm:p-4">
+        <span className="absolute inset-x-2.5 bottom-2.5 rounded-[18px] border border-white/25 bg-[rgba(23,52,44,0.38)] px-3 py-2.5 backdrop-blur-md sm:inset-x-3.5 sm:bottom-3.5 sm:px-4 sm:py-3">
           <span className="flex items-end gap-2">
             <span className="min-w-0 flex-1">
-              <span className="font-hero block text-[15px] font-medium leading-tight tracking-[-0.02em] text-white sm:text-[20px]">{dept.name}</span>
+              <span className="font-hero block text-[14px] font-medium leading-tight tracking-[-0.02em] text-white sm:text-[19px]">{dept.name}</span>
               <span className="mt-0.5 block text-[11.5px] font-semibold text-white/75 sm:text-[12.5px]">
                 {dept.count ? `${dept.count.toLocaleString('en-IN')} items` : 'Coming soon'}
               </span>
@@ -63,7 +64,7 @@ export default function CategoryCard({ dept, photo, to, index = 0, className = '
             </span>
           </span>
           {subs.length > 0 && (
-            <span className="mt-2.5 hidden flex-wrap gap-1.5 sm:flex">
+            <span className="hidden max-h-0 flex-wrap gap-1.5 overflow-hidden opacity-0 transition-all duration-500 group-hover:mt-2.5 group-hover:max-h-24 group-hover:opacity-100 sm:flex">
               {subs.map((s) => (
                 <span key={s.slug} className="rounded-full border border-white/25 bg-white/15 px-2.5 py-1 text-[11px] font-semibold text-white/90">{s.name}</span>
               ))}
