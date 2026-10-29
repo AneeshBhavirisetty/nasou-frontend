@@ -75,9 +75,9 @@ export default function Home() {
         <Head label="Shop by category" title="Everything a site needs, under one roof." note={`${departments.filter((d) => d.count).map((d) => d.name).join(', ')} — sold by verified local counters.`} />
         {/* six equal cards, one photo frame shape (client, 29 Oct 2026) */}
         <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
-          {bento.map((d) => {
+          {bento.map((d, i) => {
             const uploaded = categoryPhotoUrl(categoryPhotos, d.slug);
-            return <CategoryCard key={d.slug} dept={d} to={`/shop?dept=${d.slug}`} photo={uploaded || coverPhoto(`dept:${d.slug}`)} uploaded={!!uploaded} />;
+            return <CategoryCard key={d.slug} dept={d} index={i} to={`/shop?dept=${d.slug}`} photo={uploaded || coverPhoto(`dept:${d.slug}`)} />;
           })}
         </div>
       </section>

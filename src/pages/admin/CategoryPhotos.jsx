@@ -28,7 +28,7 @@ const measure = (file) => new Promise((resolve) => {
   img.src = url;
 });
 
-function PhotoRow({ dept, entry, canEdit }) {
+function PhotoRow({ dept, entry, canEdit, index }) {
   const toast = useToast();
   const [busy, setBusy] = useState('');
   const uploaded = categoryPhotoUrl({ [dept.slug]: entry }, dept.slug);
@@ -45,8 +45,8 @@ function PhotoRow({ dept, entry, canEdit }) {
       const all = await post(`/admin/site-photos/categories/${dept.slug}`, form);
       settingsStore.set((s) => ({ ...s, categoryPhotos: all }));
       const ratio = size ? size.w / size.h : 4 / 3;
-      toast.success(ratio < 1.15 || ratio > 1.55
-        ? `${dept.name} photo saved — it is not landscape 4:3, so its edges are trimmed on the card.`
+      toast.success(ratio < 1.05 || ratio > 1.6
+        ? `${dept.name} photo saved — it is far from 5:4, so its edges are trimmed on the card.`
         : `${dept.name} photo saved`);
     } catch (x) {
       toast.error(x.message);
@@ -70,7 +70,7 @@ function PhotoRow({ dept, entry, canEdit }) {
 
   return (
     <div className="flex flex-col gap-3 rounded-[22px] border border-line bg-white/70 p-3 shadow-card">
-      <CategoryCard dept={dept} photo={uploaded || coverPhoto(`dept:${dept.slug}`)} uploaded={!!uploaded} className="shadow-none" />
+      <CategoryCard dept={dept} index={index} photo={uploaded || coverPhoto(`dept:${dept.slug}`)} />
       <div className="px-1">
         <p className="text-[12.5px] font-bold text-ink">{uploaded ? 'Uploaded photo' : 'Automatic — taken from its products'}</p>
         {entry && <p className="text-[11.5px] text-ink-50">{entry.updatedBy} · {when(entry.updatedAt)}</p>}
@@ -102,9 +102,9 @@ export default function CategoryPhotos() {
       <AdminPageHead title="Category photos" note="The photo on each card of the home page’s “Everything a site needs” section." />
       {!can('sitePhotos', 'edit') && <ViewOnlyBanner what="category photos" />}
       {!LIVE && <p className="rounded-[14px] bg-amber-50 px-3 py-2 text-[12.5px] font-semibold text-amber">Uploading needs the live API (not available in the browser demo).</p>}
-      <Panel title="How it works" note="Upload a landscape photo, ideally 4:3 and at least 1200 × 900 px (JPEG, PNG or WebP, up to 5 MB). Every card shows its photo in the same 4:3 frame. Each photo is stored in Azure Blob Storage at the path under it — replacing that file there works too (cards update within a few minutes). Without an upload, a card uses a photo from the category’s products." />
+      <Panel title="How it works" note="Upload a landscape photo, ideally 5:4 and at least 1200 × 960 px (JPEG, PNG or WebP, up to 5 MB). Every card shows its photo edge to edge in the same frame (5:4 on computers, 4:5 on phones), so keep the subject in the middle. Each photo is stored in Azure Blob Storage at the path under it — replacing that file there works too (cards update within a few minutes). Without an upload, a card uses a photo from the category’s products." />
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {departments.map((d) => <PhotoRow key={d.slug} dept={d} entry={photos[d.slug]} canEdit={canEdit} />)}
+        {departments.map((d, i) => <PhotoRow key={d.slug} dept={d} index={i} entry={photos[d.slug]} canEdit={canEdit} />)}
       </div>
     </div>
   );
