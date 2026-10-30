@@ -12,7 +12,7 @@ import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
 import { updatePart, useRefunds } from '../store/orders';
 import { useScopedOrders } from '../lib/useScoped';
-import { money, cx } from '../lib/format';
+import { money, cx, itemCode } from '../lib/format';
 import { act } from '../lib/act';
 
 /* Your orders: one payment, one order — with each seller's part tracked on
@@ -60,7 +60,7 @@ function PartTracker({ order, part, onCancel }) {
               </span>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-[13.5px] font-semibold text-ink">{l.name}</p>
-                <p className="tnum text-[12px] text-ink-50">{l.sku} · {l.size || 'standard'} · Qty {l.qty} · {money(l.price)} each</p>
+                <p className="tnum text-[12px] text-ink-50">{itemCode(l)} · {l.size || 'standard'} · Qty {l.qty} · {money(l.price)} each</p>
               </div>
               <p className="tnum shrink-0 text-[12.5px] font-bold text-ink">{money(l.amount)}</p>
             </li>

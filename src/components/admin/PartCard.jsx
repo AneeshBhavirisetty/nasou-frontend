@@ -7,7 +7,7 @@ import { findProduct } from '../../data/catalog';
 import { createRefund, refundableOn, updatePart } from '../../store/orders';
 import { useToast } from '../../context/ToastContext';
 import { ORDER_FLOW, nextStatus } from '../../lib/marketplace';
-import { money, cx } from '../../lib/format';
+import { money, cx, itemCode } from '../../lib/format';
 import { act } from '../../lib/act';
 
 /* One retailer's sub-order: lines, progress, Razorpay transfer and the
@@ -67,7 +67,7 @@ export default function PartCard({ order, part, by, canAdvance, canCancel, canRe
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[13.5px] font-semibold text-ink">{l.name}</p>
-                  <p className="tnum text-[11.5px] text-ink-50">{l.sku} · {l.size || 'standard'} · Qty {l.qty} · {money(l.price)} each</p>
+                  <p className="tnum text-[11.5px] text-ink-50">{itemCode(l)} · {l.size || 'standard'} · Qty {l.qty} · {money(l.price)} each</p>
                 </div>
                 <span className="tnum shrink-0 text-[13px] font-bold">{money(l.amount)}</span>
               </li>

@@ -10,7 +10,7 @@ import { useToast } from '../context/ToastContext';
 import { LIVE } from '../lib/config';
 import { getRetailer } from '../store/retailers';
 import { brand } from '../data/site';
-import { money } from '../lib/format';
+import { itemCode, money } from '../lib/format';
 
 /* The GST invoice on screen, with the PDF the API stores in blob storage — the
    target of the invoice links in the Excel export. Subscribed to the orders
@@ -101,7 +101,7 @@ export default function Invoice() {
             <thead>
               <tr className="border-b border-line text-[11px] font-bold uppercase tracking-wider text-ink-35">
                 <th className="pb-2">Item</th>
-                <th className="pb-2">SKU</th>
+                <th className="pb-2">Item code</th>
                 <th className="pb-2 text-right">Qty</th>
                 <th className="pb-2 text-right">Rate</th>
                 <th className="pb-2 text-right">Amount</th>
@@ -122,7 +122,7 @@ export default function Invoice() {
                     {l.name}
                     {l.size && <span className="font-normal text-ink-50"> · {l.size}</span>}
                   </td>
-                  <td className="py-2.5 font-mono text-[12px] text-ink-50">{l.sku}</td>
+                  <td className="py-2.5 font-mono text-[12px] text-ink-50">{itemCode(l)}</td>
                   <td className="tnum py-2.5 text-right text-[13px]">{l.qty}</td>
                   <td className="tnum py-2.5 text-right text-[13px]">{money(l.price)}</td>
                   <td className="tnum py-2.5 text-right text-[13px] font-semibold">{money(l.amount)}</td>
