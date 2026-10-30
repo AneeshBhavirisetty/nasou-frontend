@@ -70,7 +70,7 @@ export function masterRowsFromWorkbook(XLSX, wb) {
 
 /* The sample format people download when they ask for it: an .xlsx with the
    header row only (client, Oct 2026). `XLSX` is SheetJS, passed in like above. */
-export function writeMasterTemplate(XLSX, filename = 'nivora-product-sheet-format.xlsx') {
+export function writeMasterTemplate(XLSX, filename = 'nivorva-product-sheet-format.xlsx') {
   const ws = XLSX.utils.aoa_to_sheet([MASTER_COLUMNS.map(([, title]) => title)]);
   ws['!cols'] = MASTER_COLUMNS.map(([, title]) => ({ wch: Math.max(12, title.length + 2) }));
   const wb = XLSX.utils.book_new();
@@ -122,7 +122,7 @@ export async function sendMasterRows(rows, { post, path = '/admin/catalog/master
 
 /* ── Product photos ─────────────────────────────────────────────────────────
    The client keeps the photos in Azure Blob Storage, one per item and laid
-   out like the sheet:  Nivora Products/categories/<Category>/<Sub category>/
+   out like the sheet:  Nivorva Products/categories/<Category>/<Sub category>/
    <Item Name>[/<variant>]/<file>  — the variant folder (a colour, "10 WAY" …)
    is optional. The storage account is private, so scripts/upload-sheet-images
    copies them into the API's media library (resized for phones) and keeps a

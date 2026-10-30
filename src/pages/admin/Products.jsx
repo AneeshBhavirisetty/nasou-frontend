@@ -25,14 +25,18 @@ import { money, cx, itemCode } from '../../lib/format';
 import { act } from '../../lib/act';
 
 const PAGE = 20;
-/* the Retailer filter's value for products with no retailer (Nivora's own catalogue) */
+/* the Retailer filter's value for products with no retailer (Nivorva's own catalogue) */
 const OWN = '__own';
 
 /* Products grouped by who sells them (client review, Oct 2026): one card per
-   retailer, plus Nivora's own catalogue; a card opens that retailer's list. */
+   retailer, plus Nivorva's own catalogue; a card opens that retailer's list.
+   Every trading retailer is here, even with no products yet (review 8). */
 function RetailerBreakdown({ products, retailers, onOpen }) {
   const groups = useMemo(() => {
     const m = new Map();
+    for (const r of retailers) {
+      if (r.status === 'approved' || r.status === 'suspended') m.set(r.id, { id: r.id, count: 0, inStock: 0, out: 0, value: 0, low: 0, high: 0 });
+    }
     for (const p of products) {
       const key = p.retailerId || '';
       const g = m.get(key) || { id: key, count: 0, inStock: 0, out: 0, value: 0, low: 0, high: 0 };
@@ -54,10 +58,10 @@ function RetailerBreakdown({ products, retailers, onOpen }) {
         <button key={g.id || OWN} type="button" onClick={() => onOpen(g.id || OWN)} className="min-w-0 rounded-[22px] border border-line bg-white p-5 text-left shadow-card transition hover:-translate-y-0.5 hover:shadow-lift">
           <span className="flex items-start justify-between gap-3">
             <span className="flex min-w-0 items-center gap-3">
-              <Avatar name={g.r?.name || 'Nivora'} tone={g.r ? 'sunk' : 'dark'} />
+              <Avatar name={g.r?.name || 'Nivorva'} tone={g.r ? 'sunk' : 'dark'} />
               <span className="min-w-0">
-                <span className="block truncate text-[15px] font-bold text-ink">{g.r?.name || (g.id ? 'Removed retailer' : 'Nivora — own catalogue')}</span>
-                <span className="block truncate text-[12px] text-ink-50">{g.r ? [g.r.city, g.r.contact].filter(Boolean).join(' · ') : 'Sold by Nivora'}</span>
+                <span className="block truncate text-[15px] font-bold text-ink">{g.r?.name || (g.id ? 'Removed retailer' : 'Nivorva — own catalogue')}</span>
+                <span className="block truncate text-[12px] text-ink-50">{g.r ? [g.r.code, g.r.city, g.r.contact].filter(Boolean).join(' · ') : 'Sold by Nivorva'}</span>
               </span>
             </span>
             {g.r && <StatusPill status={g.r.status} />}
@@ -124,11 +128,12 @@ export function ProductsManager({ seller = false }) {
   const actor = useActor();
   const retailers = useRetailers();
   const [retailer, setRetailer] = useState('');
-  const [view, setView] = useState('list');
+  /* the Super Admin starts from the retailers and opens one (client review 8) */
+  const [view, setView] = useState(seller ? 'list' : 'retailers');
   const rows = useMemo(() => (retailer === OWN ? all.filter((p) => !p.retailerId) : retailer ? all.filter((p) => p.retailerId === retailer) : all), [all, retailer]);
   const sellerName = (id) => retailers.find((r) => r.id === id)?.name || '';
-  /* who sells it: the retailer, or Nivora for its own catalogue */
-  const ownerName = (id) => (id ? sellerName(id) || '—' : 'Nivora');
+  /* who sells it: the retailer, or Nivorva for its own catalogue */
+  const ownerName = (id) => (id ? sellerName(id) || '—' : 'Nivorva');
   const [q, setQ] = useState('');
   const [dept, setDept] = useState('');
   const [cat, setCat] = useState('');
@@ -146,7 +151,7 @@ export function ProductsManager({ seller = false }) {
   useEffect(() => {
     if (params.get('new') || params.get('q')) {
       if (params.get('new') && canEdit) setEditing(null);
-      if (params.get('q')) { setQ(params.get('q')); setPage(1); }
+      if (params.get('q')) { setQ(params.get('q')); setPage(1); setView('list'); }
       setParams({}, { replace: true });
     }
   }, [params, setParams]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -220,16 +225,16 @@ export function ProductsManager({ seller = false }) {
         {canEdit && <Button size="sm" variant="outline" icon="upload" onClick={() => setBulk(true)}>Bulk import</Button>}
         {canEdit && <Button size="sm" icon="plus" onClick={() => setEditing(null)}>Add product</Button>}
         <ExcelExportButton
-          filename="nivora-products"
+          filename="nivorva-products"
           label="Export"
-          headers={['Item Code', 'Product ID', 'Name', 'Retailer', 'Category', 'Sub-category', 'Material', 'Size', 'Brand', 'Price', 'MRP', 'Discount %', 'Stock']}
-          rows={filtered.map((p) => [itemCode(p), p.sku, p.name, ownerName(p.retailerId), departmentMeta(p.department || DEFAULT_DEPARTMENT).name, p.subcategoryName || categoryName(p.category), p.material, p.size, p.supplierName, p.price, p.mrp, p.discount, p.stock])}
+          headers={['Item Code', 'Product ID', 'Name', 'Retailer ID', 'Retailer', 'Category', 'Sub-category', 'Material', 'Size', 'Brand', 'Price', 'MRP', 'Discount %', 'Stock']}
+          rows={filtered.map((p) => [itemCode(p), p.sku, p.name, retailers.find((r) => r.id === p.retailerId)?.code || '', ownerName(p.retailerId), departmentMeta(p.department || DEFAULT_DEPARTMENT).name, p.subcategoryName || categoryName(p.category), p.material, p.size, p.supplierName, p.price, p.mrp, p.discount, p.stock])}
         />
       </AdminPageHead>
 
       <Tabs value={view} onChange={setView} options={[
-        { value: 'list', label: 'Products', icon: 'package', count: rows.length },
-        ...(seller ? [] : [{ value: 'retailers', label: 'By retailer', icon: 'store', count: new Set(all.map((p) => p.retailerId || '')).size }]),
+        ...(seller ? [] : [{ value: 'retailers', label: 'Retailers', icon: 'store', count: new Set([...retailers.filter((r) => r.status === 'approved' || r.status === 'suspended').map((r) => r.id), ...all.map((p) => p.retailerId || '')]).size }]),
+        { value: 'list', label: picked ? picked.name : seller ? 'Products' : 'All products', icon: 'package', count: rows.length },
         { value: 'ledger', label: 'Stock movements', icon: 'refresh' },
       ]} />
       {view === 'retailers' && <RetailerBreakdown products={all} retailers={retailers} onOpen={(id) => { setRetailer(id); setPage(1); setView('list'); }} />}
@@ -244,7 +249,7 @@ export function ProductsManager({ seller = false }) {
           <Avatar name={picked.name} tone="dark" />
           <div className="min-w-0 flex-1">
             <p className="flex flex-wrap items-center gap-2 text-[17px] font-bold">{picked.name} <StatusPill status={picked.status} /></p>
-            <p className="text-[12.5px] text-white/70">{[picked.city, picked.contact, picked.email].filter(Boolean).join(' · ')}</p>
+            <p className="text-[12.5px] text-white/70">{[picked.code, picked.city, picked.contact, picked.email].filter(Boolean).join(' · ')}</p>
           </div>
           <div className="flex gap-2 text-center">
             {[['Products', rows.length], ['In stock', rows.filter((p) => p.stock > 0).length], ['Out of stock', rows.filter((p) => p.stock <= 0).length]].map(([l, n]) => (
@@ -253,7 +258,7 @@ export function ProductsManager({ seller = false }) {
           </div>
           <div className="flex gap-2">
             <Link to={`/admin/retailers/${picked.id}`} className="rounded-full bg-white px-4 py-2 text-[12.5px] font-bold text-forest">Retailer page</Link>
-            <button type="button" onClick={() => { setRetailer(''); setPage(1); }} className="rounded-full bg-white/10 px-4 py-2 text-[12.5px] font-bold text-white hover:bg-white/20">All retailers</button>
+            <button type="button" onClick={() => { setRetailer(''); setPage(1); setView('retailers'); }} className="rounded-full bg-white/10 px-4 py-2 text-[12.5px] font-bold text-white hover:bg-white/20">All retailers</button>
           </div>
         </div>
       )}

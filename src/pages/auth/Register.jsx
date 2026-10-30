@@ -44,7 +44,7 @@ export default function Register() {
         password: f.password,
         phoneToken,
       });
-      toast.success('Welcome to Nivora!');
+      toast.success('Welcome to Nivorva!');
       navigate(landingFor(session, explicit), { replace: true });
     } catch (err) {
       setError(err.message || 'Could not create the account. Try again.');
@@ -57,7 +57,7 @@ export default function Register() {
     <AuthCard
       title="Create your account"
       subtitle="Your details, then verify your mobile with a one-time code."
-      footer={<>Already registered? <Link to="/login" className="font-bold text-forest hover:underline">Sign in</Link> · <Link to="/sell" className="font-bold text-forest hover:underline">Sell on Nivora</Link></>}
+      footer={<>Already registered? <Link to="/login" className="font-bold text-forest hover:underline">Sign in</Link> · <Link to="/sell" className="font-bold text-forest hover:underline">Sell on Nivorva</Link></>}
     >
       <form onSubmit={create} noValidate className="space-y-4">
         <Field label="Full name" value={f.fullName} onChange={(e) => setF({ ...f, fullName: e.target.value })} placeholder="Your name" autoComplete="name" required />

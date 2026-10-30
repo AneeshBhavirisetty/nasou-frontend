@@ -196,7 +196,7 @@ export default function AdminDashboard() {
           <div>
             <p className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[10.5px] font-bold uppercase tracking-[0.2em]"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-100" /> {userRoleLabel(user)}</p>
             <h2 className="font-hero mt-4 text-[clamp(1.7rem,4.2vw,2.8rem)] font-semibold leading-[1.05] text-white">{greet}, {user?.fullName?.split(' ')[0]}.</h2>
-            <p className="mt-2 max-w-lg text-[14px] text-emerald-100">{d.activeRetailers} retailers are selling on Nivora. {rupeesCompact(d.gmv30)} in orders over the last 30 days <Delta dark now={d.gmv30} before={d.gmvPrev} />.</p>
+            <p className="mt-2 max-w-lg text-[14px] text-emerald-100">{d.activeRetailers} retailers are selling on Nivorva. {rupeesCompact(d.gmv30)} in orders over the last 30 days <Delta dark now={d.gmv30} before={d.gmvPrev} />.</p>
           </div>
           <div className="rounded-[20px] border border-white/15 bg-white/[0.07] p-4 backdrop-blur">
             <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-100">Needs your attention</p>

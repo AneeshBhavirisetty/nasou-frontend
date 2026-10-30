@@ -30,7 +30,7 @@ function EditDetails({ account, onClose }) {
     if (f.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email)) return toast.error('Enter a valid email.');
     if (f.phone && !isMobile10(f.phone)) return toast.error('Mobile must be 10 digits.');
     act(toast, () => updateAccount(account.id, { ...f, email: f.email.trim().toLowerCase() }, 'Customer details edited by support'));
-    notify({ userId: account.id, icon: 'user', kind: 'account', title: 'Nivora support updated your details', body: 'If you did not ask for this, reply in chat.', to: '/account' });
+    notify({ userId: account.id, icon: 'user', kind: 'account', title: 'Nivorva support updated your details', body: 'If you did not ask for this, reply in chat.', to: '/account' });
     toast.success('Details saved');
     onClose();
   };

@@ -44,7 +44,7 @@ export default function Footer() {
           <div className="relative px-5 py-8 sm:px-10 sm:py-12">
             <div className="grid gap-10 lg:grid-cols-[1.15fr_2fr]">
               <div>
-                <Link to="/home" className="inline-block rounded-[18px] bg-white px-5 py-4 shadow-btn" aria-label="Nivora home">
+                <Link to="/home" className="inline-block rounded-[18px] bg-white px-5 py-4 shadow-btn" aria-label="Nivorva home">
                   <Logo variant="wordmark" size={220} />
                 </Link>
                 <p className="mt-4 max-w-xs text-[13.5px] leading-relaxed text-[#cfe0d9]">{brand.promise}</p>
@@ -88,7 +88,7 @@ export default function Footer() {
 
             <div className="mt-12 flex flex-col gap-5 border-t border-white/12 pt-6 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[12px] text-white/45">
-                <span>© {new Date().getFullYear()} {brand.name} · a {brand.company} product</span>
+                <span>© {new Date().getFullYear()} {brand.name}</span>
                 <span className="hidden sm:inline">·</span>
                 <span>GSTIN {brand.gst}</span>
                 <Link to="/returns" className="transition hover:text-white/80">Returns</Link>

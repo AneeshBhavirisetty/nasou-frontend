@@ -167,6 +167,7 @@ function AccountMenu() {
     { label: 'My profile', to: '/account', icon: 'user' },
     { label: 'Orders', to: '/orders', icon: 'package' },
     { label: 'Wishlist', to: '/wishlist', icon: 'heart' },
+    { label: 'Support tickets', to: '/support', icon: 'ticket' },
     { label: 'Addresses', to: '/account#addresses', icon: 'pin' },
     ...(isAdmin ? [{ label: 'Super Admin console', to: '/admin/dashboard', icon: 'gauge' }] : []),
     ...(isRetailer ? [{ label: 'Seller console', to: '/seller', icon: 'store' }] : []),
@@ -378,7 +379,7 @@ export default function Header() {
           <Icon name={mobile ? 'close' : 'menu'} size={20} />
         </button>
 
-        <Link to="/home" className="shrink-0" aria-label="Nivora home">
+        <Link to="/home" className="shrink-0" aria-label="Nivorva home">
           <Logo size={38} />
         </Link>
 
@@ -438,7 +439,7 @@ export default function Header() {
             <Icon name="mail" size={14} /> Enquire now
           </NavLink>
           <NavLink to="/sell" className={({ isActive }) => cx(TAB({ isActive }), 'flex items-center gap-1.5')}>
-            <Icon name="store" size={14} /> Sell on Nivora
+            <Icon name="store" size={14} /> Sell on Nivorva
           </NavLink>
           <Ticker className="ml-auto min-w-0 max-w-[420px] flex-1" />
         </div>
@@ -495,7 +496,7 @@ export default function Header() {
                   ? <Link to="/join" className="rounded-[14px] bg-white px-3 py-3 text-center text-[13px] font-bold text-forest shadow-card">Sign in</Link>
                   : <Link to="/account" className="rounded-[14px] bg-white px-3 py-3 text-center text-[13px] font-bold text-forest shadow-card">My profile</Link>}
                 <Link to="/enquiry" className="rounded-[14px] bg-forest px-3 py-3 text-center text-[13px] font-bold text-white shadow-btn">Enquire now</Link>
-                <Link to="/sell" className="rounded-[14px] bg-sand px-3 py-3 text-center text-[13px] font-bold text-forest shadow-card">Sell on Nivora</Link>
+                <Link to="/sell" className="rounded-[14px] bg-sand px-3 py-3 text-center text-[13px] font-bold text-forest shadow-card">Sell on Nivorva</Link>
               </div>
               <p className="mt-4 px-1 text-[12px] font-semibold text-ink-50">{announcements[0]}</p>
             </div>

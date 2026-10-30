@@ -13,7 +13,7 @@ const AuthContext = createContext(null);
  * AuthProvider — the signed-in person, for all three portals.
  *
  * Login resolves who the user is and, for retailers, which retailer they
- * belong to (requirement 2): the session carries role, teamRole (Nasou Hive
+ * belong to (requirement 2): the session carries role, teamRole (Nivorva
  * team preset), retailerId and staffRole. Team accounts finish sign-in with
  * a second factor (requirement 3).
  *

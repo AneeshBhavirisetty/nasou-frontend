@@ -25,9 +25,14 @@ export default function PartCard({ order, part, by, canAdvance, canCancel, canRe
   const live = part.status !== 'Cancelled' && part.status !== 'Delivered';
   const max = refundableOn(order.id, part.id);
   const next = nextStatus(part.status);
+  /* undo a mistake (client review 8): Processing → Pending, Shipped → Processing */
+  const prev = ORDER_FLOW[ORDER_FLOW.indexOf(part.status) - 1];
 
   const advance = () => {
     act(toast, () => updatePart(order.id, part.id, next, { by, byRetailer }), `${part.id} → ${next}`);
+  };
+  const moveBack = () => {
+    act(toast, () => updatePart(order.id, part.id, prev, { by, byRetailer, note: `Moved back from ${part.status}` }), `${part.id} → ${prev}`);
   };
 
   return (
@@ -93,6 +98,7 @@ export default function PartCard({ order, part, by, canAdvance, canCancel, canRe
         {(canAdvance || canCancel || canRefund) && (
           <div className="flex flex-wrap gap-2 border-t border-line-soft pt-3">
             {canAdvance && live && <button onClick={advance} className="flex h-9 items-center gap-1.5 rounded-full bg-forest px-4 text-[12.5px] font-bold text-white shadow-btn hover:bg-forest-800"><Icon name="chevronsRight" size={14} /> Mark {next.toLowerCase()}</button>}
+            {canAdvance && live && prev && <button onClick={moveBack} className="flex h-9 items-center gap-1.5 rounded-full border border-line px-4 text-[12.5px] font-bold text-forest hover:border-forest"><Icon name="arrowLeft" size={14} /> Back to {prev.toLowerCase()}</button>}
             {canCancel && live && <button onClick={() => setDialog('cancel')} className="flex h-9 items-center gap-1.5 rounded-full border border-clay/30 px-4 text-[12.5px] font-bold text-clay-600 hover:bg-clay-50"><Icon name="close" size={14} /> Cancel part</button>}
             {canRefund && max > 0 && part.status !== 'Cancelled' && order.payment !== 'Cash on delivery' && <button onClick={() => { setAmount(String(max)); setDialog('refund'); }} className="flex h-9 items-center gap-1.5 rounded-full border border-line px-4 text-[12.5px] font-bold text-forest hover:border-forest"><Icon name="refresh" size={14} /> Start refund</button>}
           </div>

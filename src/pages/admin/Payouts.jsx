@@ -14,7 +14,7 @@ import { formatOrderDate } from '../../data/orders';
 import { money } from '../../lib/format';
 import { act } from '../../lib/act';
 
-/* Retailer payouts (requirement 13), kept simple. Customers pay Nivora; each
+/* Retailer payouts (requirement 13), kept simple. Customers pay Nivorva; each
    week (Monday–Sunday) a retailer's delivered sales, less commission, plan fee
    and refunds, become payable. Finance presses Settle once per retailer and
    one RazorpayX payout sends everything owed to their bank; its payout id,
@@ -55,7 +55,7 @@ function SettleDialog({ entry, rows, by, onClose }) {
           ['IFSC', entry.bank.ifsc],
         ]} />
         <p className="rounded-[12px] bg-[#f6f3ed] px-3 py-2 text-[12.5px] leading-5 text-ink-70">
-          Sent from Nivora’s RazorpayX account by IMPS (NEFT above ₹5 lakh). It usually reaches the bank in minutes; the status and bank UTR update here.
+          Sent from Nivorva’s RazorpayX account by IMPS (NEFT above ₹5 lakh). It usually reaches the bank in minutes; the status and bank UTR update here.
         </p>
         <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button variant="outline" onClick={onClose}>Cancel</Button>
@@ -155,7 +155,7 @@ export default function AdminPayouts() {
 
   return (
     <div className="space-y-5">
-      <AdminPageHead title="Payouts" note="Weekly, Monday to Sunday. Customers pay Nivora; once a week press Settle to send each retailer what they are owed." />
+      <AdminPageHead title="Payouts" note="Weekly, Monday to Sunday. Customers pay Nivorva; once a week press Settle to send each retailer what they are owed." />
       {!canEdit && <ViewOnlyBanner what="payouts" />}
       {gateway === 'simulated' && (
         <p className="rounded-[14px] border border-amber/20 bg-amber-50 px-4 py-2.5 text-[12.5px] leading-5 text-amber">Test mode — payouts are simulated and no money moves. They go live once the RazorpayX keys are added to the API.</p>

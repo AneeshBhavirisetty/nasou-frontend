@@ -1,24 +1,33 @@
+import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Icon from '../components/Icon';
 import Logo from '../components/Logo';
 import { Badge, Button, Container } from '../components/ui';
 import { formatOrderDate } from '../data/orders';
-import { useOrders } from '../store/orders';
+import { downloadInvoice, useOrders } from '../store/orders';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import { LIVE } from '../lib/config';
 import { getRetailer } from '../store/retailers';
 import { brand } from '../data/site';
 import { money } from '../lib/format';
 
-/* Printable GST invoice — the target of the invoice links in the Excel export.
-   Subscribed to the orders store: opened straight from a link, the orders
-   arrive a moment after the first render. */
+/* The GST invoice on screen, with the PDF the API stores in blob storage — the
+   target of the invoice links in the Excel export. Subscribed to the orders
+   store: opened straight from a link, the orders arrive a moment after the
+   first render. */
 export default function Invoice() {
   const { id } = useParams();
   const orders = useOrders();
   const order = orders.find((o) => o.id === id) || null;
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const toast = useToast();
+  const [busy, setBusy] = useState(false);
+  const download = async () => {
+    setBusy(true);
+    try { await downloadInvoice(order.id); } catch (e) { toast.error(e.message); } finally { setBusy(false); }
+  };
 
   if (!order && LIVE && isAuthenticated && orders.length === 0) {
     return <Container className="flex min-h-[60dvh] items-center justify-center py-16"><p className="text-[14px] font-semibold text-ink-50">Loading the invoice…</p></Container>;
@@ -47,7 +56,9 @@ export default function Invoice() {
         <button type="button" onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/orders'))} className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-ink-50 transition hover:text-ink">
           <Icon name="arrowLeft" size={14} /> Back
         </button>
-        <Button size="sm" icon="fileText" onClick={() => window.print()}>Print / save PDF</Button>
+        {LIVE
+          ? <Button size="sm" icon="fileText" loading={busy} onClick={download}>Download PDF</Button>
+          : <Button size="sm" icon="fileText" onClick={() => window.print()}>Print / save PDF</Button>}
       </div>
 
       <article className="mx-auto max-w-3xl rounded-[24px] border border-white/80 bg-white p-6 shadow-card sm:p-10 print:rounded-none print:border-0 print:shadow-none">
@@ -55,7 +66,6 @@ export default function Invoice() {
           <div>
             <Logo variant="wordmark" size={190} />
             <p className="mt-3 max-w-[16rem] text-[12px] leading-relaxed text-ink-50">{brand.address}</p>
-            <p className="mt-1 text-[12px] text-ink-50">GSTIN {brand.gst}</p>
             <p className="text-[12px] text-ink-50">{brand.phone} · {brand.email}</p>
           </div>
           <div className="text-right">
@@ -143,7 +153,7 @@ export default function Invoice() {
         </div>
 
         <footer className="mt-8 border-t border-line pt-5 text-[11.5px] leading-relaxed text-ink-35">
-          Marketplace invoice issued by Nivora (a Nasou Hive product) on behalf of the sellers named above. Computer-generated — valid without signature. Goods once sold may be returned within
+          Marketplace invoice issued by Nivorva on behalf of the sellers named above. Computer-generated — valid without signature. Goods once sold may be returned within
           7 days if unused and in original packaging. Subject to Tirupati jurisdiction.
         </footer>
       </article>

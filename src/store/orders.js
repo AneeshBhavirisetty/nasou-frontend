@@ -6,15 +6,15 @@ import { getSettings } from './settings';
 import { audit } from '../lib/auditLog';
 import { notify } from './notifications';
 import { adjustStock } from '../context/AdminStore';
-import { LIVE } from '../lib/config';
-import { api, patch as apiPatch, post, refresh, who } from '../lib/live';
+import { API_BASE_URL, LIVE } from '../lib/config';
+import { api, get, patch as apiPatch, post, refresh, who } from '../lib/live';
 
 /* ============================================================================
  * Order book (requirements 8, 9, 12, 15, 19).
  *
  * One customer order = one payment, split into one part per retailer. Each
  * part has its own status, status history and refunds. The payment stays
- * with Nivora; each retailer is paid in the weekly settlement (store/payouts).
+ * with Nivorva; each retailer is paid in the weekly settlement (store/payouts).
  * The order-level status is derived from its parts (lib/marketplace aggregateStatus).
  *
  *   order { id, createdAt, userId, customer, email, phone, address, city,
@@ -88,7 +88,7 @@ function seed() {
       const reached = status === 'Cancelled' ? 0 : ORDER_FLOW.indexOf(status);
       pt.statusLog = ORDER_FLOW.slice(0, reached + 1).map((s, n) => ({ status: s, at: createdAt + n * 0.9 * DAY, by: n ? pt.retailerName : customer }));
       if (status === 'Cancelled') pt.statusLog.push({ status: 'Cancelled', at: createdAt + 0.4 * DAY, by: pt.retailerName, note: 'Out of stock at the counter' });
-      pt.transfer = null; // payment stays with Nivora; the retailer is paid in the weekly settlement
+      pt.transfer = null; // payment stays with Nivorva; the retailer is paid in the weekly settlement
       if (status === 'Cancelled' && online) pt.refunded = pt.total;
     });
     const status = aggregateStatus(parts);
@@ -245,7 +245,7 @@ export function updatePart(orderId, partId, status, { by = '', note = '', byReta
 
   audit({ action: 'order.status', entity: 'order', entityId: partId, summary: `${partId} (${part.retailerName}): ${part.status} → ${status}${note ? ` — ${note}` : ''}`, before: { status: part.status }, after: { status } });
   notify({ userId: before.userId || 'guest', icon: status === 'Delivered' ? 'check' : status === 'Cancelled' ? 'close' : 'truck', kind: 'orders', title: `Part ${partId} ${WORDS[status] || status}`, body: `${part.retailerName} · ${part.lines.length} item${part.lines.length > 1 ? 's' : ''}${note ? ` · ${note}` : ''}`, to: `/orders?id=${orderId}` });
-  if (!byRetailer) notify({ userId: `retailer:${part.retailerId}`, icon: 'truck', title: `${partId} set to ${status} by Nivora`, body: note || by, to: `/seller/orders/${orderId}` });
+  if (!byRetailer) notify({ userId: `retailer:${part.retailerId}`, icon: 'truck', title: `${partId} set to ${status} by Nivorva`, body: note || by, to: `/seller/orders/${orderId}` });
   return after;
 }
 
@@ -335,4 +335,25 @@ export function setPaymentStatus(orderId, paymentStatus, by = '') {
   if (!before) return;
   writeOrder(orderId, (o) => ({ ...o, paymentStatus }));
   audit({ action: 'payment.status', entity: 'order', entityId: orderId, summary: `${orderId} payment: ${before.paymentStatus} → ${paymentStatus}${by ? ` (${by})` : ''}`, before: { paymentStatus: before.paymentStatus }, after: { paymentStatus } });
+}
+
+/* The invoice as a PDF, made and stored by the API: the whole order for the
+   customer and the team, a retailer's own part for a retailer. */
+export async function downloadInvoice(orderId) {
+  const fetchIt = () => {
+    const s = who();
+    const base = s?.role === 'ADMIN' ? '/admin' : s?.role === 'RETAILER' ? '/seller' : '';
+    return fetch(`${API_BASE_URL}${base}/orders/${orderId}/invoice`, { headers: { Authorization: `Bearer ${s?.accessToken}` } });
+  };
+  let res = await fetchIt();
+  if (res.status === 401) { await get('/users/me'); res = await fetchIt(); } // renews an expired session
+  if (!res.ok) throw new Error('Could not get the invoice. Please try again.');
+  const url = URL.createObjectURL(await res.blob());
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${orderId}.pdf`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
 }

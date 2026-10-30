@@ -4,10 +4,10 @@ import { Button, Container } from '../components/ui';
 import { useSettings } from '../store/settings';
 import { useRetailers } from '../store/retailers';
 
-/* "Sell on Nivora" — the retailer acquisition page that leads to signup. */
+/* "Sell on Nivorva" — the retailer acquisition page that leads to signup. */
 const STEPS = [
   ['userPlus', 'Apply in 10 minutes', 'Store details, GST and PAN with their certificates, and a cancelled cheque.'],
-  ['shieldCheck', 'Get verified', 'The Nivora team checks your documents — usually within a working day.'],
+  ['shieldCheck', 'Get verified', 'The Nivorva team checks your documents — usually within a working day.'],
   ['package', 'List from the master catalog', 'Pick categories, add stock and prices. Products go live straight away.'],
   ['rupee', 'Get paid every week', 'Razorpay splits each payment and settles your share to your bank.'],
 ];
@@ -21,7 +21,7 @@ export default function Sell() {
         <div className="pointer-events-none absolute -right-16 -top-24 h-96 w-96 rounded-full bg-[radial-gradient(circle,rgba(37,88,73,0.18),transparent_65%)]" />
         <div className="field-dots pointer-events-none absolute inset-0 opacity-40" />
         <div className="relative max-w-2xl">
-          <p className="section-label">Sell on Nivora</p>
+          <p className="section-label">Sell on Nivorva</p>
           <h1 className="font-hero mt-5 text-[clamp(2.2rem,6vw,4rem)] font-semibold leading-[1.02] text-forest">Your counter, open to every contractor in the state.</h1>
           <p className="mt-5 max-w-xl text-[15.5px] leading-7 text-ink-70">Join {live} verified retailers selling plumbing, electrical, hardware and more on one marketplace. One cart for the buyer, a clean order queue for you, weekly payouts straight to your bank.</p>
           <div className="mt-8 flex flex-wrap gap-3">

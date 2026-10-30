@@ -90,7 +90,7 @@ function AvatarMenu({ readOnly, storeName }) {
           >
             <div className="rounded-[12px] bg-forest px-3 py-3 text-white">
               <p className="truncate text-[13.5px] font-bold">{user.fullName}</p>
-              <p className="truncate text-[11.5px] text-emerald-100">{readOnly ? 'Nasou Hive team · viewing' : `${staffRole(user.staffRole).label} · ${storeName || ''}`}</p>
+              <p className="truncate text-[11.5px] text-emerald-100">{readOnly ? 'Nivorva team · viewing' : `${staffRole(user.staffRole).label} · ${storeName || ''}`}</p>
             </div>
             <Link to="/seller/profile" onClick={() => setOpen(false)} className="mt-1 flex items-center gap-2.5 rounded-[12px] px-3 py-2.5 text-[13px] font-semibold text-ink-70 hover:bg-sunk/70 hover:text-forest">
               <Icon name="store" size={15} className="text-ink-35" /> Store profile
@@ -219,7 +219,7 @@ export default function SellerLayout() {
             <div className="flex min-w-0 flex-1 items-center justify-end gap-2">
               {live && <ConsoleSearch />}
               {live && !readOnly && (
-                <button onClick={() => window.dispatchEvent(new Event(OPEN_CHAT))} aria-label="Ask the Nivora AI assistant" title="AI assistant" className={cx(roundBtn, 'relative')}>
+                <button onClick={() => window.dispatchEvent(new Event(OPEN_CHAT))} aria-label="Ask the Nivorva AI assistant" title="AI assistant" className={cx(roundBtn, 'relative')}>
                   <Icon name="sparkle" size={18} />
                   <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-gold ring-2 ring-canvas" />
                 </button>
@@ -251,7 +251,7 @@ export default function SellerLayout() {
 
         <main className="mx-auto max-w-[1600px] px-4 pb-[calc(110px+env(safe-area-inset-bottom))] pt-3 sm:px-6 lg:px-10 lg:pb-12 lg:pt-4">
           {retailer?.status === 'suspended' && (
-            <p className="mb-4 flex items-start gap-2 rounded-[16px] border border-clay/20 bg-clay-50 px-4 py-3 text-[13px] font-semibold text-clay-600"><Icon name="lock" size={15} className="mt-0.5 shrink-0" /> Your store is suspended — your products are hidden and new orders are paused. Finish open orders; Nivora support will be in touch.</p>
+            <p className="mb-4 flex items-start gap-2 rounded-[16px] border border-clay/20 bg-clay-50 px-4 py-3 text-[13px] font-semibold text-clay-600"><Icon name="lock" size={15} className="mt-0.5 shrink-0" /> Your store is suspended — your products are hidden and new orders are paused. Finish open orders; Nivorva support will be in touch.</p>
           )}
           {!retailer ? (
             <p className="text-ink-50">This account is not linked to a store.</p>

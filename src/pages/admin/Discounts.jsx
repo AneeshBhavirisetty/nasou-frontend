@@ -16,7 +16,7 @@ import { EASE } from '../../lib/motion';
 import { act } from '../../lib/act';
 import { useRetailers } from '../../store/retailers';
 
-const blank = { code: '', kind: 'percent', value: 10, minOrder: 0, maxDiscount: 0, scope: '', expiry: '', active: true, autoApply: false };
+const blank = { code: '', kind: 'percent', value: 10, minOrder: 0, maxDiscount: 0, scope: '', startsOn: '', expiry: '', active: true, autoApply: false };
 
 /* '' whole cart · '<sub-category slug>' · 'dept:<category slug>' */
 export const scopeName = (scope) => (!scope ? 'Whole cart' : scope.startsWith('dept:') ? departmentMeta(scope.slice(5)).name : categories.find((c) => c.slug === scope)?.name || scope);
@@ -42,9 +42,12 @@ function CouponForm({ open, coupon, onClose, onSave }) {
       minOrder: Math.max(0, Math.round(Number(c.minOrder) || 0)),
       maxDiscount: Math.max(0, Math.round(Number(c.maxDiscount) || 0)),
       scope: c.scope,
+      startsOn: c.startsOn,
       expiry: c.expiry,
       active: !!c.active,
       autoApply: !!c.autoApply && !!c.scope,
+      usageLimit: c.usageLimit ?? null,
+      version: c.version,
     });
     onClose();
   };
@@ -79,7 +82,11 @@ function CouponForm({ open, coupon, onClose, onSave }) {
             </select>
           </label>
           <label className="block">
-            <span className="mb-1.5 block text-[11.5px] font-semibold uppercase tracking-[0.16em] text-forest-800">Expiry (optional)</span>
+            <span className="mb-1.5 block text-[11.5px] font-semibold uppercase tracking-[0.16em] text-forest-800">Starts (blank = today)</span>
+            <input type="date" value={c.startsOn || ''} onChange={(e) => set('startsOn', e.target.value)} className="h-12 w-full rounded-md border border-line bg-white/80 px-4 text-[14px] text-ink outline-none transition focus:border-forest focus:shadow-[0_0_0_2px_rgba(37,88,73,0.18)]" />
+          </label>
+          <label className="block">
+            <span className="mb-1.5 block text-[11.5px] font-semibold uppercase tracking-[0.16em] text-forest-800">Last day (optional)</span>
             <input type="date" value={c.expiry} onChange={(e) => set('expiry', e.target.value)} className="h-12 w-full rounded-md border border-line bg-white/80 px-4 text-[14px] text-ink outline-none transition focus:border-forest focus:shadow-[0_0_0_2px_rgba(37,88,73,0.18)]" />
           </label>
         </div>
@@ -113,8 +120,8 @@ export default function AdminDiscounts() {
   const { coupons, bulkRules, saveCoupon, deleteCoupon } = useAdminStore();
   const [editing, setEditing] = useState(undefined);
   const [tab, setTab] = useState('codes');
-  /* Nivora's own codes and the codes retailers make for their products are
-     kept apart (review 6): the team manages Nivora's; a store's are shown
+  /* Nivorva's own codes and the codes retailers make for their products are
+     kept apart (review 6): the team manages Nivorva's; a store's are shown
      here read-only (pause only) — the store manages them in its console. */
   const [owner, setOwner] = useState('nivora');
   const retailers = useRetailers();
@@ -164,7 +171,7 @@ export default function AdminDiscounts() {
       {tab === 'codes' && (
       <>
       <div className="flex flex-wrap gap-2">
-        {[['nivora', 'Nivora codes', nivoraCodes.length], ['stores', 'Retailers’ own codes', storeCodes.length]].map(([k, l, n]) => (
+        {[['nivora', 'Nivorva codes', nivoraCodes.length], ['stores', 'Retailers’ own codes', storeCodes.length]].map(([k, l, n]) => (
           <button key={k} onClick={() => setOwner(k)} className={cx('flex items-center gap-2 rounded-full border px-4 py-2 text-[13px] font-bold transition', owner === k ? 'border-forest bg-forest text-white' : 'border-line bg-white text-ink-70 hover:border-forest/40')}>
             <Icon name={k === 'nivora' ? 'tag' : 'store'} size={14} /> {l} <span className={cx('tnum rounded-full px-1.5 text-[11px]', owner === k ? 'bg-white/20' : 'bg-sunk')}>{n}</span>
           </button>
@@ -236,8 +243,10 @@ export default function AdminDiscounts() {
                     </p>
                     <p className="mt-0.5 text-[12px] text-ink-50">
                       {c.minOrder > 0 ? `Min ${money(c.minOrder)}` : 'No minimum'}
+                      {c.startsOn && <> · from {c.startsOn}</>}
                       {c.expiry && <> · till {c.expiry}</>}
                     </p>
+                    {c.createdAt && <p className="mt-0.5 text-[11.5px] text-ink-35">Created {new Date(c.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</p>}
 
                     <div className="mt-auto flex items-center justify-between gap-2 pt-3 text-[12px]">
                       <span className="text-ink-35">On a ₹2,000 cart</span>

@@ -2,8 +2,18 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 
+/* src/landing/ is copied unchanged from the nasouhive repo; the old name is
+   swapped at build time so those files stay identical to it. */
+const landingName = {
+  name: "landing-name",
+  enforce: "pre",
+  transform(code, id) {
+    if (id.includes("/src/landing/") && code.includes("Nasou Hive")) return code.replaceAll("Nasou Hive", "Nivorva");
+  },
+};
+
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [landingName, react(), tailwindcss()],
   server: { port: 5174 },
   build: {
     chunkSizeWarningLimit: 900,

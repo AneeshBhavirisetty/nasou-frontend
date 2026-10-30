@@ -61,7 +61,7 @@ export default function Join() {
           <Link to="/home" className="inline-flex items-center gap-2 text-sm font-semibold text-forest-800 transition hover:-translate-x-1 hover:text-forest">
             <Icon name="arrowLeft" size={15} /> Back to shop
           </Link>
-          <Link to="/" aria-label="Nivora home"><Logo size={30} /></Link>
+          <Link to="/" aria-label="Nivorva home"><Logo size={30} /></Link>
         </div>
 
         <div className="flex flex-1 flex-col items-center justify-center py-10">

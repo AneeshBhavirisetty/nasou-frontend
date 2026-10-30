@@ -6,10 +6,10 @@ import { useToast } from '../../context/ToastContext';
 import { categoryLabel, getTicket, openAttachment, replyTicket, ticketStatusLabel, updateTicket } from '../../store/support';
 import { cx } from '../../lib/format';
 
-/* One support ticket: its header, the conversation (store, Nivora, status
+/* One support ticket: its header, the conversation (owner, Nivorva, status
    changes), and a reply box with an optional attachment. `side` is 'store'
-   (seller console) or 'team' (Super Admin); each side sees the other's
-   messages on the left. */
+   (seller console), 'customer' (the shop) or 'team' (Super Admin); each side
+   sees the other's messages on the left. */
 
 const when = (ms) => new Date(ms).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
 export const PRIORITY_TONE = { LOW: 'neutral', MEDIUM: 'info', HIGH: 'warn', URGENT: 'bad' };
@@ -56,7 +56,8 @@ export default function TicketThread({ id, side, actions, onChanged }) {
   };
 
   if (!t) return <div className="grid h-60 place-items-center text-[13px] text-ink-50"><Icon name="spinner" size={18} className="animate-spin" /></div>;
-  const mine = side === 'store' ? 'STORE' : 'TEAM';
+  const mine = { store: 'STORE', customer: 'CUSTOMER', team: 'TEAM' }[side];
+  const owner = t.retailerName || t.customerName;
   const closed = t.status === 'CLOSED';
 
   return (
@@ -70,7 +71,7 @@ export default function TicketThread({ id, side, actions, onChanged }) {
         </div>
         <h2 className="mt-2 text-[18px] font-semibold text-ink">{t.subject}</h2>
         <p className="mt-0.5 text-[12px] text-ink-50">
-          {side === 'team' ? <><b className="text-ink-70">{t.retailerName}</b> · </> : null}
+          {side === 'team' ? <><b className="text-ink-70">{owner}</b>{t.customerPhone ? ` · +91 ${t.customerPhone}` : ''} · </> : null}
           Opened by {t.openedBy} · {when(t.createdAt)}{t.orderRef ? ` · order ${t.orderRef}` : ''}{t.assignee ? ` · with ${t.assignee}` : ''}
         </p>
         {actions && <div className="mt-3">{actions(t, setT)}</div>}
@@ -82,7 +83,7 @@ export default function TicketThread({ id, side, actions, onChanged }) {
         ) : (
           <div key={m.id} className={cx('flex', m.side === mine ? 'justify-end' : 'justify-start')}>
             <div className={cx('max-w-[82%] rounded-[16px] px-4 py-3 text-[13.5px] leading-relaxed', m.side === mine ? 'rounded-br-[4px] bg-forest text-white' : 'rounded-bl-[4px] border border-line-soft bg-white text-ink')}>
-              <p className={cx('mb-1 text-[11px] font-bold', m.side === mine ? 'text-emerald-100' : 'text-forest')}>{m.author}{m.side === 'TEAM' ? ' · Nivora' : ''}</p>
+              <p className={cx('mb-1 text-[11px] font-bold', m.side === mine ? 'text-emerald-100' : 'text-forest')}>{m.author}{m.side === 'TEAM' ? ' · Nivorva' : ''}</p>
               <p className="whitespace-pre-wrap">{m.body}</p>
               {m.attachment && (
                 <button type="button" onClick={() => openAttachment(t.id, m.id).catch((e) => toast.error(e.message))} className={cx('mt-2 flex items-center gap-1.5 rounded-[10px] px-2.5 py-1.5 text-[12px] font-bold', m.side === mine ? 'bg-white/15 text-white' : 'bg-sunk text-forest')}>
@@ -97,15 +98,15 @@ export default function TicketThread({ id, side, actions, onChanged }) {
       </div>
 
       <form onSubmit={send} className="border-t border-line-soft bg-chat p-3 sm:p-4">
-        {closed && side === 'store' && <p className="mb-2 text-[12px] text-ink-50">This ticket is closed. Writing here opens it again.</p>}
-        <textarea value={text} onChange={(e) => setText(e.target.value)} rows={2} placeholder={side === 'store' ? 'Write to the Nivora team…' : `Reply to ${t.retailerName}…`} className="w-full resize-none rounded-[14px] border border-line bg-white px-3.5 py-2.5 text-[13.5px] outline-none focus:border-forest" />
+        {closed && side !== 'team' && <p className="mb-2 text-[12px] text-ink-50">This ticket is closed. Writing here opens it again.</p>}
+        <textarea value={text} onChange={(e) => setText(e.target.value)} rows={2} placeholder={side === 'team' ? `Reply to ${owner}…` : 'Write to the Nivorva team…'} className="w-full resize-none rounded-[14px] border border-line bg-white px-3.5 py-2.5 text-[13.5px] outline-none focus:border-forest" />
         <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
           <label className="flex cursor-pointer items-center gap-1.5 text-[12.5px] font-bold text-forest">
             <Icon name="upload" size={14} /> {file ? file.name : 'Attach a file'}
             <input type="file" accept=".pdf,image/png,image/jpeg,image/webp" className="sr-only" onChange={(e) => setFile(e.target.files?.[0] || null)} />
           </label>
           <span className="flex gap-2">
-            {side === 'store' && !['RESOLVED', 'CLOSED'].includes(t.status) && <Button size="sm" variant="outline" onClick={() => setStatus('resolved')} type="button">Mark resolved</Button>}
+            {side !== 'team' && !['RESOLVED', 'CLOSED'].includes(t.status) && <Button size="sm" variant="outline" onClick={() => setStatus('resolved')} type="button">Mark resolved</Button>}
             <Button size="sm" type="submit" loading={busy} icon="send" disabled={!text.trim()}>Send</Button>
           </span>
         </div>

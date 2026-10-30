@@ -15,7 +15,7 @@ import { masterRowsFromWorkbook, sendMasterRows, summarise, writeMasterTemplate 
    first, then imported 500 rows at a time. Item Codes are the retailer's own
    (PL00001 …); a blank one gets the retailer's next code.
 
-   Super Admin: chooses whose sheet it is (Nivora is a platform — every product
+   Super Admin: chooses whose sheet it is (Nivorva is a platform — every product
    is a retailer's) and may remove that retailer's items the sheet no longer
    lists. Seller (`seller`): always their own store. */
 

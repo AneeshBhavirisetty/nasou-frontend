@@ -94,7 +94,7 @@ export default function AdminLayout({ children }) {
                   </button>
                 )}
                 <div className="min-w-0">
-                  <p className="text-[10.5px] font-bold uppercase tracking-[0.22em] text-forest-800/80">Nivora · Super Admin</p>
+                  <p className="text-[10.5px] font-bold uppercase tracking-[0.22em] text-forest-800/80">Nivorva · Super Admin</p>
                   <h1 className="truncate text-[clamp(1.25rem,3vw,1.55rem)] font-bold tracking-[-0.03em] text-forest">{title}</h1>
                 </div>
               </div>

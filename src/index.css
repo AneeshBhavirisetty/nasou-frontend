@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* ============================================================
-   NASOU HIVE — DESIGN TOKENS
+   NIVORVA — DESIGN TOKENS
    Visual language follows the NasouHive demo templates: linen
    paper (#EFEAE1), forest #1f5c4a, sage ink, Manrope throughout
    (Sora for the big hero voice), soft white cards with green-
@@ -10,7 +10,7 @@
 @theme {
   /* Palette from the NasouHive reference app (nasouhive repo, Oct 2026):
      linen #EFEAE1 → cream #EFE7DA → mist #E6ECEA, sand #E5D8C7, forest
-     #1F5C4A / #255849, deep ink #1F3B34. The Nivora logo keeps its own
+     #1F5C4A / #255849, deep ink #1F3B34. The Nivorva logo keeps its own
      greens — it is an image and is never recoloured. */
   --color-canvas: #efeae1;
   --color-surface: #ffffff;

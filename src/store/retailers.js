@@ -85,11 +85,11 @@ export function updateRetailer(id, fields, summary = 'Updated retailer details')
 
 /* status changes, each logged, each told to the retailer */
 const STATUS_COPY = {
-  approved: ['Your store is approved', 'You can now list products and take orders on Nivora.'],
+  approved: ['Your store is approved', 'You can now list products and take orders on Nivorva.'],
   needs_changes: ['Corrections needed on your application', null],
   rejected: ['Your application was not approved', null],
   suspended: ['Your store is suspended', 'Your products are hidden and new orders are paused.'],
-  deactivated: ['Your store is deactivated', 'Sign-in is disabled. Contact Nivora support to restore it.'],
+  deactivated: ['Your store is deactivated', 'Sign-in is disabled. Contact Nivorva support to restore it.'],
   deleted: ['Your store was closed', 'Open orders were closed and paid orders refunded.'],
 };
 export function setRetailerStatus(id, status, { note = '', by = '' } = {}) {

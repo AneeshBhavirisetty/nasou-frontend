@@ -140,7 +140,7 @@ export default function DataTable({
       const v = typeof c.csv === 'function' ? c.csv(r) : valueOf(c, r);
       return v instanceof Date ? isoDate(v) : v;
     };
-    downloadSheet(`nivora-${exportName}-${isoDate()}.csv`, cols.map((c) => c.label), filtered.map((r) => cols.map((c) => csvVal(c, r))));
+    downloadSheet(`nivorva-${exportName}-${isoDate()}.csv`, cols.map((c) => c.label), filtered.map((r) => cols.map((c) => csvVal(c, r))));
     audit({ action: 'export.csv', entity: exportName, summary: `Exported ${filtered.length} ${exportName} rows to CSV${q || Object.values(fv).some(Boolean) || range ? ' (filtered)' : ''}` });
     toast.success(`${filtered.length} rows exported`);
   };

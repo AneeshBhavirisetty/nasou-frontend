@@ -4,7 +4,7 @@
  * Every product, order and related list a screen shows goes through
  * scopeRows / scopeOrders below — never a hand-written filter per page. The
  * rules:
- *   platform (Nasou Hive team)  sees everything, on purpose. Each bypass is
+ *   platform (Nivorva team)  sees everything, on purpose. Each bypass is
  *                               reported through `onBypass` so it is logged.
  *   retailer                    sees only rows whose retailerId is theirs;
  *                               a multi-retailer order is cut down to their

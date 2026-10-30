@@ -13,7 +13,7 @@ import { LIVE } from '../../lib/config';
 /* Category photos (client, 29 Oct 2026): the photo on each card of the home
    page's "Everything a site needs" section. Owner, Operations and Management
    can change them (the sitePhotos permission). Each upload is kept in blob
-   storage at "Nivora Site/categories/<CATEGORY>/cover.<ext>" (nasou-api
+   storage at "Nivorva Site/categories/<CATEGORY>/cover.<ext>" (nasou-api
    SitePhotoService); without one, the card uses a photo from the category's
    products. The preview is the storefront's own card. */
 
@@ -74,7 +74,7 @@ function PhotoRow({ dept, entry, canEdit, index }) {
       <div className="px-1">
         <p className="text-[12.5px] font-bold text-ink">{uploaded ? 'Uploaded photo' : 'Automatic — taken from its products'}</p>
         {entry && <p className="text-[11.5px] text-ink-50">{entry.updatedBy} · {when(entry.updatedAt)}</p>}
-        <p className="mt-1 break-all font-mono text-[10.5px] text-ink-35">{entry?.path || `Nivora Site/categories/${dept.name.toUpperCase()}/cover.jpg`}</p>
+        <p className="mt-1 break-all font-mono text-[10.5px] text-ink-35">{entry?.path || `Nivorva Site/categories/${dept.name.toUpperCase()}/cover.jpg`}</p>
       </div>
       {canEdit && (
         <div className="mt-auto flex flex-wrap gap-2">

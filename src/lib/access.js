@@ -2,7 +2,7 @@
  * access.js — who may do what (Super Admin requirements, item 3 + section 4).
  *
  * Three kinds of user:
- *   ADMIN     the Nasou Hive team, using the Super Admin console (/admin)
+ *   ADMIN     the Nivorva team, using the Super Admin console (/admin)
  *   RETAILER  an onboarded retailer (or one of their staff), using /seller
  *   CUSTOMER  a buyer
  *

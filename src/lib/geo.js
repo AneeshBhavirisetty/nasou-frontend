@@ -9,7 +9,7 @@
  * Both fail soft: the form stays editable and says what went wrong.
  * ==========================================================================*/
 
-/* Nivora trades in Tirupati only. City and state are fixed on every address
+/* Nivorva trades in Tirupati only. City and state are fixed on every address
    (delivery, checkout, retailer store); the PIN has to be a Tirupati one. The
    API enforces the same rule (common/ServiceArea.java) — change both together. */
 export const SERVICE_AREA = { city: 'Tirupati', state: 'Andhra Pradesh', pinPrefix: '5175' };

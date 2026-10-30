@@ -57,14 +57,14 @@ export default function AdminRetailers() {
       <span className="flex min-w-[220px] items-center gap-3">
         <Avatar name={r.name} size="sm" />
         <span className="min-w-0">
-          <span className="block truncate font-bold text-ink">{r.name}</span>
+          <span className="block truncate font-bold text-ink">{r.name}{r.code && <span className="ml-1.5 font-mono text-[11px] font-bold text-ink-50">{r.code}</span>}</span>
           <span className="block truncate text-[11.5px] text-ink-50">{r.city}, {r.state}</span>
         </span>
       </span>
     ) },
     { key: 'status', label: 'Status', render: (r) => <StatusPill status={r.status} /> },
     { key: 'rate', label: 'Commission', align: 'right', render: (r) => `${r.rate}%` },
-    { key: 'products', label: 'Products', align: 'right', render: (r) => <span title={r.productsByNivora ? `${r.productsByNivora} uploaded by Nivora` : undefined}>{r.products.toLocaleString('en-IN')}{r.productsByNivora ? <span className="block text-[10.5px] font-semibold text-ink-35">{r.productsByNivora} by Nivora</span> : null}</span> },
+    { key: 'products', label: 'Products', align: 'right', render: (r) => <span title={r.productsByNivora ? `${r.productsByNivora} uploaded by Nivorva` : undefined}>{r.products.toLocaleString('en-IN')}{r.productsByNivora ? <span className="block text-[10.5px] font-semibold text-ink-35">{r.productsByNivora} by Nivorva</span> : null}</span> },
     { key: 'orders', label: 'Sub-orders', align: 'right' },
     { key: 'sales', label: 'Sales', align: 'right', render: (r) => money(r.sales) },
     { key: 'joinedAt', label: 'Joined', render: (r) => formatOrderDate(r.joinedAt), csv: (r) => new Date(r.joinedAt).toISOString().slice(0, 10) },
@@ -78,7 +78,7 @@ export default function AdminRetailers() {
   const send = (e) => {
     e.preventDefault();
     if (msg.trim().length < 5) return;
-    messaging.forEach((r) => notify({ userId: `retailer:${r.id}`, icon: 'mail', title: 'Message from Nivora', body: msg.trim(), to: '/seller' }));
+    messaging.forEach((r) => notify({ userId: `retailer:${r.id}`, icon: 'mail', title: 'Message from Nivorva', body: msg.trim(), to: '/seller' }));
     audit({ action: 'retailer.message', entity: 'retailer', summary: `Messaged ${messaging.length} retailer(s): ${msg.trim().slice(0, 80)}` });
     toast.success(`Sent to ${messaging.length} retailer${messaging.length > 1 ? 's' : ''}`);
     setMessaging(null);
@@ -87,7 +87,7 @@ export default function AdminRetailers() {
 
   return (
     <div className="space-y-5">
-      <AdminPageHead title="Retailers" note="Every store on Nivora. Open one for documents, commission, status and its orders.">
+      <AdminPageHead title="Retailers" note="Every store on Nivorva. Open one for documents, commission, status and its orders.">
         <Button size="sm" variant="outline" icon="external" onClick={() => { navigator.clipboard?.writeText(`${window.location.origin}/sell`); toast.success('Signup link copied — send it to the retailer'); }}>Copy signup link</Button>
         {queue > 0 && <Button size="sm" icon="shieldCheck" to="/admin/approvals">{queue} waiting for review</Button>}
       </AdminPageHead>
@@ -103,7 +103,7 @@ export default function AdminRetailers() {
         id="retailers"
         rows={rows}
         columns={columns}
-        searchText={(r) => `${r.name} ${r.legalName} ${r.city} ${r.contact} ${r.email} ${r.gstin} ${r.phone}`}
+        searchText={(r) => `${r.code || ''} ${r.name} ${r.legalName} ${r.city} ${r.contact} ${r.email} ${r.gstin} ${r.phone}`}
         searchPlaceholder="Search name, city, GSTIN, contact"
         filters={[
           { key: 'status', label: 'Status', options: Object.entries(RETAILER_STATUS).map(([value, v]) => ({ value, label: v.label })), test: (r, v) => r.status === v },

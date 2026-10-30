@@ -40,7 +40,7 @@ function FloatChip({ className, delay = 0, children }) {
 
 export default function HomeHero({ banners, stats }) {
   const wide = useWide();
-  const slides = banners.length ? banners : [{ id: 'x', eyebrow: 'Nivora marketplace', title: 'Every fitting, from every trusted counter.', sub: '', cta: 'Shop the catalogue', to: '/shop' }];
+  const slides = banners.length ? banners : [{ id: 'x', eyebrow: 'Nivorva marketplace', title: 'Every fitting, from every trusted counter.', sub: '', cta: 'Shop the catalogue', to: '/shop' }];
   const [i, setI] = useState(0);
   const [paused, setPaused] = useState(false);
   useEffect(() => {
@@ -65,7 +65,7 @@ export default function HomeHero({ banners, stats }) {
       <div className="relative grid min-h-[520px] items-center gap-6 px-5 pb-8 pt-7 sm:px-10 sm:pb-12 sm:pt-10 lg:grid-cols-[1.05fr_0.95fr] lg:px-14">
         <div className="relative z-10 max-w-2xl">
           <span className="chip-glass inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.28em] text-forest">
-            <span className="h-1.5 w-1.5 rounded-full bg-forest" /> Nivora
+            <span className="h-1.5 w-1.5 rounded-full bg-forest" /> Nivorva
           </span>
           <AnimatePresence mode="wait">
             <motion.div key={s.id} initial={{ opacity: 0, y: 22 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -14 }} transition={{ duration: 0.55, ease: EASE }}>
@@ -76,7 +76,7 @@ export default function HomeHero({ banners, stats }) {
                 <Link to={s.to} className="button-primary sheen inline-flex items-center gap-2 rounded-full border px-6 py-3.5 text-[14px] font-bold shadow-btn transition hover:-translate-y-0.5">
                   {s.cta} <Icon name="arrowRight" size={16} />
                 </Link>
-                <Link to="/sell" className="pill-sand border border-white px-6 py-3.5 text-[14px]">Sell on Nivora</Link>
+                <Link to="/sell" className="pill-sand border border-white px-6 py-3.5 text-[14px]">Sell on Nivorva</Link>
               </div>
             </motion.div>
           </AnimatePresence>

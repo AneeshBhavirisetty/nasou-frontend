@@ -10,7 +10,7 @@ import { saveSetting, useSettings } from '../../store/settings';
 import { categoryName } from '../../data/catalog';
 import { act } from '../../lib/act';
 
-/* Commission (requirement 10): Nivora's cut of each sub-order — the platform
+/* Commission (requirement 10): Nivorva's cut of each sub-order — the platform
    default and each retailer's own rate. Retailers pay commission only; there
    are no subscription plans (plan fees are off, decisions.subscriptionBilling). */
 
@@ -27,7 +27,7 @@ export default function AdminCommission() {
 
   return (
     <div className="space-y-5">
-      <AdminPageHead title="Commission" note="Nivora’s cut of each sub-order. Set a retailer’s own rate from their page." />
+      <AdminPageHead title="Commission" note="Nivorva’s cut of each sub-order. Set a retailer’s own rate from their page." />
       {!canEdit && <ViewOnlyBanner what="commission" />}
 
       <div className="grid gap-5 lg:grid-cols-[360px_1fr]">
@@ -38,7 +38,7 @@ export default function AdminCommission() {
           </div>
           <div className="mt-5 rounded-[16px] bg-[#f6f3ed] p-4 text-[12.5px] text-ink-70">
             <p className="font-bold text-forest">Example — ₹10,000 cart at 10%</p>
-            <p className="mt-1">Retailer A ₹6,000 → ₹5,400 to them, ₹600 to Nivora.<br />Retailer B ₹4,000 → ₹3,600 to them, ₹400 to Nivora.</p>
+            <p className="mt-1">Retailer A ₹6,000 → ₹5,400 to them, ₹600 to Nivorva.<br />Retailer B ₹4,000 → ₹3,600 to them, ₹400 to Nivorva.</p>
           </div>
         </Panel>
 

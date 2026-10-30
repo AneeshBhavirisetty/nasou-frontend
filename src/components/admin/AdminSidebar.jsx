@@ -97,7 +97,7 @@ function NavItem({ n, badges }) {
   );
 }
 
-/* `home` is where the logo links; `subtitle` sits under the Nivora name.
+/* `home` is where the logo links; `subtitle` sits under the Nivorva name.
    Entries with a `group` are listed under it; the rest come first, untitled. */
 export function SideRail({ open, onClose, nav, badges = {}, home, subtitle, label }) {
   const { logout } = useAuth();

@@ -29,7 +29,7 @@ export function retailerFootprint(retailerId) {
 export function deleteRetailer(retailerId, { by, reason }) {
   if (LIVE) return setRetailerStatus(retailerId, 'deleted', { by, note: reason });
   const { openParts } = retailerFootprint(retailerId);
-  openParts.forEach((p) => updatePart(p.orderId, p.partId, 'Cancelled', { by, note: 'Retailer closed on Nivora' }));
+  openParts.forEach((p) => updatePart(p.orderId, p.partId, 'Cancelled', { by, note: 'Retailer closed on Nivorva' }));
   return setRetailerStatus(retailerId, 'deleted', { by, note: reason });
 }
 

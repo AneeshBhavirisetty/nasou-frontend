@@ -46,7 +46,7 @@ export default function VerifyPhone({ value, onChange, token, onVerified, label 
     try {
       const res = await authApi.verifyOtp(value, otp);
       if (res?.isNewUser === false || res?.accessToken) {
-        setError('This mobile number already has a Nivora account. Sign in instead.');
+        setError('This mobile number already has a Nivorva account. Sign in instead.');
         return;
       }
       onVerified(res?.phoneToken || (IS_MOCK ? 'demo-phone-token' : ''));

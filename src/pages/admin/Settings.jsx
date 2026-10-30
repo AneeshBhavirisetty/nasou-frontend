@@ -171,7 +171,7 @@ export default function AdminSettings() {
       {tab === 'home' && <Banners canEdit={canEdit} />}
       {tab === 'tax' && (
         <RuleTable title="Tax rules" section="taxRules" canEdit={canEdit}
-          note="GST by category. Nivora delivers in Tirupati only, so every rule applies to every order. Confirm rates with your accountant."
+          note="GST by category. Nivorva delivers in Tirupati only, so every rule applies to every order. Confirm rates with your accountant."
           blank={{ department: 'plumbing', region: 'All', rate: 18 }}
           columns={[
             { key: 'department', label: 'Category', options: DEPARTMENTS.map((d) => [d.slug, d.name]) },

@@ -34,7 +34,7 @@ export default function OrderConfirmed() {
           <Icon name="check" size={34} strokeWidth={2.6} />
         </motion.span>
 
-        <p className="mt-6 text-[11px] font-bold uppercase tracking-[0.2em] text-ink-50">Nivora secure checkout</p>
+        <p className="mt-6 text-[11px] font-bold uppercase tracking-[0.2em] text-ink-50">Nivorva secure checkout</p>
         <h1 className="mt-2 text-[clamp(1.9rem,5vw,2.4rem)] font-semibold text-forest">Order placed</h1>
         <p className="mt-3 text-[14.5px] leading-relaxed text-ink-50">
           Order <span className="font-mono font-semibold text-ink">{orderId}</span> is

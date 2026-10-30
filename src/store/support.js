@@ -6,7 +6,7 @@ import { getStoredSession } from '../lib/auth';
 /* ============================================================================
  * Review 6 data the consoles read from nasou-api:
  *
- *   tickets     support tickets — a store's own (seller) or every store's (team)
+ *   tickets     support tickets — a store's or customer's own, or everyone's (team)
  *   enquiries   price requests / leads — about the store's products (seller)
  *               or all of them (team)
  *   customers   people who ordered from this store (seller only)
@@ -24,7 +24,7 @@ export const useEnquiries = () => useStore(enquiriesStore);
 export const useSellerCustomers = () => useStore(sellerCustomersStore);
 
 const role = () => getStoredSession()?.role;
-const side = () => (role() === 'ADMIN' ? '/admin' : '/seller');
+const side = () => (role() === 'ADMIN' ? '/admin' : role() === 'RETAILER' ? '/seller' : '/support');
 
 export const TICKET_CATEGORIES = [
   ['technical', 'Technical issue'],
@@ -33,6 +33,15 @@ export const TICKET_CATEGORIES = [
   ['payments', 'Payments'],
   ['payouts', 'Payouts'],
   ['account', 'Account'],
+  ['other', 'Something else'],
+];
+/* what a shopper can raise a ticket about */
+export const CUSTOMER_TICKET_CATEGORIES = [
+  ['orders', 'An order'],
+  ['payments', 'A payment'],
+  ['products', 'A product'],
+  ['account', 'My account'],
+  ['technical', 'The website'],
   ['other', 'Something else'],
 ];
 export const TICKET_PRIORITIES = [
@@ -74,7 +83,7 @@ const form = (fields, file) => {
 };
 
 export async function openTicket({ category, priority, subject, description, orderRef, file }) {
-  const t = await api('/seller/tickets', { method: 'POST', body: form({ category, priority, subject, description, orderRef }, file) });
+  const t = await api(`${side()}/tickets`, { method: 'POST', body: form({ category, priority, subject, description, orderRef }, file) });
   await loadTickets();
   return t;
 }

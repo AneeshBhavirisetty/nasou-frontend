@@ -2,7 +2,7 @@ import Icon from './Icon';
 import { SERVICE_AREA } from '../lib/geo';
 import { cx } from '../lib/format';
 
-/* "Deliver to" in the header. Nivora delivers in Tirupati only, so this states
+/* "Deliver to" in the header. Nivorva delivers in Tirupati only, so this states
    the service area instead of offering a location picker. Pass display classes
    that keep it a flex row (`flex`, `xl:flex`) — `block` stacks the pin over
    the text and pushes it out of the chip (review 6). */

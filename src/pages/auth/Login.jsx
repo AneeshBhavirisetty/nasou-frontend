@@ -13,7 +13,7 @@ import { SHOW_DEMO } from '../../lib/config';
 import { landingFor } from '../../lib/auth';
 
 /* Sign in for all three portals. Login resolves the role (and for retailers,
-   the retailer) and lands each person in the right place. Nasou Hive team
+   the retailer) and lands each person in the right place. Nivorva team
    accounts finish with a 6-digit second factor. */
 
 function detectType(v) {
@@ -83,7 +83,7 @@ export default function Login() {
 
   if (challenge) {
     return (
-      <AuthCard title="Two-step check" subtitle={`Nasou Hive team accounts need a second step. Enter the code sent to ${challenge.maskedPhone}.`} back={{ to: '/login', label: 'Use another account' }}>
+      <AuthCard title="Two-step check" subtitle={`Nivorva team accounts need a second step. Enter the code sent to ${challenge.maskedPhone}.`} back={{ to: '/login', label: 'Use another account' }}>
         <form onSubmit={submitCode} className="space-y-5">
           <OtpInput value={code} onChange={setCode} onComplete={() => {}} />
           {SHOW_DEMO && <p className="rounded-[12px] bg-[#f6f3ed] px-3 py-2 text-center text-[12px] text-ink-50">Demo code: <b className="font-mono text-forest">123456</b></p>}
@@ -99,8 +99,8 @@ export default function Login() {
   return (
     <AuthCard
       title="Sign in"
-      subtitle="Shoppers, retailers and the Nivora team all sign in here."
-      footer={<>New to Nivora? <Link to="/register" className="font-bold text-forest hover:underline">Sign up as a customer</Link> · <Link to="/sell/register" className="font-bold text-forest hover:underline">Sign up as a retailer</Link></>}
+      subtitle="Shoppers, retailers and the Nivorva team all sign in here."
+      footer={<>New to Nivorva? <Link to="/register" className="font-bold text-forest hover:underline">Sign up as a customer</Link> · <Link to="/sell/register" className="font-bold text-forest hover:underline">Sign up as a retailer</Link></>}
     >
       <form onSubmit={submit} noValidate className="space-y-4">
         <Field

@@ -154,7 +154,7 @@ export function CreateOrderDialog({ open, onClose }) {
             </label>
             <Button onClick={lookup} loading={busy && !who} variant="outline" icon="search">Find</Button>
           </div>
-          {who && !who.found && <p className="mt-2 rounded-md bg-amber-50 px-3 py-2 text-[12.5px] text-amber">No Nivora customer has this number. Ask them to sign up on Nivora first, then place the order here.</p>}
+          {who && !who.found && <p className="mt-2 rounded-md bg-amber-50 px-3 py-2 text-[12.5px] text-amber">No Nivorva customer has this number. Ask them to sign up on Nivorva first, then place the order here.</p>}
           {who?.found && <p className="mt-2 flex items-center gap-1.5 text-[13px] font-bold text-emerald-700"><Icon name="check" size={14} /> {who.firstName}{who.savedAddress ? ` · delivers to ${who.savedAddress}` : ' · no saved address'}</p>}
         </div>
 

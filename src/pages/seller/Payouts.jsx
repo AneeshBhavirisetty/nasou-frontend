@@ -9,7 +9,7 @@ import { formatOrderDate } from '../../data/orders';
 import { money } from '../../lib/format';
 
 /* Seller payouts (requirements 13 and 14): what each week earned, what is
-   still owed, and every payment Nivora sent — with Razorpay's payout id and
+   still owed, and every payment Nivorva sent — with Razorpay's payout id and
    the bank UTR to match against the bank statement. */
 const WEEK_TEXT = { open: 'This week', ready: 'To be paid', processing: 'On its way', paid: 'Paid' };
 

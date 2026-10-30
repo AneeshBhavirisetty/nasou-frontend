@@ -6,7 +6,7 @@ import { del, get, patch as apiPatch, post, refresh } from '../lib/live';
 
 /* ============================================================================
  * Accounts — every sign-in identity the demo knows about, so the mock auth
- * behaves like the real one: Nasou Hive team members (ADMIN + role preset),
+ * behaves like the real one: Nivorva team members (ADMIN + role preset),
  * retailer owners and their staff (RETAILER + retailerId), and customers.
  *
  * Demo passwords are checked here only because there is no server in the

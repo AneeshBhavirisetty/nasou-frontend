@@ -71,7 +71,7 @@ let _supplierName = new Map(suppliers.map((s) => [s.slug, s.name]));
 /* Listed on the storefront only while its retailer may sell (requirement 11:
    suspending a retailer hides their products). */
 export const isListed = (p) => !!p && (LIVE && !p.retailerId ? true : canSell(getRetailer(p.retailerId)));
-/* No retailer = the store's own catalogue (the master sheet), sold by Nivora itself. */
+/* No retailer = the store's own catalogue (the master sheet), sold by Nivorva itself. */
 export const sellerName = (p) => (p && !p.retailerId ? brand.name : getRetailer(p?.retailerId)?.name || '');
 
 /* Live bindings: rebuilt whenever a retailer's status changes, so the shop
@@ -283,7 +283,7 @@ export function buildTrace(product) {
     { stage: 'Supplier', place: product.supplierName, detail: 'Manufacturer of record', code: 'SUP' },
     { stage: 'Material', place: product.material, detail: `${product.form} · ${product.size || 'standard'}`, code: 'MAT' },
     { stage: 'Batch', place: batchId(product), detail: 'Deterministic batch reference', code: 'BAT' },
-    { stage: 'Seller', place: sellerName(product) || 'Nivora seller', detail: product.stock > 0 ? `${product.stock} in stock` : 'Awaiting restock', code: 'WH' },
+    { stage: 'Seller', place: sellerName(product) || 'Nivorva seller', detail: product.stock > 0 ? `${product.stock} in stock` : 'Awaiting restock', code: 'WH' },
     { stage: 'Dispatch', place: 'Pan-India courier', detail: 'GST invoice included', code: 'SHIP' },
   ];
 }

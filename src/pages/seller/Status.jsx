@@ -40,7 +40,7 @@ export default function SellerStatus() {
       try {
         await post('/seller/resubmit', form);
         await refresh('retailers');
-        toast.success('Re-submitted — the Nivora team will review it again');
+        toast.success('Re-submitted — the Nivorva team will review it again');
       } catch (x) {
         toast.error(x.message);
       } finally {
@@ -49,7 +49,7 @@ export default function SellerStatus() {
       return;
     }
     resubmitApplication(r.id, { documents: docs.map((d) => (d.status === 'rejected' ? d : { ...d, status: d.status === 'verified' ? 'verified' : 'submitted' })) });
-    toast.success('Re-submitted — the Nivora team will review it again');
+    toast.success('Re-submitted — the Nivorva team will review it again');
     setBusy(false);
   };
   const stillRejected = docs.some((d) => d.status === 'rejected');
@@ -59,7 +59,7 @@ export default function SellerStatus() {
       <section className="relative overflow-hidden rounded-[28px] bg-[linear-gradient(135deg,#173d33_0%,#1f5c4a_100%)] p-6 text-white shadow-pop sm:p-9">
         <div className="field-dots-dark pointer-events-none absolute inset-0 opacity-30" />
         <div className="relative">
-          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-100">Your Nivora application</p>
+          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-100">Your Nivorva application</p>
           <h1 className="font-hero mt-3 text-[clamp(1.6rem,4vw,2.4rem)] font-semibold text-white">
             {r.status === 'pending' && 'We’re checking your documents.'}
             {r.status === 'needs_changes' && 'A few things need fixing.'}
@@ -84,7 +84,7 @@ export default function SellerStatus() {
 
       {last && (
         <div className={cx('rounded-[20px] border p-4', r.status === 'rejected' ? 'border-clay/20 bg-clay-50' : 'border-amber/20 bg-amber-50')}>
-          <p className={cx('text-[13px] font-bold', r.status === 'rejected' ? 'text-clay-600' : 'text-amber')}>Message from the Nivora team</p>
+          <p className={cx('text-[13px] font-bold', r.status === 'rejected' ? 'text-clay-600' : 'text-amber')}>Message from the Nivorva team</p>
           <p className="mt-1 text-[14px] text-ink">{last.note}</p>
         </div>
       )}

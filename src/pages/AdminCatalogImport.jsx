@@ -46,7 +46,7 @@ export default function AdminCatalogImport() {
     const ws = XLSX.utils.aoa_to_sheet([MASTER_COLUMNS.map(([, title]) => title), ...mine.map(sheetRow)]);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Products');
-    XLSX.writeFile(wb, `nivora-products-${seller?.name.replace(/\W+/g, '-').toLowerCase()}-${isoDate()}.xlsx`);
+    XLSX.writeFile(wb, `nivorva-products-${seller?.name.replace(/\W+/g, '-').toLowerCase()}-${isoDate()}.xlsx`);
     audit({ action: 'export.xlsx', entity: 'catalog', entityId: rid, summary: `Exported ${mine.length} products of ${seller?.name}` });
     toast.success(`${mine.length} products exported`);
   };

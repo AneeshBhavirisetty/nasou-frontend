@@ -89,7 +89,7 @@ export default function Home() {
         <div className="field-dots-dark pointer-events-none absolute inset-0 opacity-25" />
         <div className="relative grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
           <div>
-            <p className="text-[11px] font-extrabold uppercase tracking-[0.28em] text-emerald-100">How Nivora works</p>
+            <p className="text-[11px] font-extrabold uppercase tracking-[0.28em] text-emerald-100">How Nivorva works</p>
             <h2 className="font-hero mt-4 text-[clamp(1.9rem,4.5vw,3.2rem)] font-normal tracking-[-0.045em] leading-[1.02] text-white">One cart. Many counters. Every part tracked.</h2>
             <p className="mt-4 max-w-md text-[15px] leading-7 text-emerald-100">Add fittings from different shops, pay once, and watch each seller pack and ship their part — with one GST invoice per order.</p>
             <Link to="/shop" className="mt-7 inline-flex items-center gap-2 rounded-full bg-white px-6 py-3.5 text-[14px] font-bold text-forest">Start shopping <Icon name="arrowRight" size={15} /></Link>
@@ -169,7 +169,7 @@ export default function Home() {
         <div className="relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
           <div className="max-w-xl">
             <p className="section-label">For retailers</p>
-            <h2 className="font-hero mt-3 text-[clamp(1.6rem,4vw,2.6rem)] font-semibold leading-[1.05] text-forest">Run a counter? Sell on Nivora and get paid every week.</h2>
+            <h2 className="font-hero mt-3 text-[clamp(1.6rem,4vw,2.6rem)] font-semibold leading-[1.05] text-forest">Run a counter? Sell on Nivorva and get paid every week.</h2>
           </div>
           <Link to="/sell" className="inline-flex w-fit items-center gap-2 rounded-full bg-forest px-7 py-4 text-[14.5px] font-bold text-white shadow-btn transition hover:-translate-y-0.5">Open your store <Icon name="arrowRight" size={16} /></Link>
         </div>

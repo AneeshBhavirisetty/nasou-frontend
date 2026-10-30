@@ -105,15 +105,15 @@ export async function fileUrl(path) {
 /* ── Mock auth ──────────────────────────────────────────────────────────────
  * Runs only in demo mode (no backend). Accounts live in store/accounts.js;
  * every seeded account uses the password `nivora123` (the old `nasou123`
- * still works). Nasou Hive team accounts need a second factor after the
+ * still works). Nivorva team accounts need a second factor after the
  * password — the demo code is 123456. See DEMO_ACCOUNTS for the list.
  * ────────────────────────────────────────────────────────────────────────── */
 
 /* Shown on the sign-in page in demo mode, grouped by portal. */
 export const DEMO_ACCOUNTS = [
-  { group: 'Super Admin (Nasou Hive team)', email: 'owner@nivora.test', label: 'Owner · IAM admin' },
-  { group: 'Super Admin (Nasou Hive team)', email: 'ops@nivora.test', label: 'Operations' },
-  { group: 'Super Admin (Nasou Hive team)', email: 'management@nivora.test', label: 'Management' },
+  { group: 'Super Admin (Nivorva team)', email: 'owner@nivora.test', label: 'Owner · IAM admin' },
+  { group: 'Super Admin (Nivorva team)', email: 'ops@nivora.test', label: 'Operations' },
+  { group: 'Super Admin (Nivorva team)', email: 'management@nivora.test', label: 'Management' },
   { group: 'Retailers', email: 'retailer@nivora.test', label: 'Sri Sai Pipes · owner' },
   { group: 'Retailers', email: 'staff@nivora.test', label: 'Sri Sai Pipes · fulfilment staff' },
   { group: 'Retailers', email: 'retailer2@nivora.test', label: 'Deccan Hardware · owner' },
@@ -155,12 +155,12 @@ const delay = (ms = 450) => new Promise((r) => setTimeout(r, ms));
 
 /* account → error message if it may not sign in, else null */
 function loginBlock(a) {
-  if (a.status === 'blocked') return 'This account is blocked. Contact Nivora support to restore it.';
+  if (a.status === 'blocked') return 'This account is blocked. Contact Nivorva support to restore it.';
   if (a.status === 'suspended') return 'This team account is suspended. Ask the Owner to re-activate it.';
   if (a.role === 'RETAILER') {
     const r = getRetailer(a.retailerId);
     if (!r || r.status === 'deleted') return 'This store has been closed.';
-    if (r.status === 'deactivated') return 'This store is deactivated, so sign-in is disabled. Contact Nivora to restore it.';
+    if (r.status === 'deactivated') return 'This store is deactivated, so sign-in is disabled. Contact Nivorva to restore it.';
   }
   return null;
 }

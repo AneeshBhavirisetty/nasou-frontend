@@ -48,7 +48,7 @@ export default function SellerBilling() {
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Kpi label={`Billed (${days} days)`} value={rupeesCompact(billed)} note={`${live.length} orders · incl. GST`} icon="receipt" />
-        <Kpi label="GST on your invoices" value={rupeesCompact(gst)} note="Collected by Nivora as the marketplace" icon="fileText" />
+        <Kpi label="GST on your invoices" value={rupeesCompact(gst)} note="Collected by Nivorva as the marketplace" icon="fileText" />
         <Kpi label="Commission" value={rupeesCompact(commission)} note={`${retailer?.commission?.rate ?? 10}% of each order`} icon="percent" />
         <Kpi label="Owed to you now" value={money(bal.unpaid)} note={`${money(bal.held)} held until delivery`} icon="rupee" />
       </div>
@@ -57,7 +57,7 @@ export default function SellerBilling() {
         <Panel title="How the money moves">
           <ol className="grid gap-3 sm:grid-cols-4">
             {[
-              ['cart', 'Customer pays Nivora', 'UPI, card, net banking, or cash on delivery.'],
+              ['cart', 'Customer pays Nivorva', 'UPI, card, net banking, or cash on delivery.'],
               ['receipt', 'GST invoice per order', 'In your store’s name with your GSTIN — open it below.'],
               ['percent', 'Commission comes off', `${retailer?.commission?.rate ?? 10}% of the order total.`],
               ['rupee', 'Weekly payout', 'Every Monday–Sunday week, once delivered, to your bank.'],

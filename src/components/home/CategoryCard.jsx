@@ -42,10 +42,6 @@ export default function CategoryCard({ dept, photo, to, index = 0, className = '
         {/* the fade the text sits on */}
         <span className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(31,59,52,0)_58%,rgba(31,59,52,0.45)_78%,rgba(23,52,44,0.9)_100%)]" />
 
-        {/* number and icon */}
-        <span className="absolute left-3 top-3 rounded-full bg-white/85 px-2.5 py-1 font-mono text-[10.5px] font-bold tracking-[0.12em] text-forest shadow-card backdrop-blur sm:left-4 sm:top-4">
-          {String(index + 1).padStart(2, '0')}
-        </span>
         <span className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-[12px] border border-white/50 bg-white/30 text-forest shadow-[0_8px_20px_rgba(0,0,0,0.12)] backdrop-blur-md transition duration-500 group-hover:rotate-[-8deg] group-hover:bg-white sm:right-4 sm:top-4 sm:h-10 sm:w-10">
           <Icon name={dept.icon} size={17} />
         </span>

@@ -15,7 +15,7 @@ import { cx } from '../../lib/format';
 /* Seller › Support (client review 6, section 15): raise a ticket for a
    technical problem, product uploads, an order, payments, payouts or the
    account — with a category, priority, description and an attachment — and
-   follow it Open → In progress → Resolved → Closed while the Nivora team
+   follow it Open → In progress → Resolved → Closed while the Nivorva team
    replies here. Each reply or status change also rings the bell and emails
    the store. */
 
@@ -38,7 +38,7 @@ function NewTicket({ open, onClose, onCreated }) {
     setBusy(true);
     try {
       const t = await openTicket({ ...f, subject: f.subject.trim(), description: f.description.trim(), file });
-      toast.success(`${t.number} raised — the Nivora team will reply here`);
+      toast.success(`${t.number} raised — the Nivorva team will reply here`);
       setF({ category: 'technical', priority: 'medium', subject: '', description: '', orderRef: '' });
       setFile(null);
       onCreated(t.id);
@@ -104,11 +104,11 @@ export default function SellerSupport() {
 
   return (
     <div className="space-y-5">
-      <AdminPageHead title="Support" note="Raise a ticket and the Nivora team replies here — you also get a notification and an email.">
+      <AdminPageHead title="Support" note="Raise a ticket and the Nivorva team replies here — you also get a notification and an email.">
         {!readOnly && LIVE && <Button size="sm" icon="plus" onClick={() => setCreating(true)}>New ticket</Button>}
       </AdminPageHead>
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Kpi label="Open" value={count(['OPEN'])} note="Waiting for Nivora" icon="ticket" />
+        <Kpi label="Open" value={count(['OPEN'])} note="Waiting for Nivorva" icon="ticket" />
         <Kpi label="In progress" value={count(['IN_PROGRESS'])} note="Being worked on" icon="clock" />
         <Kpi label="Resolved" value={count(['RESOLVED'])} note="Reply to re-open" icon="check" />
         <Kpi label="Closed" value={count(['CLOSED'])} note="All done" icon="lock" />
@@ -146,7 +146,7 @@ export default function SellerSupport() {
           </section>
           <section className="overflow-hidden rounded-[20px] border border-line bg-white shadow-card">
             {openId ? <TicketThread id={openId} side="store" onChanged={() => loadTickets()} />
-              : <div className="grid h-full min-h-[360px] place-items-center p-8"><EmptyNote icon="ticket" title="Pick a ticket" body="Or raise a new one — the Nivora team usually replies within a working day." /></div>}
+              : <div className="grid h-full min-h-[360px] place-items-center p-8"><EmptyNote icon="ticket" title="Pick a ticket" body="Or raise a new one — the Nivorva team usually replies within a working day." /></div>}
           </section>
         </div>
       )}

@@ -24,7 +24,7 @@ import { cx, money, itemCode } from '../../lib/format';
  *
  * The server only ever applies them to this store's own lines (nasou-api
  * PricingEngine checks the retailer per line), and they are kept apart from
- * Nivora's own codes. `?apply=1` (Products › Apply discount) opens "Apply a
+ * Nivorva's own codes. `?apply=1` (Products › Apply discount) opens "Apply a
  * code to products".
  * ==========================================================================*/
 
@@ -32,11 +32,16 @@ const TARGETS = [
   ['all', 'All my products'],
   ['dept', 'A whole category'],
   ['sub', 'A sub-category'],
+  ['brand', 'A brand'],
+  ['kind', 'An item type'],
   ['picked', 'Picked products'],
 ];
 
 /* scope → target fields, and back */
 const targetOf = (c) => (c.productSkus?.length ? 'picked' : c.scope?.startsWith('dept:') ? 'dept' : c.scope ? 'sub' : 'all');
+/* the store's products of one brand or item type */
+const groupProducts = (t, products) => (t.target === 'brand' ? products.filter((p) => p.supplier === t.brand)
+  : t.target === 'kind' ? products.filter((p) => typeKey(p.kind) === t.kind) : []);
 const describeTarget = (c) => {
   if (c.productSkus?.length) return `${c.productSkus.length} picked product${c.productSkus.length === 1 ? '' : 's'}`;
   if (c.scope?.startsWith('dept:')) return `All ${departmentName(c.scope.slice(5))}`;
@@ -47,8 +52,9 @@ const valueText = (c) => (c.kind === 'percent' ? `${c.value}% off` : `${money(c.
 
 /* Picks what a discount applies to, from this store's own products. Every
    category is listed (client review 7: "only Electrical is coming") — those
-   the store sells nothing in are greyed. Picked products can be narrowed by
-   category, sub-category, brand and item type, then selected all at once. */
+   the store sells nothing in are greyed. A brand or an item type (review 8) is
+   saved as the products it stands for today. Picked products can be narrowed
+   by category, sub-category, brand and item type, then selected all at once. */
 function TargetPicker({ value, onChange, products }) {
   const [q, setQ] = useState('');
   const [f, setF] = useState({ dept: '', sub: '', brand: '', kind: '' });
@@ -78,11 +84,11 @@ function TargetPicker({ value, onChange, products }) {
   const count = value.target === 'all' ? products.length
     : value.target === 'dept' ? products.filter((p) => p.department === value.dept).length
       : value.target === 'sub' ? products.filter((p) => p.category === value.sub).length
-        : picked.size;
+        : value.target === 'picked' ? picked.size : groupProducts(value, products).length;
 
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
         {TARGETS.map(([k, l]) => (
           <button key={k} type="button" onClick={() => onChange({ ...value, target: k })} className={cx('rounded-[14px] border px-3 py-2.5 text-left text-[12.5px] font-bold transition', value.target === k ? 'border-forest bg-forest text-white shadow-btn' : 'border-line bg-white text-ink-70 hover:border-forest/40')}>{l}</button>
         ))}
@@ -97,6 +103,18 @@ function TargetPicker({ value, onChange, products }) {
         <select value={value.sub} onChange={(e) => onChange({ ...value, sub: e.target.value })} className={SELECT_CLS}>
           <option value="">Choose a sub-category…</option>
           {subs.map(([s, n]) => <option key={s} value={s}>{categoryName(s)} ({n})</option>)}
+        </select>
+      )}
+      {value.target === 'brand' && (
+        <select value={value.brand || ''} onChange={(e) => onChange({ ...value, brand: e.target.value })} className={SELECT_CLS}>
+          <option value="">Choose a brand…</option>
+          {countBy(products, (p) => p.supplier).map(([k, n]) => <option key={k} value={k}>{products.find((p) => p.supplier === k)?.supplierName || k} ({n})</option>)}
+        </select>
+      )}
+      {value.target === 'kind' && (
+        <select value={value.kind || ''} onChange={(e) => onChange({ ...value, kind: e.target.value })} className={SELECT_CLS}>
+          <option value="">Choose an item type…</option>
+          {countBy(products, (p) => typeKey(p.kind)).map(([k, n]) => <option key={k} value={k}>{typeLabel(k)} ({n})</option>)}
         </select>
       )}
       {value.target === 'picked' && (
@@ -145,10 +163,18 @@ function TargetPicker({ value, onChange, products }) {
   );
 }
 
-const targetToScope = (t) => ({
+const targetToScope = (t, products) => ({
   scope: t.target === 'dept' && t.dept ? `dept:${t.dept}` : t.target === 'sub' && t.sub ? t.sub : '',
-  productSkus: t.target === 'picked' ? t.skus : [],
+  productSkus: t.target === 'picked' ? t.skus : groupProducts(t, products).map((p) => p.sku),
 });
+/* what still has to be chosen; without it a discount would fall back to every product */
+const targetProblem = (t, products) => (
+  t.target === 'dept' && !t.dept ? 'Choose the category.'
+    : t.target === 'sub' && !t.sub ? 'Choose the sub-category.'
+      : t.target === 'brand' && !t.brand ? 'Choose the brand.'
+        : t.target === 'kind' && !t.kind ? 'Choose the item type.'
+          : t.target === 'picked' && !t.skus.length ? 'Pick at least one product.'
+            : (t.target === 'brand' || t.target === 'kind') && !groupProducts(t, products).length ? 'No products there yet.' : '');
 const scopeToTarget = (c) => ({
   target: targetOf(c),
   dept: c.scope?.startsWith('dept:') ? c.scope.slice(5) : '',
@@ -172,13 +198,12 @@ function CodeDialog({ coupon, onClose, products, prefix }) {
 
   const save = async (e) => {
     e.preventDefault();
-    if (t.target === 'dept' && !t.dept) return toast.error('Choose the category.');
-    if (t.target === 'sub' && !t.sub) return toast.error('Choose the sub-category.');
-    if (t.target === 'picked' && !t.skus.length) return toast.error('Pick at least one product.');
+    const problem = targetProblem(t, products);
+    if (problem) return toast.error(problem);
     setBusy(true);
     const ok = await act(toast, () => saveCoupon({
       ...coupon, ...f, code: f.code.trim().toUpperCase(), value: Number(f.value), minOrder: Number(f.minOrder) || 0,
-      maxDiscount: Number(f.maxDiscount) || 0, usageLimit: f.usageLimit === '' ? null : Number(f.usageLimit), ...targetToScope(t),
+      maxDiscount: Number(f.maxDiscount) || 0, usageLimit: f.usageLimit === '' ? null : Number(f.usageLimit), ...targetToScope(t, products),
     }), isNew ? `Code ${f.code.toUpperCase()} created` : 'Code saved');
     setBusy(false);
     if (ok) onClose();
@@ -194,7 +219,7 @@ function CodeDialog({ coupon, onClose, products, prefix }) {
           <label><span className={LABEL_CLS}>Minimum spend (₹)</span><input inputMode="numeric" value={f.minOrder} onChange={set('minOrder')} placeholder="None" className={SELECT_CLS} /></label>
           {f.kind === 'percent' && <label><span className={LABEL_CLS}>Cap (₹)</span><input inputMode="numeric" value={f.maxDiscount} onChange={set('maxDiscount')} placeholder="No cap" className={SELECT_CLS} /></label>}
           <label><span className={LABEL_CLS}>Uses allowed</span><input inputMode="numeric" value={f.usageLimit} onChange={set('usageLimit')} placeholder="Unlimited" className={SELECT_CLS} /></label>
-          <label><span className={LABEL_CLS}>Starts</span><input type="date" value={f.startsOn} onChange={set('startsOn')} className={SELECT_CLS} /></label>
+          <label><span className={LABEL_CLS}>Starts (blank = today)</span><input type="date" value={f.startsOn} onChange={set('startsOn')} className={SELECT_CLS} /></label>
           <label><span className={LABEL_CLS}>Last day</span><input type="date" value={f.expiry} onChange={set('expiry')} className={SELECT_CLS} /></label>
         </div>
         <div>
@@ -225,8 +250,11 @@ function ApplyDialog({ coupons, onClose, products }) {
   const [busy, setBusy] = useState(false);
   const apply = async () => {
     if (!c) return;
+    const problem = targetProblem(t, products);
+    if (problem) return toast.error(problem);
+    const scope = targetToScope(t, products);
     setBusy(true);
-    const ok = await act(toast, () => saveCoupon({ ...c, ...targetToScope(t) }), `${c.code} now applies to ${describeTarget({ ...c, ...targetToScope(t) })}`);
+    const ok = await act(toast, () => saveCoupon({ ...c, ...scope }), `${c.code} now applies to ${describeTarget({ ...c, ...scope })}`);
     setBusy(false);
     if (ok) onClose();
   };
@@ -260,10 +288,11 @@ function RuleDialog({ rule, onClose, products }) {
   const [busy, setBusy] = useState(false);
   const save = async (e) => {
     e.preventDefault();
-    if (t.target === 'picked' && !t.skus.length) return toast.error('Pick at least one product.');
-    /* an automatic discount is "all products" or picked ones; a category or sub-category is turned into its products */
+    const problem = targetProblem(t, products);
+    if (problem) return toast.error(problem);
+    /* an automatic discount is "all products" or a list of them; anything narrower is turned into its products */
     const skus = t.target === 'picked' ? t.skus : t.target === 'dept' ? products.filter((p) => p.department === t.dept).map((p) => p.sku)
-      : t.target === 'sub' ? products.filter((p) => p.category === t.sub).map((p) => p.sku) : [];
+      : t.target === 'sub' ? products.filter((p) => p.category === t.sub).map((p) => p.sku) : groupProducts(t, products).map((p) => p.sku);
     setBusy(true);
     const ok = await act(toast, () => saveBulkRule({ ...rule, ...f, scopeType: 'retailer', minQty: Number(f.minQty), value: Number(f.value), productSkus: skus }), 'Automatic discount saved');
     setBusy(false);
@@ -310,7 +339,7 @@ export default function SellerDiscounts() {
 
   return (
     <div className="space-y-5">
-      <AdminPageHead title="Discounts" note="Your own codes and automatic discounts — they only ever apply to your products, and stay separate from Nivora’s offers.">
+      <AdminPageHead title="Discounts" note="Your own codes and automatic discounts — they only ever apply to your products, and stay separate from Nivorva’s offers.">
         {!readOnly && <Button size="sm" variant="outline" icon="tag" onClick={() => setDialog({ type: 'apply' })}>Apply a code to products</Button>}
         {!readOnly && <Button size="sm" icon="plus" onClick={() => setDialog({ type: tab === 'codes' ? 'code' : 'rule' })}>{tab === 'codes' ? 'New discount code' : 'New automatic discount'}</Button>}
       </AdminPageHead>
@@ -338,7 +367,7 @@ export default function SellerDiscounts() {
                   <span className="rounded-[10px] border border-dashed border-forest/40 bg-emerald-50/60 px-3 py-1.5 font-mono text-[14px] font-bold text-forest">{c.code}</span>
                   <div className="min-w-0 flex-1">
                     <p className="text-[13.5px] font-bold text-ink">{valueText(c)}{c.maxDiscount ? ` · up to ${money(c.maxDiscount)}` : ''}{c.minOrder ? ` · on ${money(c.minOrder)}+` : ''}</p>
-                    <p className="text-[12px] text-ink-50">{describeTarget(c)} · used {c.timesUsed || 0}{c.usageLimit ? ` of ${c.usageLimit}` : ''}{c.expiry ? ` · until ${c.expiry}` : ''}{c.autoApply ? ' · applies by itself' : ''}</p>
+                    <p className="text-[12px] text-ink-50">{describeTarget(c)} · used {c.timesUsed || 0}{c.usageLimit ? ` of ${c.usageLimit}` : ''}{c.startsOn ? ` · from ${c.startsOn}` : ''}{c.expiry ? ` · until ${c.expiry}` : ''}{c.autoApply ? ' · applies by itself' : ''}</p>
                   </div>
                   <StatusPill status={c.active ? 'active' : 'inactive'} label={c.active ? 'Active' : 'Paused'} />
                   {!readOnly && (

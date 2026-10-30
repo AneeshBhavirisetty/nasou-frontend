@@ -35,6 +35,7 @@ import SellerCustomers from './pages/seller/Customers';
 import SellerEnquiries from './pages/seller/Enquiries';
 import SellerBilling from './pages/seller/Billing';
 import SellerReports from './pages/seller/Reports';
+import Support from './pages/Support';
 import SellerSupport from './pages/seller/Support';
 import AdminSupport from './pages/admin/Support';
 import AdminEnquiries from './pages/admin/Enquiries';
@@ -118,6 +119,7 @@ export default function App() {
         <Route element={<ProtectedLayout />}>
           <Route path="/orders" element={<Orders />} />
           <Route path="/account" element={<Account />} />
+          <Route path="/support" element={<Support />} />
         </Route>
 
         <Route element={<AuthLayout />}>

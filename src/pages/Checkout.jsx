@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import Icon from '../components/Icon';
 import ProductArt from '../components/ProductArt';
+import AvailableOffers from '../components/AvailableOffers';
 import AddressForm, { addressProblem, blankAddress } from '../components/AddressForm';
 import { Badge, Button, Container, Breadcrumbs } from '../components/ui';
 import { useCart } from '../context/CartContext';
@@ -202,14 +203,17 @@ export default function Checkout() {
     );
   }
 
-  const applyCode = () => {
+  /* `picked`: a code tapped in the offers list; otherwise the typed one */
+  const applyCode = (picked) => {
+    const typed = (typeof picked === 'string' ? picked : code).trim().toUpperCase();
+    if (typeof picked === 'string') setCode(typed);
     if (LIVE) {
-      if (!code.trim()) return undefined;
-      setLiveCode(code.trim().toUpperCase());
+      if (!typed) return undefined;
+      setLiveCode(typed);
       setRemovedAuto(false);
       return undefined;
     }
-    const c = coupons.find((x) => x.code === code.trim().toUpperCase());
+    const c = coupons.find((x) => x.code === typed);
     if (!c) return toast.error('That code isn’t valid.');
     setManual(c);
     setRemovedAuto(false);
@@ -307,7 +311,7 @@ export default function Checkout() {
       <div className="rounded-[20px] bg-white/70 p-4 shadow-card backdrop-blur sm:rounded-[24px] sm:border sm:border-white/80 sm:p-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-ink-50">Nivora secure checkout</p>
+            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-ink-50">Nivorva secure checkout</p>
             <h1 className="font-hero mt-2 text-[clamp(1.6rem,4vw,2.1rem)] font-semibold text-forest">Complete your order</h1>
           </div>
           <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-[12px] font-bold text-emerald-700"><Icon name="shieldCheck" size={14} /> {groups.length} seller{groups.length > 1 ? 's' : ''} · one payment</span>
@@ -370,7 +374,7 @@ export default function Checkout() {
             {step === 2 && (
               <>
                 <h2 className="text-[20px] font-semibold text-forest">How would you like to pay?</h2>
-                <p className="mt-1 text-[14px] text-ink-50">Pay once — Razorpay splits it between the sellers and Nivora.</p>
+                <p className="mt-1 text-[14px] text-ink-50">Pay once — Razorpay splits it between the sellers and Nivorva.</p>
                 <div className="mt-6 grid gap-2.5 sm:grid-cols-2">
                   {paymentMethods.filter((m) => m !== 'GST invoice').map((m) => (
                     <button key={m} onClick={() => setPay(m)} className={cx('flex items-center gap-3 rounded-[18px] border p-4 text-left transition sm:p-5', pay === m ? 'border-forest bg-white shadow-card' : 'border-line-soft bg-white hover:border-forest/40')}>
@@ -454,9 +458,10 @@ export default function Checkout() {
               ) : (
                 <div className="flex gap-2">
                   <input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} onKeyDown={(e) => e.key === 'Enter' && applyCode()} placeholder="Discount code" className="h-11 min-w-0 flex-1 rounded-md border border-[#dfe7e3] bg-white px-3.5 text-[13px] font-semibold uppercase tracking-wide outline-none focus:border-forest" />
-                  <button onClick={applyCode} className="h-11 shrink-0 rounded-md bg-sunk px-4 text-[13px] font-bold text-forest hover:bg-emerald-100/60">Apply</button>
+                  <button onClick={() => applyCode()} className="h-11 shrink-0 rounded-md bg-sunk px-4 text-[13px] font-bold text-forest hover:bg-emerald-100/60">Apply</button>
                 </div>
               )}
+              <AvailableOffers items={items} fallback={coupons.filter((c) => c.active)} onApply={applyCode} current={calc.couponAmount > 0 ? calc.coupon?.code : null} />
             </div>
 
             <dl className="mt-4 space-y-2.5 text-[14px]">
@@ -472,7 +477,7 @@ export default function Checkout() {
             </div>
             {totals.savings > 0 && <div className="mt-4"><Badge tone="ok" icon="check">You saved {money(totals.savings + calc.couponAmount)}</Badge></div>}
             <p className="mt-4 flex items-center gap-2 rounded-[16px] bg-[#f6f3ed] p-3.5 text-[12.5px] font-semibold text-ink-70">
-              <Icon name="shieldCheck" size={16} className="shrink-0 text-forest" /> Verified sellers. One payment, split securely by Razorpay.
+              <Icon name="shieldCheck" size={16} className="shrink-0 text-forest" /> Verified sellers. One secure payment by Razorpay.
             </p>
           </div>
         </aside>

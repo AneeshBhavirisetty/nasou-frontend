@@ -9,14 +9,14 @@ import { formatOrderDate } from '../../data/orders';
 /* Seller › Enquiries (client review 6, customer item 14: "will the retailer
    get an email or anything?"). When a shopper asks for a price on one of this
    store's products, the store gets a bell notification, an email to its
-   address, and the enquiry here. Nivora's trade desk calls the shopper back;
+   address, and the enquiry here. Nivorva's trade desk calls the shopper back;
    the store sees who asked, for what, and how it was handled. */
 
 export default function SellerEnquiries() {
   const list = useEnquiries();
   return (
     <div className="space-y-5">
-      <AdminPageHead title="Enquiries" note="Shoppers asking for a price on your products. Nivora’s trade desk calls them back within a working day; you get a notification and an email for each one." />
+      <AdminPageHead title="Enquiries" note="Shoppers asking for a price on your products. Nivorva’s trade desk calls them back within a working day; you get a notification and an email for each one." />
       <Panel pad={false}>
         {!LIVE ? (
           <div className="p-6"><EmptyNote icon="inbox" title="Enquiries arrive from the live store" body="Connect the API to see price requests about your products." /></div>
@@ -37,7 +37,7 @@ export default function SellerEnquiries() {
                     </p>
                     <p className="mt-1.5 rounded-[12px] bg-[#f6f3ed] px-3 py-2 text-[13px] text-ink-70">{e.message}</p>
                   </div>
-                  <StatusPill status={(e.status || 'NEW').toLowerCase()} label={e.status === 'CONTACTED' ? 'Called back' : e.status === 'CLOSED' ? 'Closed' : 'New'} />
+                  <StatusPill status={(e.status || 'NEW').toLowerCase()} label={e.status === 'CONTACTED' ? 'Called back' : e.status === 'CLOSED' ? 'Closed' : 'Not called'} />
                 </li>
               );
             })}

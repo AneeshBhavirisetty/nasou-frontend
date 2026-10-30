@@ -166,7 +166,7 @@ export default function ProductDetail() {
             </p>
             <h1 className="mt-2 text-[clamp(1.6rem,4vw,2rem)] font-semibold leading-tight text-forest">{product.name}</h1>
             <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-sand-50 px-3 py-1.5 text-[12.5px] font-bold text-forest">
-              <Icon name="store" size={14} /> Sold by {sellerName(product) || 'a Nivora seller'}
+              <Icon name="store" size={14} /> Sold by {sellerName(product) || 'a Nivorva seller'}
               {isListed(product) ? <Icon name="shieldCheck" size={14} className="text-emerald-700" /> : <span className="text-clay-600">· not taking orders</span>}
             </p>
             <p className="mt-3 text-[14.5px] leading-6 text-ink-50">{product.description}</p>

@@ -14,7 +14,7 @@ import { isMobile10, cx, itemCode } from '../lib/format';
 /* What happens after "Send enquiry" (client review 6, customer item 14) —
    the same steps nasou-api's EnquiryService takes. */
 const NEXT_STEPS = (product) => [
-  ['inbox', 'Saved with the Nivora trade desk', 'The team sees it straight away in Super Admin › Enquiries, with a notification.'],
+  ['inbox', 'Saved with the Nivorva trade desk', 'The team sees it straight away in Super Admin › Enquiries, with a notification.'],
   ...(product ? [['store', `${sellerName(product)} is told too`, `The seller of ${itemCode(product)} gets a notification and an email, and sees it under Enquiries.`]] : []),
   ['phone', 'We call you within one working day', 'With prices, slab rates and stock for what you asked about.'],
 ];
@@ -227,7 +227,7 @@ export default function Enquiry() {
                 </p>
               </div>
               <a
-                href={whatsappLink('Hi Nivora, I have a trade enquiry.')}
+                href={whatsappLink('Hi Nivorva, I have a trade enquiry.')}
                 target="_blank"
                 rel="noreferrer"
                 className="mt-5 flex w-full items-center justify-center gap-2 rounded-md bg-forest px-4 py-3 text-[14px] font-bold text-white shadow-btn transition hover:-translate-y-0.5 hover:bg-forest-800"
@@ -237,7 +237,7 @@ export default function Enquiry() {
             </div>
 
             <div className="forest-band rounded-[24px] p-5 text-white sm:p-6">
-              <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.18em] text-[#cfe0d9]">Why buy trade on Nivora</p>
+              <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.18em] text-[#cfe0d9]">Why buy trade on Nivorva</p>
               <ul className="space-y-2.5 text-[13.5px] text-white/85">
                 {[
                   ['tag', 'Slab pricing above ₹25,000'],

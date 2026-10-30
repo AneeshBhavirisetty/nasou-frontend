@@ -121,7 +121,7 @@ export function CartProvider({ children }) {
   const groups = useMemo(() => {
     const m = new Map();
     for (const it of items) {
-      const g = m.get(it.retailerId) || { retailerId: it.retailerId, name: it.seller || 'Nivora seller', items: [], subtotal: 0, listed: true };
+      const g = m.get(it.retailerId) || { retailerId: it.retailerId, name: it.seller || 'Nivorva seller', items: [], subtotal: 0, listed: true };
       g.items.push(it);
       g.subtotal += it.price * it.qty - (it.bulk?.amount || 0);
       g.listed = g.listed && it.listed;

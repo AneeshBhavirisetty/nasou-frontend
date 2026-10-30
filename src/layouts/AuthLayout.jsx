@@ -18,7 +18,7 @@ export default function AuthLayout() {
               <span>Back to shop</span>
             </Link>
           </div>
-          <Link to="/home" aria-label="Nivora home" className="mx-auto mb-6">
+          <Link to="/home" aria-label="Nivorva home" className="mx-auto mb-6">
             <Logo variant="stacked" size={148} />
           </Link>
           <Outlet />

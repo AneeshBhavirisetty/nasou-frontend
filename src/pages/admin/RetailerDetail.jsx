@@ -136,7 +136,7 @@ export default function RetailerDetail() {
                 <h2 className="truncate text-[clamp(1.4rem,3.5vw,2rem)] font-semibold text-white">{r.name}</h2>
                 <StatusPill status={r.status} className="!bg-white/15 !text-white" />
               </div>
-              <p className="mt-1 text-[13px] text-emerald-100">{r.legalName} · {r.type} · {r.city}, {r.state}</p>
+              <p className="mt-1 text-[13px] text-emerald-100">{r.code ? `Retailer ID ${r.code} · ` : ''}{r.legalName} · {r.type} · {r.city}, {r.state}</p>
               <p className="mt-1 text-[12.5px] text-emerald-100/80">Joined {formatOrderDate(r.joinedAt)}</p>
             </div>
           </div>
@@ -164,7 +164,7 @@ export default function RetailerDetail() {
             <Kpi label="Sales" value={money(money_.sales)} note={`${parts.filter((p) => p.status !== 'Cancelled').length} live sub-orders`} icon="rupee" />
             <Kpi label="Commission earned" value={money(money_.commission)} note={`${r.commission?.rate ?? settings.commission.default}% base rate`} icon="percent" />
             <Kpi label="Owed to retailer" value={money(money_.unpaid)} note={`${money(money_.held)} more once delivered`} icon="card" />
-            <Kpi label="Products" value={r.productCount ?? mine.length} note={`${mine.filter((p) => p.stock > 0).length} in stock${r.productsByNivora ? ` · ${r.productsByNivora} uploaded by Nivora` : ''}`} icon="package" />
+            <Kpi label="Products" value={r.productCount ?? mine.length} note={`${mine.filter((p) => p.stock > 0).length} in stock${r.productsByNivora ? ` · ${r.productsByNivora} uploaded by Nivorva` : ''}`} icon="package" />
           </div>
           <div className="grid gap-5 lg:grid-cols-2">
             <Panel title="Business">

@@ -16,7 +16,7 @@ import { post } from '../../lib/api';
 import { OUTSIDE_AREA, SERVICE_AREA, inServiceArea } from '../../lib/geo';
 
 /* Retailer signup with document upload (requirement 5). Every new retailer
-   starts Pending and cannot sell until the Nivora team approves them.
+   starts Pending and cannot sell until the Nivorva team approves them.
    Spam protection: a hidden honeypot field, a minimum fill time and a small
    arithmetic check — the API adds rate limiting and a captcha provider. */
 
@@ -57,14 +57,14 @@ export default function SellerRegister() {
       if (!isMobile10(f.phone)) return 'Enter a 10-digit mobile number.';
       if (!phoneToken) return 'Verify your mobile number — tap Verify and enter the code we text you.';
       if (f.password.length < 8) return 'Password needs at least 8 characters.';
-      if (findAccount(f.email) || findAccount(f.phone)) return 'That email or mobile already has a Nivora account — sign in instead.';
+      if (findAccount(f.email) || findAccount(f.phone)) return 'That email or mobile already has a Nivorva account — sign in instead.';
     }
     if (step === 1) {
       if (f.name.trim().length < 3) return 'Enter your store name.';
       if (f.legalName.trim().length < 3) return 'Enter the registered business name.';
       if (f.address.trim().length < 6) return 'Enter the store address.';
       if (!/^\d{6}$/.test(f.pin)) return 'PIN code must be 6 digits.';
-      if (!inServiceArea(f.pin)) return 'Nivora works with stores in Tirupati only — enter a Tirupati PIN code (5175xx).';
+      if (!inServiceArea(f.pin)) return 'Nivorva works with stores in Tirupati only — enter a Tirupati PIN code (5175xx).';
       if (!f.categories.length) return 'Pick at least one category you sell.';
     }
     if (step === 2) {
@@ -160,8 +160,8 @@ export default function SellerRegister() {
   return (
     <Container className="pb-14 pt-6">
       <div className="mx-auto max-w-3xl">
-        <Link to="/sell" className="inline-flex items-center gap-1.5 text-[13px] font-bold text-forest-800 hover:text-forest"><Icon name="arrowLeft" size={14} /> Selling on Nivora</Link>
-        <h1 className="font-hero mt-4 text-[clamp(1.8rem,4.5vw,2.6rem)] font-semibold">Open your store on Nivora</h1>
+        <Link to="/sell" className="inline-flex items-center gap-1.5 text-[13px] font-bold text-forest-800 hover:text-forest"><Icon name="arrowLeft" size={14} /> Selling on Nivorva</Link>
+        <h1 className="font-hero mt-4 text-[clamp(1.8rem,4.5vw,2.6rem)] font-semibold">Open your store on Nivorva</h1>
         <p className="mt-1 text-[14px] text-ink-50">About 10 minutes. Keep your GST certificate, PAN and a cancelled cheque handy.</p>
 
         <ol className="mt-6 grid grid-cols-5 gap-2">
@@ -212,7 +212,7 @@ export default function SellerRegister() {
                 {upload('gst')}
                 <Field label="PAN" value={f.pan} onChange={up('pan')} maxLength={10} placeholder="AAPFS1234K" hint="Business or proprietor PAN" />
                 {upload('pan')}
-                <p className="rounded-[14px] bg-[#f6f3ed] p-3 text-[12.5px] text-ink-70 sm:col-span-2">Nivora collects GST on your behalf as a marketplace and issues tax invoices in your store’s name. Your GSTIN appears on every invoice.</p>
+                <p className="rounded-[14px] bg-[#f6f3ed] p-3 text-[12.5px] text-ink-70 sm:col-span-2">Nivorva collects GST on your behalf as a marketplace and issues tax invoices in your store’s name. Your GSTIN appears on every invoice.</p>
               </div>
             )}
             {step === 3 && (
@@ -230,7 +230,7 @@ export default function SellerRegister() {
                 {upload('business')}
                 <div className="grid gap-4 sm:grid-cols-[200px_1fr] sm:items-end">
                   <Field label={`What is ${challenge.a} + ${challenge.b}?`} inputMode="numeric" value={f.answer} onChange={(e) => setF((s) => ({ ...s, answer: e.target.value.replace(/\D/g, '').slice(0, 2) }))} hint="Helps us keep bots out" />
-                  <label className="flex items-start gap-2.5 text-[13px] text-ink-70"><input type="checkbox" checked={f.agree} onChange={(e) => setF((s) => ({ ...s, agree: e.target.checked }))} className="mt-0.5 accent-[#1f5c4a]" /> I confirm these details are correct and accept the Nivora seller terms and commission schedule.</label>
+                  <label className="flex items-start gap-2.5 text-[13px] text-ink-70"><input type="checkbox" checked={f.agree} onChange={(e) => setF((s) => ({ ...s, agree: e.target.checked }))} className="mt-0.5 accent-[#1f5c4a]" /> I confirm these details are correct and accept the Nivorva seller terms and commission schedule.</label>
                 </div>
               </div>
             )}

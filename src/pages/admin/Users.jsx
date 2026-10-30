@@ -18,7 +18,7 @@ import { money, cx, isMobile10 } from '../../lib/format';
 import { act } from '../../lib/act';
 
 /* Team & customers (customer review admin item 1; requirements 3 and 7).
-   Internal users: the Nasou Hive team. Exactly one Owner (the IAM admin);
+   Internal users: the Nivorva team. Exactly one Owner (the IAM admin);
    everyone else is a team member with a role preset — Operations, Support,
    Finance or Management. Customers: everyone who buys. Roles: the access
    matrix, editable by the Owner without code. */
@@ -68,7 +68,7 @@ function MemberForm({ member, team, onClose }) {
     try {
       if (isNew) {
         const a = await createAccount({ fullName: f.fullName.trim(), email: f.email, phone: f.phone, title: f.title.trim(), role: 'ADMIN', teamRole: f.teamRole }, { by: user?.fullName });
-        notify({ userId: a.id, icon: 'users', title: 'Welcome to the Nivora team', body: `You joined as ${teamRoleLabel(f.teamRole)}. Two-factor sign-in is on for your account.`, to: '/admin/dashboard' });
+        notify({ userId: a.id, icon: 'users', title: 'Welcome to the Nivorva team', body: `You joined as ${teamRoleLabel(f.teamRole)}. Two-factor sign-in is on for your account.`, to: '/admin/dashboard' });
         toast.success(`${a.fullName} added as ${teamRoleLabel(f.teamRole)}. They set a password with Forgot password and their mobile.`);
       } else {
         act(toast, () => updateAccount(member.id, { fullName: f.fullName.trim(), phone: f.phone, title: f.title.trim(), ...(owner ? {} : { teamRole: f.teamRole }) }, 'Team member updated'), 'Saved');
@@ -186,7 +186,7 @@ export default function AdminUsers() {
 
   return (
     <div className="space-y-5">
-      <AdminPageHead title="Team & customers" note="Internal users get access through their role; customers are everyone who buys on Nivora.">
+      <AdminPageHead title="Team & customers" note="Internal users get access through their role; customers are everyone who buys on Nivorva.">
         {tab === 'team' && canTeamEdit && <Button size="sm" icon="userPlus" onClick={() => setEditing(null)}>Add internal user</Button>}
       </AdminPageHead>
 

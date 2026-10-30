@@ -1,3 +1,4 @@
+import { useSyncExternalStore } from 'react';
 import { LIVE } from './config';
 import { api, del, get, patch, post, put } from './api';
 import { getStoredSession } from './auth';
@@ -37,17 +38,43 @@ const quiet = (p) => p.catch(() => undefined);
 
 /* ── storefront ─────────────────────────────────────────────────────────── */
 
+let catalogLoaded = false;
+const catalogWatchers = new Set();
+/* true once the catalogue has arrived. main.jsx re-mounts the app on that
+   change, so pages that opened without it (categories and wishlist empty until
+   a refresh, client review 8) fill in by themselves. */
+export const useCatalogLoaded = () => useSyncExternalStore((fn) => {
+  catalogWatchers.add(fn);
+  return () => catalogWatchers.delete(fn);
+}, () => catalogLoaded);
+
+async function loadCatalog() {
+  const snap = await get('/storefront/snapshot');
+  setLiveCatalog(snap);
+  if (!isAdmin()) retailersStore.set(snap.retailers || []);
+  settingsStore.set((s) => ({ ...s, ...(snap.settings || {}) }));
+  adminStore.set((s) => ({ ...s, bulkRules: snap.bulkRules || [] }));
+  catalogLoaded = true;
+  catalogWatchers.forEach((fn) => fn());
+}
+
+const keepTrying = () => setTimeout(() => loadCatalog().catch(keepTrying), 8000);
+
+/* A slow start of the API, a dropped connection or an expired session can fail
+   the first request, so it is tried again before the app opens, and after that
+   in the background until the catalogue is there. */
 export async function bootstrap() {
   if (!LIVE) return;
-  try {
-    const snap = await get('/storefront/snapshot');
-    setLiveCatalog(snap);
-    if (!isAdmin()) retailersStore.set(snap.retailers || []);
-    settingsStore.set((s) => ({ ...s, ...(snap.settings || {}) }));
-    adminStore.set((s) => ({ ...s, bulkRules: snap.bulkRules || [] }));
-  } catch (e) {
-    console.error('Could not load the catalogue', e);
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    try {
+      await loadCatalog();
+      return;
+    } catch (e) {
+      console.error('Could not load the catalogue', e);
+      if (attempt < 3) await new Promise((r) => { setTimeout(r, attempt * 1500); });
+    }
   }
+  if (!catalogLoaded) keepTrying();
 }
 
 /* ── per resource ───────────────────────────────────────────────────────── */
@@ -125,7 +152,7 @@ export const load = {
     await bootstrap();
   },
   async tickets() {
-    if (isAdmin() || isSeller()) await loadTickets();
+    if (who()) await loadTickets();
   },
   async enquiries() {
     if (isAdmin() || isSeller()) await loadEnquiries();
@@ -145,7 +172,7 @@ export async function loadSession() {
     ? ['access', 'settings', 'retailers', 'requests', 'orders', 'refunds', 'payouts', 'accounts', 'products', 'discounts', 'notifications', 'audit', 'recon', 'tickets', 'enquiries']
     : isSeller()
       ? ['retailers', 'orders', 'refunds', 'payouts', 'products', 'stock', 'notifications', 'accounts', 'discounts', 'tickets', 'enquiries', 'customers']
-      : ['orders', 'notifications', 'stockAlerts'];
+      : ['orders', 'notifications', 'stockAlerts', 'tickets'];
   await Promise.allSettled(jobs.map((k) => load[k]()));
 }
 
@@ -173,7 +200,7 @@ export function startPolling() {
   timers.push(setInterval(() => { if (visible() && who()) load.notifications().catch(() => {}); }, 30000));
   timers.push(setInterval(() => {
     if (!visible() || !who()) return;
-    refresh('orders', 'refunds', ...(isAdmin() ? ['retailers', 'requests', 'access', 'tickets'] : isSeller() ? ['tickets'] : []));
+    refresh('orders', 'refunds', ...(isAdmin() ? ['retailers', 'requests', 'access', 'tickets'] : ['tickets']));
   }, 120000));
 }
 export function stopPolling() {

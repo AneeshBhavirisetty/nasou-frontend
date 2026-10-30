@@ -8,7 +8,7 @@ import { post, refresh } from '../lib/live';
 /* ============================================================================
  * Retailer payouts (requirement 13) and reconciliation (requirement 20).
  *
- * Customers pay Nivora. Each weekly cycle (Monday–Sunday) per retailer:
+ * Customers pay Nivorva. Each weekly cycle (Monday–Sunday) per retailer:
  *     delivered sales − commission − plan fee − refunds ± adjustments = net
  * The running week is "open"; closed weeks are "ready" until Finance presses
  * Settle, which sends everything the retailer is owed (all ready weeks) as

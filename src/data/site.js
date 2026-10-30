@@ -1,7 +1,6 @@
 export const brand = {
-  name: 'Nivora',
-  short: 'Nivora',
-  company: 'Nasou Hive',
+  name: 'Nivorva',
+  short: 'Nivorva',
   tagline: 'Every trusted counter. One cart.',
   promise:
     'Plumbing, electrical, hardware and more from verified local retailers — search by size, brand or SKU, order once, and track every seller’s part to your site.',
@@ -18,19 +17,10 @@ export const brand = {
 export const currency = { symbol: '₹', code: 'INR', locale: 'en-IN' };
 
 export const announcements = [
-  'Nivora is now a marketplace — shop verified retailers in one cart',
+  'Nivorva is now a marketplace — shop verified retailers in one cart',
   'Free delivery on orders above ₹999 · GST invoice on every order',
   'Search by item code, size or supplier — {skus} products live',   // {skus}: the live catalogue size
   'Delivering across Tirupati · dispatch same day on in-stock items before 2pm',
-];
-
-export const primaryNav = [
-  { label: 'Shop all', to: '/shop' },
-  { label: 'PVC fittings', to: '/shop?category=pvc-fittings' },
-  { label: 'CPVC fittings', to: '/shop?category=cpvc-fittings' },
-  { label: 'UPVC fittings', to: '/shop?category=upvc-fittings' },
-  { label: 'Pipes', to: '/shop?category=pvc-pipes' },
-  { label: 'Valves & accessories', to: '/shop?category=plumbing-accessories' },
 ];
 
 export const valueProps = [
@@ -59,16 +49,18 @@ export const footerColumns = [
     title: 'Shop',
     links: [
       { label: 'All products', to: '/shop' },
-      { label: 'PVC fittings', to: '/shop?category=pvc-fittings' },
-      { label: 'CPVC fittings', to: '/shop?category=cpvc-fittings' },
-      { label: 'UPVC fittings', to: '/shop?category=upvc-fittings' },
-      { label: 'Pipes', to: '/shop?category=pvc-pipes' },
+      { label: 'Plumbing', to: '/shop?dept=plumbing' },
+      { label: 'Electrical', to: '/shop?dept=electrical' },
+      { label: 'Interior Designing', to: '/shop?dept=interior-designing' },
+      { label: 'Hardware', to: '/shop?dept=hardware' },
+      { label: 'Bath & Kitchen Essentials', to: '/shop?dept=bath-kitchen' },
+      { label: 'Sanitary', to: '/shop?dept=sanitary' },
     ],
   },
   {
     title: 'Catalogue',
     links: [
-      { label: 'Search by SKU', to: '/shop' },
+      { label: 'Search by item code', to: '/shop' },
       { label: 'Deals', to: '/deals' },
       { label: 'New arrivals', to: '/shop?sort=new' },
       { label: 'Brands we stock', to: '/shop' },
@@ -80,14 +72,14 @@ export const footerColumns = [
       { label: 'Sign in', to: '/login' },
       { label: 'Orders', to: '/orders' },
       { label: 'Wishlist', to: '/wishlist' },
-      { label: 'Track an order', to: '/orders' },
+      { label: 'Support tickets', to: '/support' },
     ],
   },
   {
     title: 'Company',
     links: [
-      { label: 'About Nivora', to: '/about' },
-      { label: 'Sell on Nivora', to: '/sell' },
+      { label: 'About Nivorva', to: '/about' },
+      { label: 'Sell on Nivorva', to: '/sell' },
       { label: 'Trade enquiries', to: '/enquiry' },
       { label: 'Returns policy', to: '/returns' },
     ],
@@ -104,5 +96,6 @@ export const socials = [
 export const paymentMethods = ['UPI', 'Cards', 'Net banking', 'Cash on delivery', 'GST invoice'];
 
 /* wa.me deep link with an optional prefilled message */
-export const whatsappLink = (text = 'Hi Nivora, I have a question about an order.') =>
-  `https://wa.me/${brand.whatsapp}?text=${encodeURIComponent(text)}`;
+/* `to`: another number (91XXXXXXXXXX), e.g. the team writing to a shopper; default the store's own */
+export const whatsappLink = (text = 'Hi Nivorva, I have a question about an order.', to = brand.whatsapp) =>
+  `https://wa.me/${to}?text=${encodeURIComponent(text)}`;

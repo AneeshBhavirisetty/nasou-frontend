@@ -198,7 +198,8 @@ export default function Account() {
           {[
             ['package', 'Your orders', 'Track every seller’s part, invoices', '/orders'],
             ['heart', 'Wishlist', 'Products you saved for later', '/wishlist'],
-            ['headset', 'Help & enquiries', 'Bulk quotes and support', '/enquiry'],
+            ['ticket', 'Support tickets', 'Raise a problem, follow the reply', '/support'],
+            ['headset', 'Help & enquiries', 'Bulk quotes and price requests', '/enquiry'],
           ].map(([ic, t, d, to]) => (
             <Link key={t} to={to} className="flex items-center gap-3 rounded-[18px] bg-white p-4 shadow-card transition hover:-translate-y-0.5">
               <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[12px] bg-sunk text-forest"><Icon name={ic} size={18} /></span>

@@ -10,7 +10,7 @@ import { money } from '../../lib/format';
 import { act } from '../../lib/act';
 
 /* Store profile (requirement 14). Contact details change straight away;
-   legal name, business type, GSTIN, PAN and bank account go to the Nivora
+   legal name, business type, GSTIN, PAN and bank account go to the Nivorva
    team for approval first (requirement 17). */
 
 const GSTIN = /^\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/;
@@ -44,7 +44,7 @@ export default function SellerProfile() {
     if (s.pan !== r.pan) fields.pan = s.pan;
     if (s.holder !== r.bank?.holder || s.account !== r.bank?.account || s.ifsc !== r.bank?.ifsc) fields.bank = { holder: s.holder, account: s.account, ifsc: s.ifsc };
     if (!Object.keys(fields).length) return toast.info('Nothing changed.');
-    act(toast, () => proposeChanges(r.id, fields, user.fullName), 'Sent to Nivora for approval — the current details stay in use until then');
+    act(toast, () => proposeChanges(r.id, fields, user.fullName), 'Sent to Nivorva for approval — the current details stay in use until then');
   };
   const field = (state, set, k, label, extra = {}) => (
     <label className={extra.wide ? 'sm:col-span-2' : ''}>
@@ -55,7 +55,7 @@ export default function SellerProfile() {
 
   return (
     <div className="space-y-5">
-      <AdminPageHead title="Store profile" note="How your store appears on Nivora, and where your money goes." />
+      <AdminPageHead title="Store profile" note="How your store appears on Nivorva, and where your money goes." />
       <div className="grid gap-5 lg:grid-cols-2">
         <Panel title="Store & contact" note="Changes apply straight away.">
           <form onSubmit={saveContact} className="grid gap-3 sm:grid-cols-2">
@@ -69,7 +69,7 @@ export default function SellerProfile() {
             {!lock && <div className="sm:col-span-2"><Button type="submit" icon="check">Save</Button></div>}
           </form>
         </Panel>
-        <Panel title="Legal, tax & bank" note="These need Nivora’s approval before they take effect.">
+        <Panel title="Legal, tax & bank" note="These need Nivorva’s approval before they take effect.">
           {pending && (
             <p className="mb-4 flex items-start gap-2 rounded-[12px] bg-amber-50 px-3 py-2.5 text-[12.5px] font-semibold text-amber"><Icon name="clock" size={14} className="mt-0.5 shrink-0" /> Waiting for approval: {Object.keys(pending).join(', ')}. You will get a notification when it is decided.</p>
           )}

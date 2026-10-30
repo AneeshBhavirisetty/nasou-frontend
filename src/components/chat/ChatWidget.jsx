@@ -15,10 +15,10 @@ import { api } from '../../lib/api';
 /* ============================================================================
  * ChatWidget — floating support chat, bottom-right.
  *
- *   Customer : one thread with the Nivora support desk. With the client's AI
+ *   Customer : one thread with the Nivorva support desk. With the client's AI
  *              service connected (nasou-api AI_SERVICE_URL) its first answers
  *              come from the AI; otherwise from built-in rules.
- *   Retailer : the Nivora AI assistant (review 6) — POST /assistant/chat,
+ *   Retailer : the Nivorva AI assistant (review 6) — POST /assistant/chat,
  *              answered from the store's own live data. Support requests go
  *              through Support tickets instead.
  *   Admin    : an inbox of every customer thread, with replies.
@@ -36,7 +36,7 @@ import { api } from '../../lib/api';
 
 const KEY = 'nasou_chat_v1';
 export const OPEN_CHAT = 'nivora:open-chat';
-const AGENT = { name: 'Nivora support', sub: 'Replies in a few minutes' };
+const AGENT = { name: 'Nivorva support', sub: 'Replies in a few minutes' };
 const TEASER_KEY = 'nivora_chat_teaser';
 const QUICK = ['Where is my order?', 'Bulk price for 500 pcs?', 'GST invoice copy', 'Is this size in stock?'];
 const SHOW = { Pending: 'placed', Processing: 'being packed', Shipped: 'on the way', Delivered: 'delivered', Cancelled: 'cancelled' };
@@ -58,7 +58,7 @@ function autoReply(text, userId) {
       : 'Bulk prices apply by themselves in the cart once you reach the quantity. For 500+ pieces, send an enquiry and we will quote.';
   }
   if (t.includes('invoice') || t.includes('gst')) return 'Every order has a GST invoice — open Orders, pick the order and tap Invoice. Trade customers can ask us to add their GSTIN.';
-  return 'Thanks! A Nivora agent is on this and will reply here shortly.';
+  return 'Thanks! A Nivorva agent is on this and will reply here shortly.';
 }
 
 const now = () => Date.now();
@@ -339,7 +339,7 @@ function CustomerChat({ store, threadId, who }) {
       </div>
       {msgs.length === 0 && <Chips items={QUICK} onPick={send} />}
       {store.live && !who?.id
-        ? <p className="border-t border-line bg-chat p-3 text-center text-[12.5px] text-ink-50"><a href="/login" className="font-bold text-forest">Sign in</a> to chat with Nivora support.</p>
+        ? <p className="border-t border-line bg-chat p-3 text-center text-[12.5px] text-ink-50"><a href="/login" className="font-bold text-forest">Sign in</a> to chat with Nivorva support.</p>
         : <Composer onSend={send} />}
     </>
   );
@@ -381,7 +381,7 @@ function AssistantChat({ who }) {
       <div className="thin-bar flex-1 space-y-3 overflow-y-auto bg-chat p-4">
         {msgs.length === 0 && (
           <Hello name={who?.name?.split(' ')[0] || 'there'}>
-            I’m the Nivora assistant. Ask about orders to pack, stock, sales, discounts or support — I answer from your store’s live data.
+            I’m the Nivorva assistant. Ask about orders to pack, stock, sales, discounts or support — I answer from your store’s live data.
           </Hello>
         )}
         {msgs.map((m) => <Bubble key={m.id} m={m} mine={m.from === 'user'} />)}
@@ -509,7 +509,7 @@ export default function ChatWidget() {
             style={{ transformOrigin: 'bottom right' }}
             className="fixed bottom-[calc(var(--tabbar-h,0px)+5rem)] right-4 z-[190] flex h-[min(72dvh,520px)] w-[calc(100vw-2rem)] max-w-[392px] flex-col overflow-hidden rounded-[22px] border border-white/70 bg-chat/95 shadow-[0_28px_80px_rgba(31,59,52,0.24)] backdrop-blur-2xl sm:bottom-[calc(var(--tabbar-h,0px)+6rem)] sm:right-6"
             role="dialog"
-            aria-label={isAdmin ? 'Support inbox' : assistant ? 'Nivora AI assistant' : 'Chat with Nivora support'}
+            aria-label={isAdmin ? 'Support inbox' : assistant ? 'Nivorva AI assistant' : 'Chat with Nivorva support'}
           >
             {/* the reference's deep-ink header, mint light pooling top-right */}
             <header className="relative flex items-center gap-2.5 overflow-hidden bg-pine bg-[radial-gradient(60%_120%_at_100%_0%,rgba(110,168,145,0.35),transparent_60%),radial-gradient(40%_90%_at_0%_100%,rgba(229,216,199,0.14),transparent_60%)] px-4 py-4 text-white">
@@ -520,7 +520,7 @@ export default function ChatWidget() {
               </span>
               <span className="relative min-w-0 flex-1">
                 <span className="block truncate text-[14px] font-bold">
-                  {isAdmin ? 'Support inbox' : assistant ? 'Nivora AI assistant' : AGENT.name}
+                  {isAdmin ? 'Support inbox' : assistant ? 'Nivorva AI assistant' : AGENT.name}
                 </span>
                 <span className="flex min-w-0 items-center gap-1.5 text-[11px] text-white/60">
                   <span className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-[#7fd1ae]" />

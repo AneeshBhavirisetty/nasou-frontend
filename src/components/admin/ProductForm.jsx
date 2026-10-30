@@ -161,7 +161,7 @@ export default function ProductForm({ open, product, onClose, onSave, retailerId
     setErr('');
     if (isNew && !fixedRetailer && !f.retailerId) return setErr('Choose which retailer sells this product.');
     if (!f.subName.trim()) return setErr('Choose the sub-category.');
-    if (masterOnly && !sub) return setErr('Pick a sub-category from the list — Nivora manages the master catalogue.');
+    if (masterOnly && !sub) return setErr('Pick a sub-category from the list — Nivorva manages the master catalogue.');
     if (!f.kind.trim()) return setErr('Enter the item type (e.g. Elbows, Switches).');
     if (f.name.trim().length < 2) return setErr('Enter the item name.');
     if (price <= 0) return setErr('Enter the selling price.');
@@ -196,7 +196,7 @@ export default function ProductForm({ open, product, onClose, onSave, retailerId
       size: f.size.trim(),
       sizeRaw: f.size.trim(),
       supplier: knownBrand?.slug || brandSlug(brand),
-      supplierName: knownBrand?.name || brand || 'Nivora',
+      supplierName: knownBrand?.name || brand || 'Nivorva',
       supplierTier: knownBrand?.tier || product?.supplierTier || 'value',
       department: product?.department || f.department,
       category,
