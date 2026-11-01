@@ -376,8 +376,9 @@ export default function Header() {
           <Icon name={mobile ? 'close' : 'menu'} size={20} />
         </button>
 
-        <Link to="/home" className="shrink-0" aria-label="Nivorva home">
-          <Logo size={38} />
+        {/* on a phone the letters give way to the buttons, and the narrowest keep the mark alone */}
+        <Link to="/home" className="min-w-0 sm:shrink-0" aria-label="Nivorva home">
+          <Logo size={36} nameClassName="max-[344px]:hidden" />
         </Link>
 
         {/* xl:flex, not xl:block — block would stack the pin over the text and push it out of the chip */}

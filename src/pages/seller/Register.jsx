@@ -179,7 +179,7 @@ export default function SellerRegister() {
 
           <div key={step} className="animate-[stepIn_.26s_cubic-bezier(.22,1,.36,1)_both]">
             {step === 0 && (
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <Field label="Your name" value={f.contact} onChange={set('contact')} autoComplete="name" />
                 <Field label="Work email" type="email" value={f.email} onChange={set('email')} autoComplete="email" hint="Your sign-in for the seller console" />
                 <div className="sm:col-span-2"><VerifyPhone label="Mobile" value={f.phone} onChange={(v) => setF((s) => ({ ...s, phone: v }))} token={phoneToken} onVerified={setPhoneToken} hint="Tap Verify — we’ll text a one-time code to this number." /></div>
