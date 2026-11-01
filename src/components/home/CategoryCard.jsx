@@ -51,9 +51,7 @@ export default function CategoryCard({ dept, photo, to, index = 0, className = '
           <span className="flex items-end gap-2">
             <span className="min-w-0 flex-1">
               <span className="font-hero block text-[14px] font-medium leading-tight tracking-[-0.02em] text-white sm:text-[19px]">{dept.name}</span>
-              <span className="mt-0.5 block text-[11.5px] font-semibold text-white/75 sm:text-[12.5px]">
-                {dept.count ? `${dept.count.toLocaleString('en-IN')} items` : 'Coming soon'}
-              </span>
+              {!dept.count && <span className="mt-0.5 block text-[11.5px] font-semibold text-white/75 sm:text-[12.5px]">Coming soon</span>}
             </span>
             <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white text-forest shadow-[0_8px_18px_rgba(0,0,0,0.18)] transition duration-500 group-hover:-rotate-45 group-hover:bg-sand sm:h-10 sm:w-10">
               <Icon name="arrowRight" size={15} />

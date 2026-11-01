@@ -260,9 +260,7 @@ function MegaMenu({ onClose }) {
                   <Icon name={x.icon} size={15} />
                 </span>
                 <span className="flex-1 text-[14px] font-bold">{x.name}</span>
-                <span className={cx('tnum text-[11px] font-semibold', dept === x.slug ? 'text-white/70' : 'text-ink-35')}>
-                  {x.count || 'Soon'}
-                </span>
+                {!x.count && <span className={cx('text-[11px] font-semibold', dept === x.slug ? 'text-white/70' : 'text-ink-35')}>Soon</span>}
               </Link>
             </li>
           ))}
@@ -294,7 +292,6 @@ function MegaMenu({ onClose }) {
                   <span>
                     <span className="flex items-center gap-1.5 text-[14px] font-bold text-ink">
                       {c.name}
-                      <span className="tnum text-[11px] font-semibold text-ink-35">{c.count}</span>
                     </span>
                     {c.blurb && <span className="mt-0.5 block text-[12px] leading-snug text-ink-50">{c.blurb}</span>}
                   </span>
@@ -475,14 +472,13 @@ export default function Header() {
                     >
                       <span className="grid h-8 w-8 shrink-0 place-items-center rounded-[10px] bg-sunk text-forest"><Icon name={d.icon} size={15} /></span>
                       <span className="flex-1">{d.name}</span>
-                      <span className="tnum text-[12px] font-semibold text-ink-35">{d.count || 'Soon'}</span>
+                      {!d.count && <span className="text-[12px] font-semibold text-ink-35">Soon</span>}
                     </Link>
                     {d.subs.length > 0 && (
                       <div className="mb-1 ml-14 grid gap-0.5 border-l border-line-soft pl-3">
                         {d.subs.map((c) => (
                           <Link key={c.slug} to={`/shop?dept=${d.slug}&category=${c.slug}`} className="flex items-center justify-between rounded-[10px] px-2 py-2 text-[13px] font-semibold text-ink-70 hover:bg-sunk/70">
                             {c.name}
-                            <span className="tnum text-[11.5px] text-ink-35">{c.count}</span>
                           </Link>
                         ))}
                       </div>

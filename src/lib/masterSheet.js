@@ -122,13 +122,23 @@ export async function sendMasterRows(rows, { post, path = '/admin/catalog/master
 
 /* ── Product photos ─────────────────────────────────────────────────────────
    The client keeps the photos in Azure Blob Storage, one per item and laid
-   out like the sheet:  Nivorva Products/categories/<Category>/<Sub category>/
+   out like the sheet:  Nivora Products/categories/<Category>/<Sub category>/
    <Item Name>[/<variant>]/<file>  — the variant folder (a colour, "10 WAY" …)
-   is optional. The storage account is private, so scripts/upload-sheet-images
-   copies them into the API's media library (resized for phones) and keeps a
-   map of blob path → media URL; this picks a row's photo from that map. */
+   is optional. The API copies a row's photo from its link when the sheet is
+   imported. scripts/upload-sheet-images does the same from a downloaded folder
+   and keeps a map of blob path → media URL; this picks a row's photo from that
+   map, for rows with no link of their own. */
 
 const KEY = (s) => String(s || '').toUpperCase().replace(/\s+/g, ' ').trim();
+
+/* The same name however it is worded: the sheet's SWITCH TYPE MCB is the folder
+   MCB SWITCH TYPE, LED TUBE LIGHT is TUBE LIGHTS LED, UPVC STEP OVER BEND is
+   UPVC STEPOVER BEND, 2-POLE 30 MA RCCB is RCCB 2-POLE 30MA. Word order, plurals,
+   repeated words, those two spacings and the word ELECTRICAL (the category
+   says that already) do not count. */
+const WORDS = (s) => KEY(s).replace(/\bSTEP OVER\b/g, 'STEPOVER').replace(/\b(\d+) MA\b/g, '$1MA')
+  .split(/[^A-Z0-9.-]+/).filter((w) => w && w !== 'ELECTRICAL').map((w) => w.replace(/(CH|SH|X)ES$/, '$1').replace(/([^S])S$/, '$1'))
+  .filter((w, i, all) => all.indexOf(w) === i).sort().join(' ');
 
 export function photoIndex(map) {
   const index = new Map();
@@ -138,9 +148,10 @@ export function photoIndex(map) {
     if (at < 0 || p.length < at + 5) continue;
     const [cat, sub, name] = p.slice(at + 1, at + 4).map(KEY);
     const variant = p.length > at + 5 ? KEY(p[at + 4]) : null;
-    const key = `${cat}|${sub}|${name}`;
-    if (!index.has(key)) index.set(key, []);
-    index.get(key).push({ variant, url });
+    for (const key of [`${cat}|${sub}|${name}`, `${cat}|${sub}|~${WORDS(name)}`]) {
+      if (!index.has(key)) index.set(key, []);
+      index.get(key).push({ variant, url });
+    }
   }
   return index;
 }
@@ -148,7 +159,8 @@ export function photoIndex(map) {
 /* The photo for a sheet row: its own variant (size, colour or subtype) when
    there is one, else the item's main photo. Null when the item has none. */
 export function photoFor(row, index) {
-  const list = index.get(`${KEY(row.category)}|${KEY(row.subCategory)}|${KEY(row.itemName)}`);
+  const at = `${KEY(row.category)}|${KEY(row.subCategory)}|`;
+  const list = index.get(at + KEY(row.itemName)) || index.get(`${at}~${WORDS(row.itemName)}`);
   if (!list?.length) return null;
   const wants = [row.itemSize, row.itemColor, row.subtype1, row.subtype2].map(KEY).filter(Boolean);
   return (list.find((c) => c.variant && wants.some((w) => w === c.variant || w.startsWith(`${c.variant} `)))

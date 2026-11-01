@@ -36,6 +36,12 @@ const PACK_UNITS = [['piece', 'Pieces'], ['bag', 'Bags'], ['box', 'Boxes'], ['bu
 /* the illustration shown until a photo loads, picked from the item type */
 const ART_FROM_TYPE = ['elbow', 'tee', 'coupling', 'reducer', 'bush', 'adapter', 'bend', 'shoe', 'cap', 'union', 'valve', 'saddle', 'nipple', 'pipe'];
 const artFor = (type) => ART_FROM_TYPE.find((a) => typeKey(type).includes(a)) || 'coupling';
+const paise = (n) => Math.round(Number(n) * 100) / 100;
+/* a price as it is typed: digits, one point, two places */
+const rupees = (v) => {
+  const [whole, ...rest] = String(v).replace(/[^\d.]/g, '').split('.');
+  return rest.length ? `${whole}.${rest.join('').slice(0, 2)}` : whole;
+};
 
 const blank = {
   name: '', department: DEFAULT_DEPARTMENT, subName: '', kind: '', form: '', itemSubtype2: '', size: '', color: '',
@@ -173,7 +179,8 @@ export default function ProductForm({ open, product, onClose, onSave, retailerId
     if (!sub && all.some((p) => p.category === category && (p.department || DEFAULT_DEPARTMENT) !== f.department)) {
       category = `${f.department}-${category}`;
     }
-    const finalMrp = mrp || Math.round(price * 1.15);
+    /* paise count: the sheet sells at ₹10.64, and an edit must not move it to ₹11 */
+    const finalMrp = mrp || paise(price * 1.15);
     const material = f.department === 'plumbing' ? (sub?.name || subName) : product?.material || null;
 
     onSave({
@@ -201,9 +208,9 @@ export default function ProductForm({ open, product, onClose, onSave, retailerId
       department: product?.department || f.department,
       category,
       subcategoryName: sub?.name || subName,
-      price: Math.round(price),
-      mrp: Math.round(finalMrp),
-      discount: pctOff(Math.round(price), Math.round(finalMrp)),
+      price: paise(price),
+      mrp: paise(finalMrp),
+      discount: pctOff(paise(price), paise(finalMrp)),
       stock: Math.max(0, Math.round(Number(f.stock) || 0)),
       images: f.images,
       rating: product?.rating ?? 4.2,
@@ -321,12 +328,12 @@ export default function ProductForm({ open, product, onClose, onSave, retailerId
                 <select value={f.packUnit} onChange={(e) => set('packUnit')(e.target.value)} className={SELECT}>{PACK_UNITS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>
               </label>
               <Field label="Quantity (stock)" inputMode="numeric" value={f.stock} onChange={(e) => set('stock')(e.target.value.replace(/\D/g, ''))} placeholder="0" />
-              <Field label="Price — MRP (₹)" inputMode="numeric" value={f.mrp} onChange={(e) => set('mrp')(e.target.value.replace(/\D/g, ''))} placeholder="auto (+15%)" hint="Blank = 15% above selling price" />
+              <Field label="Price — MRP (₹)" inputMode="decimal" value={f.mrp} onChange={(e) => set('mrp')(rupees(e.target.value))} placeholder="auto (+15%)" hint="Blank = 15% above selling price" />
               <div>
                 <span className={LABEL}>Discount</span>
                 <p className={cx('flex h-12 items-center rounded-md border border-line px-4 text-[14px] font-bold', off ? 'bg-emerald-50 text-emerald-700' : 'bg-sunk/60 text-ink-50')}>{off ? `${off}% off` : '—'}</p>
               </div>
-              <Field label="Selling price (₹)" inputMode="numeric" value={f.price} onChange={(e) => set('price')(e.target.value.replace(/\D/g, ''))} placeholder="0" required />
+              <Field label="Selling price (₹)" inputMode="decimal" value={f.price} onChange={(e) => set('price')(rupees(e.target.value))} placeholder="0" required />
             </div>
           </Section>
 

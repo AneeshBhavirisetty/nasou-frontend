@@ -73,6 +73,13 @@ export async function api(path, options = {}, retried = false) {
     throw new ApiError('Your session has expired. Please log in again.', 401);
   }
 
+  /* Reading again is safe: wait as the server asks, so a screen fills in instead of staying empty. */
+  if (response.status === 429 && (options.method ?? 'GET') === 'GET' && !options.tooMany) {
+    const wait = Math.min(Number(response.headers.get('Retry-After')) || 5, 30);
+    await new Promise((r) => { setTimeout(r, wait * 1000); });
+    return api(path, { ...options, tooMany: true }, retried);
+  }
+
   if (response.status === 204) return null;
 
   const body = await response.json().catch(() => null);
