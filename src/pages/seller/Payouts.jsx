@@ -43,7 +43,7 @@ export default function SellerPayouts() {
                 <div className="min-w-0">
                   <p className="tnum text-[15px] font-bold text-ink">{money(s.amount)}</p>
                   <p className="text-[12px] text-ink-50">{s.label} · sent {formatOrderDate(s.at)}</p>
-                  <p className="truncate font-mono text-[11.5px] text-ink-50">{s.utr ? `UTR ${s.utr}` : s.payoutId}</p>
+                  <p className="truncate font-mono text-[11.5px] text-ink-50">{s.utr ? `${s.paidVia === 'manual' ? 'Ref' : 'UTR'} ${s.utr}` : s.paidVia === 'manual' ? 'Paid by bank transfer' : s.payoutId}</p>
                 </div>
                 <StatusPill status={s.status} />
               </li>

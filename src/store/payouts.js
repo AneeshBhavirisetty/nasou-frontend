@@ -151,6 +151,22 @@ export function settleRetailer(entry, { rows, by }) {
   return s;
 }
 
+/* RazorpayX off: Finance paid the retailer by hand; record it, so what they are owed drops to ₹0 */
+export function settleManually(entry, { rows, by, reference }) {
+  if (LIVE) {
+    return post(`/admin/payouts/${entry.retailerId}/settle-manual`, { amount: entry.amount, reference: reference || null, confirmed: true })
+      .then((s) => { refresh('payouts', 'notifications', 'recon'); return s; });
+  }
+  if (!entry.canSettle) throw new Error(entry.bank ? 'Nothing to settle — fees and refunds were more than sales.' : 'No bank account on file for this retailer.');
+  const id = uid('settle');
+  const s = { id, retailerId: entry.retailerId, retailerName: entry.retailerName, amount: entry.amount, from: entry.from, to: entry.to, label: entry.label,
+    status: 'paid', paidVia: 'manual', payoutId: '', razorpayStatus: '', utr: reference || '', bank: entry.bank, by, at: Date.now(), paidAt: Date.now() };
+  settlementsStore.set((all) => [s, ...all]);
+  for (const w of rows.filter((x) => x.retailerId === entry.retailerId && x.status === 'ready')) writeRecord(w.key, (r) => ({ ...r, settlementId: id, status: 'paid', utr: reference || '' }));
+  audit({ action: 'payout.paid', entity: 'payout', entityId: id, summary: `${entry.retailerName} ${entry.label} paid by hand · ₹${entry.amount.toLocaleString('en-IN')}` });
+  return s;
+}
+
 /* Check status: ask Razorpay where a processing payout has got to */
 export function checkSettlement(s) {
   if (LIVE) return post(`/admin/payouts/settlements/${s.id}/refresh`, {}).then((x) => { refresh('payouts', 'notifications', 'recon'); return x; });

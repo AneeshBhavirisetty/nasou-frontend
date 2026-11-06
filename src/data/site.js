@@ -93,7 +93,8 @@ export const socials = [
   { label: 'YouTube', href: 'https://youtube.com' },
 ];
 
-export const paymentMethods = ['UPI', 'Cards', 'Net banking', 'Cash on delivery', 'GST invoice'];
+/* No cash on delivery (client, 6 Nov 2026): every order is paid online. */
+export const paymentMethods = ['UPI', 'Cards', 'Net banking', 'GST invoice'];
 
 /* wa.me deep link with an optional prefilled message */
 /* `to`: another number (91XXXXXXXXXX), e.g. the team writing to a shopper; default the store's own */

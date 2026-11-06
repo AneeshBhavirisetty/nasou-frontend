@@ -9,7 +9,7 @@ import { useToast } from '../../context/ToastContext';
 import { useActor, useScopedOrders, useScopedRefunds } from '../../lib/useScoped';
 import { useRetailers } from '../../store/retailers';
 import { useSettings } from '../../store/settings';
-import { addAdjustment, checkSettlement, computeSettlements, settleRetailer, usePayoutRecords, useSettlementsSent } from '../../store/payouts';
+import { addAdjustment, checkSettlement, computeSettlements, settleManually, settleRetailer, usePayoutRecords, useSettlementsSent } from '../../store/payouts';
 import { formatOrderDate } from '../../data/orders';
 import { money } from '../../lib/format';
 import { act } from '../../lib/act';
@@ -19,7 +19,9 @@ import { istStamp } from '../../lib/ist';
    week (Monday–Sunday) a retailer's delivered sales, less commission, plan fee
    and refunds, become payable. Finance presses Settle once per retailer and
    one RazorpayX payout sends everything owed to their bank; its payout id,
-   status and bank UTR show here. */
+   status and bank UTR show here. While RazorpayX is switched off, Finance
+   pays retailers by hand and records it here instead (client, 6 Nov 2026):
+   Settle asks twice, then marks the weeks paid — what is owed drops to ₹0. */
 
 export function useSettlements() {
   /* scoped: a retailer computes only their own weeks */
@@ -67,6 +69,60 @@ function SettleDialog({ entry, rows, by, onClose }) {
   );
 }
 
+/* RazorpayX off: record a payment Finance made by hand — two steps, because it cannot be undone. */
+function ManualSettleDialog({ entry, rows, by, onClose }) {
+  const toast = useToast();
+  const [step, setStep] = useState(1);
+  const [reference, setReference] = useState('');
+  const [busy, setBusy] = useState(false);
+  const record = async () => {
+    setBusy(true);
+    const ok = await act(toast, () => settleManually(entry, { rows, by, reference: reference.trim() }), `${entry.retailerName} marked paid — ${money(entry.amount)} settled`);
+    setBusy(false);
+    if (ok) onClose();
+  };
+  return (
+    <Modal open onClose={onClose} title={step === 1 ? `Settle ${entry.retailerName}` : 'Confirm the payment'} size="md">
+      {step === 1 ? (
+        <div className="space-y-4">
+          <p className="tnum text-[28px] font-semibold tracking-[-0.03em] text-forest">{money(entry.amount)}</p>
+          <DetailList rows={[
+            ['For', `${entry.label} · ${entry.weeks} week${entry.weeks > 1 ? 's' : ''}`],
+            ['Pay to', entry.bank.holder],
+            ['Account', `••••${entry.bank.last4}`],
+            ['IFSC', entry.bank.ifsc],
+          ]} />
+          <p className="rounded-[12px] bg-amber-50 px-3 py-2 text-[12.5px] leading-5 text-amber">
+            RazorpayX is not set up yet, so Nivorva sends nothing. Pay this amount from the bank yourself first, then record it here.
+          </p>
+          <label className="block">
+            <span className="mb-1.5 block text-[11.5px] font-semibold uppercase tracking-[0.16em] text-forest-800">Bank reference (UTR, optional)</span>
+            <input value={reference} maxLength={40} onChange={(e) => setReference(e.target.value)} placeholder="e.g. HDFCN52026110612345" className={SELECT_CLS} />
+          </label>
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button variant="outline" onClick={onClose}>Cancel</Button>
+            <Button icon="rupee" onClick={() => setStep(2)}>Settle {money(entry.amount)}</Button>
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <p className="text-[14px] leading-6 text-ink-70">
+            Have you paid <b className="text-ink">{money(entry.amount)}</b> to <b className="text-ink">{entry.retailerName}</b> (A/c ••••{entry.bank.last4})?
+          </p>
+          <p className="rounded-[12px] bg-clay-50 px-3 py-2 text-[12.5px] leading-5 text-clay-600">
+            Their {entry.weeks} week{entry.weeks > 1 ? 's' : ''} ({entry.label}) will be marked paid and what they are owed becomes ₹0. The retailer is told. This cannot be undone.
+          </p>
+          {reference.trim() && <p className="text-[12.5px] text-ink-50">Reference: <span className="font-mono">{reference.trim()}</span></p>}
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button variant="outline" onClick={() => setStep(1)}>Back</Button>
+            <Button icon="check" loading={busy} onClick={record}>Yes, mark as paid</Button>
+          </div>
+        </div>
+      )}
+    </Modal>
+  );
+}
+
 function SettlementSheet({ s, canEdit, onClose }) {
   const toast = useToast();
   const [busy, setBusy] = useState(false);
@@ -83,9 +139,10 @@ function SettlementSheet({ s, canEdit, onClose }) {
           ['Weeks', s.label],
           ['Sent', `${formatOrderDate(s.at)} by ${s.by}`],
           ['Bank', bankLine(s.bank)],
-          ['Razorpay payout', s.payoutId ? <span className="font-mono">{s.payoutId}</span> : '—'],
-          ['Razorpay status', s.razorpayStatus || '—'],
-          ['Bank UTR', s.utr ? <span className="font-mono">{s.utr}</span> : '—'],
+          ['Paid', s.paidVia === 'manual' ? 'By hand, outside Nivorva' : 'RazorpayX payout'],
+          s.paidVia !== 'manual' && ['Razorpay payout', s.payoutId ? <span className="font-mono">{s.payoutId}</span> : '—'],
+          s.paidVia !== 'manual' && ['Razorpay status', s.razorpayStatus || '—'],
+          [s.paidVia === 'manual' ? 'Bank reference' : 'Bank UTR', s.utr ? <span className="font-mono">{s.utr}</span> : '—'],
           s.paidAt && ['Paid', formatOrderDate(s.paidAt)],
         ]} />
         {s.failureReason && <p className="rounded-[12px] bg-clay-50 px-3 py-2 text-[12.5px] text-clay-600">{s.failureReason}{s.status === 'failed' ? ' — the weeks are back in Ready to settle.' : ''}</p>}
@@ -162,7 +219,7 @@ export default function AdminPayouts() {
         <p className="rounded-[14px] border border-amber/20 bg-amber-50 px-4 py-2.5 text-[12.5px] leading-5 text-amber">Test mode — payouts are simulated and no money moves. They go live once the RazorpayX keys are added to the API.</p>
       )}
       {gateway === 'off' && (
-        <p className="rounded-[14px] border border-amber/20 bg-amber-50 px-4 py-2.5 text-[12.5px] leading-5 text-amber">RazorpayX payouts are switched off, so Settle is unavailable. The amounts below are what each retailer is owed — pay them outside Nivorva for now. Settle turns on once RazorpayX is set up.</p>
+        <p className="rounded-[14px] border border-amber/20 bg-amber-50 px-4 py-2.5 text-[12.5px] leading-5 text-amber">RazorpayX is not set up yet, so Nivorva sends no money. Pay each retailer from the bank yourself, then press Settle to record it — you are asked to confirm twice, and what they are owed becomes ₹0.</p>
       )}
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -188,7 +245,7 @@ export default function AdminPayouts() {
                 {d.amount <= 0 ? (
                   <p className="text-[12px] text-ink-50">Fees and refunds were more than sales — this comes off the next settlement.</p>
                 ) : canEdit && (
-                  <Button full icon="rupee" disabled={!d.canSettle || gateway === 'off'} onClick={() => setSettling(d)}>Settle {money(d.amount)}</Button>
+                  <Button full icon="rupee" disabled={!d.canSettle} onClick={() => setSettling(d)}>Settle {money(d.amount)}</Button>
                 )}
               </li>
             ))}
@@ -208,7 +265,7 @@ export default function AdminPayouts() {
               { key: 'label', label: 'Weeks' },
               { key: 'amount', label: 'Amount', align: 'right', render: (s) => <b>{money(s.amount)}</b> },
               { key: 'status', label: 'Status', render: (s) => <StatusPill status={s.status} /> },
-              { key: 'payoutId', label: 'Razorpay payout', render: (s) => <span className="font-mono text-[12px]">{s.payoutId || '—'}</span> },
+              { key: 'payoutId', label: 'Razorpay payout', render: (s) => (s.paidVia === 'manual' ? <span className="text-[12px] text-ink-50">Paid by hand</span> : <span className="font-mono text-[12px]">{s.payoutId || '—'}</span>), csv: (s) => (s.paidVia === 'manual' ? 'Paid by hand' : s.payoutId || '') },
               { key: 'utr', label: 'UTR', render: (s) => <span className="font-mono text-[12px]">{s.utr || '—'}</span> },
             ]}
             searchText={(s) => `${s.retailerName} ${s.payoutId} ${s.utr}`}
@@ -254,7 +311,9 @@ export default function AdminPayouts() {
         </div>
       </Panel>
 
-      {settling && <SettleDialog entry={settling} rows={rows} by={user?.fullName} onClose={() => setSettling(null)} />}
+      {settling && (gateway === 'off'
+        ? <ManualSettleDialog entry={settling} rows={rows} by={user?.fullName} onClose={() => setSettling(null)} />
+        : <SettleDialog entry={settling} rows={rows} by={user?.fullName} onClose={() => setSettling(null)} />)}
       {sheet && <SettlementSheet s={sheet} canEdit={canEdit} onClose={() => setOpenSettlement(null)} />}
       {week && <WeekSheet row={week} canEdit={canEdit} by={user?.fullName} onClose={() => setOpenWeek(null)} />}
     </div>
