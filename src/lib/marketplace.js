@@ -1,3 +1,4 @@
+import { istClock, istStartOfDay } from './ist.js';
 /* ============================================================================
  * marketplace.js — the multi-retailer rules, as pure functions.
  *
@@ -191,13 +192,26 @@ export function aggregateStatus(parts = []) {
 
 export const nextStatus = (s) => ORDER_FLOW[Math.min(ORDER_FLOW.length - 1, ORDER_FLOW.indexOf(s) + 1)];
 
+/* ── running late ───────────────────────────────────────────────────────── */
+/* A seller's part is late when it has sat in one status longer than this many
+   days. One rule for the dashboard's "running late" and the Orders filter of
+   the same name, so the two always show the same orders (review 10). */
+export const LATE_AFTER = { Pending: 2, Processing: 3, Shipped: 5 };
+export function lateDays(part, now = Date.now()) {
+  const limit = LATE_AFTER[part.status];
+  if (!limit) return 0;
+  const since = part.statusLog?.[part.statusLog.length - 1]?.at || part.createdAt;
+  const days = Math.floor((now - since) / DAY);
+  return now - since > limit * DAY ? days : 0;
+}
+/* the Orders panel's own Pending test: the order, or one of its sellers' parts, is pending */
+export const isPendingOrder = (o) => o.status === 'Pending' || o.parts.some((p) => p.status === 'Pending');
+
 /* ── settlement cycles (weekly, Monday to Sunday) ─────────────────────────── */
 export function cycleStart(ms) {
-  const d = new Date(ms);
-  d.setHours(0, 0, 0, 0);
-  const dow = (d.getDay() + 6) % 7; // Monday = 0
-  d.setDate(d.getDate() - dow);
-  return d.getTime();
+  const day = istStartOfDay(ms);
+  const dow = (istClock(day).getUTCDay() + 6) % 7; // Monday = 0, in IST like the API's SettlementService
+  return day - dow * DAY;
 }
 export const cycleEnd = (start) => start + 7 * DAY - 1;
 export function cycleLabel(start) {
@@ -206,7 +220,7 @@ export function cycleLabel(start) {
 }
 /* does the cycle contain the 1st of a month? (monthly fees fall there) */
 export function cycleHasMonthStart(start) {
-  for (let t = start; t <= cycleEnd(start); t += DAY) if (new Date(t).getDate() === 1) return true;
+  for (let t = start; t <= cycleEnd(start); t += DAY) if (istClock(t).getUTCDate() === 1) return true;
   return false;
 }
 

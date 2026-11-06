@@ -1,3 +1,4 @@
+import { istDay } from './ist';
 /* ============================================================================
  * exportSheet — build a spreadsheet the browser can download, no dependency.
  *
@@ -43,12 +44,8 @@ export function downloadSheet(filename, headers, rows) {
   return rows.length;
 }
 
-/** YYYY-MM-DD in local time (date inputs speak this). */
-export const isoDate = (d = new Date()) => {
-  const x = new Date(d);
-  x.setMinutes(x.getMinutes() - x.getTimezoneOffset());
-  return x.toISOString().slice(0, 10);
-};
+/** YYYY-MM-DD, the IST day (date inputs speak this). */
+export const isoDate = (d = new Date()) => istDay(new Date(d).getTime());
 
 /** Inclusive day-range test against a millisecond timestamp. */
 export function withinRange(ms, fromIso, toIso) {

@@ -9,14 +9,14 @@ import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
 import { useAdminStore, couponDiscount, productById } from '../context/AdminStore';
-import { checkout as checkoutLive, placeOrder as saveOrder } from '../store/orders';
+import { checkout as checkoutLive, payOrder, placeOrder as saveOrder } from '../store/orders';
 import { notify } from '../store/notifications';
 import { shippingFor, taxRateFor } from '../store/settings';
 import { IS_MOCK, post } from '../lib/api';
 import { LIVE } from '../lib/config';
 import { addressBook, formatAddress } from '../lib/geo';
 import { allocate } from '../lib/marketplace';
-import { isListed } from '../data/catalog';
+import { isListed, photoOf } from '../data/catalog';
 import { paymentMethods } from '../data/site';
 import { cx, money } from '../lib/format';
 
@@ -252,8 +252,18 @@ export default function Checkout() {
           address: { name: addr.name.trim(), phone: addr.phone, address: [addr.line1, addr.landmark].filter(Boolean).join(', '), city: addr.city.trim(), pin: addr.pin, state: addr.state, lat: addr.lat ?? null, lng: addr.lng ?? null },
         }, (crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`).replace(/[^A-Za-z0-9_.:-]/g, ''));
         setPlaced(true);
-        navigate('/order-confirmed', { replace: true, state: { id: order.id, total: order.total, count: totals.count, delivery: speed, pay, coupon: order.coupon, couponAmount: order.couponDiscount, parts: order.parts.length } });
         clear();
+        if (order.checkout) {
+          /* the order is placed and its stock held; it counts once Razorpay confirms the payment */
+          try {
+            await payOrder(order.id, order.checkout);
+          } catch (x) {
+            toast.error(x.dismissed ? `Payment not finished. Order ${order.id} is held for you — pay from Your orders before it is cancelled.` : x.message);
+            navigate(`/orders?id=${order.id}`, { replace: true });
+            return;
+          }
+        }
+        navigate('/order-confirmed', { replace: true, state: { id: order.id, total: order.total, count: totals.count, delivery: speed, pay, coupon: order.coupon, couponAmount: order.couponDiscount, parts: order.parts.length } });
         return;
       }
       if (ONLINE(pay)) {
@@ -436,7 +446,7 @@ export default function Checkout() {
                   <ul className="space-y-2.5">
                     {g.items.map((line) => (
                       <li key={`${line.id}-${line.supplierId}`} className="flex gap-3">
-                        <span className="photo-bed grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-[12px]"><ProductArt kind={line.product.art} material={line.product.material} className="h-full w-full p-1" /></span>
+                        <span className="photo-bed grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-[12px]">{photoOf(line.product) ? <img src={photoOf(line.product)} alt="" loading="lazy" className="h-full w-full object-cover" /> : <ProductArt kind={line.product.art} material={line.product.material} className="h-full w-full p-1" />}</span>
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-[13px] font-bold">{line.product.name}</p>
                           <p className="tnum text-[12px] text-ink-50">Qty {line.qty}{line.bulk ? ` · bulk − ${money(line.bulk.amount)}` : ''}</p>

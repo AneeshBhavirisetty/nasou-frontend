@@ -3,7 +3,7 @@ import Icon from '../Icon';
 import ProductArt from '../ProductArt';
 import ReasonDialog from './ReasonDialog';
 import { StatusPill, SELECT_CLS, LABEL_CLS } from './AdminUI';
-import { findProduct } from '../../data/catalog';
+import { findProduct, photoOf } from '../../data/catalog';
 import { createRefund, refundableOn, updatePart } from '../../store/orders';
 import { useToast } from '../../context/ToastContext';
 import { ORDER_FLOW, nextStatus } from '../../lib/marketplace';
@@ -63,7 +63,7 @@ export default function PartCard({ order, part, by, canAdvance, canCancel, canRe
             return (
               <li key={l.id} className="flex items-center gap-3">
                 <span className="photo-bed grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-[12px]">
-                  {p?.images?.[0] ? <img src={p.images[0]} alt="" className="h-full w-full object-cover" /> : <ProductArt kind={p?.art} material={p?.material} className="h-full w-full p-1" />}
+                  {photoOf(p) ? <img src={photoOf(p)} alt="" loading="lazy" className="h-full w-full object-cover" /> : <ProductArt kind={p?.art} material={p?.material} className="h-full w-full p-1" />}
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[13.5px] font-semibold text-ink">{l.name}</p>

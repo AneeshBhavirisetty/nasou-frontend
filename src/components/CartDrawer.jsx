@@ -6,6 +6,7 @@ import ProductArt from './ProductArt';
 import { Button, Stepper } from './ui';
 import { useCart, MAX_QTY } from '../context/CartContext';
 import { money } from '../lib/format';
+import { photoOf } from '../data/catalog';
 
 export default function CartDrawer() {
   const { items, totals, open, setOpen, setQty, remove } = useCart();
@@ -93,7 +94,7 @@ export default function CartDrawer() {
                       >
                         <Link to={`/product/${line.id}`} onClick={() => setOpen(false)} className="shrink-0">
                           <span className="photo-bed grid h-[74px] w-[74px] place-items-center overflow-hidden rounded-[14px]">
-                            <ProductArt kind={line.product.art} material={line.product.material} className="h-full w-full p-1.5" />
+                            {photoOf(line.product) ? <img src={photoOf(line.product)} alt="" loading="lazy" className="h-full w-full object-cover" /> : <ProductArt kind={line.product.art} material={line.product.material} className="h-full w-full p-1.5" />}
                           </span>
                         </Link>
                         <div className="min-w-0 flex-1">

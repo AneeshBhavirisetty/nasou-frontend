@@ -34,10 +34,11 @@
   --color-pine: #1f3b34;
   --color-pine-600: #255849;
 
-  /* One surface for the whole chat panel — header excepted — and it is the
-     website's own background (review 6: "chatbot internal background
-     mismatch"; client, 29 Oct: same colour as the site). */
-  --color-chat: #efeae1;
+  /* One surface for the whole chat panel — header excepted. Review 9 (item
+     14): match the approved design, the reference ChatbotWidget's #F7F9F8 —
+     the cool off-white its mist chips, white bubbles and pine header sit on
+     (the warm site beige clashed with them). */
+  --color-chat: #f7f9f8;
 
   /* Brand — the reference's forest #1F5C4A and its softer partner #255849;
      the rest of the ramp is darker or lighter steps of those. */

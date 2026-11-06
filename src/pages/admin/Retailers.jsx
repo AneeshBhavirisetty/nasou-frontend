@@ -16,6 +16,7 @@ import { RETAILER_STATUS } from '../../lib/marketplace';
 import { rupeesCompact } from '../../lib/analytics';
 import { formatOrderDate } from '../../data/orders';
 import { money } from '../../lib/format';
+import { istDay } from '../../lib/ist';
 
 /* Retailers — the global list view (requirement 7). Opening a row shows the
    retailer's full page (RetailerDetail). */
@@ -67,7 +68,7 @@ export default function AdminRetailers() {
     { key: 'products', label: 'Products', align: 'right', render: (r) => <span title={r.productsByNivora ? `${r.productsByNivora} uploaded by Nivorva` : undefined}>{r.products.toLocaleString('en-IN')}{r.productsByNivora ? <span className="block text-[10.5px] font-semibold text-ink-35">{r.productsByNivora} by Nivorva</span> : null}</span> },
     { key: 'orders', label: 'Sub-orders', align: 'right' },
     { key: 'sales', label: 'Sales', align: 'right', render: (r) => money(r.sales) },
-    { key: 'joinedAt', label: 'Joined', render: (r) => formatOrderDate(r.joinedAt), csv: (r) => new Date(r.joinedAt).toISOString().slice(0, 10) },
+    { key: 'joinedAt', label: 'Joined', render: (r) => formatOrderDate(r.joinedAt), csv: (r) => istDay(r.joinedAt) },
     { key: 'contact', label: 'Contact', render: (r) => <span className="whitespace-nowrap">{r.contact}</span> },
     { key: 'phone', label: 'Phone', hidden: true },
     { key: 'email', label: 'Email', hidden: true },

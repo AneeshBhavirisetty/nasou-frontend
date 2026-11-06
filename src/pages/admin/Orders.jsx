@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import Icon from '../../components/Icon';
 import DataTable from '../../components/admin/DataTable';
 import { AdminPageHead, Kpi, StatusPill, ViewOnlyBanner } from '../../components/admin/AdminUI';
@@ -14,6 +14,8 @@ import { invoiceUrl } from '../../lib/exportSheet';
 import { rupeesCompact } from '../../lib/analytics';
 import { money } from '../../lib/format';
 import { act } from '../../lib/act';
+import { istStamp } from '../../lib/ist';
+import { LATE_AFTER, isPendingOrder, lateDays } from '../../lib/marketplace';
 
 /* Orders — global list view (requirement 7). One row per customer order;
    each order has one sub-order per retailer, tracked separately. Opening a
@@ -26,6 +28,9 @@ export default function AdminOrders() {
   const orders = useScopedOrders();
   const retailers = useRetailers();
   const canEdit = can('orders', 'edit');
+  /* the dashboard links here with ?status=Pending or ?late=yes, already filtered */
+  const [params] = useSearchParams();
+  const initialFilters = Object.fromEntries(['status', 'late'].filter((k) => params.get(k)).map((k) => [k, params.get(k)]));
 
   const rows = useMemo(() => orders.map((o) => ({
     ...o,
@@ -66,7 +71,7 @@ export default function AdminOrders() {
               {o.id}{o.flagged && <Icon name="bell" size={13} className="text-clay" />}
             </span>
           ) },
-          { key: 'createdAt', label: 'Placed', render: (o) => formatOrderDate(o.createdAt), csv: (o) => new Date(o.createdAt).toISOString() },
+          { key: 'createdAt', label: 'Placed', render: (o) => formatOrderDate(o.createdAt), csv: (o) => istStamp(o.createdAt) },
           { key: 'customer', label: 'Customer', render: (o) => <span className="block min-w-[140px]"><span className="block font-bold text-ink">{o.customer}</span><span className="text-[11.5px] text-ink-50">{o.city} {o.pin}</span></span> },
           { key: 'sellers', label: 'Sellers', render: (o) => <span className="block max-w-[220px] truncate" title={o.sellers}>{o.partCount > 1 ? `${o.partCount} sellers · ` : ''}{o.sellers}</span> },
           { key: 'status', label: 'Status', render: (o) => <StatusPill status={o.status} /> },
@@ -81,13 +86,15 @@ export default function AdminOrders() {
         searchText={(o) => `${o.id} ${o.customer} ${o.email} ${o.phone} ${o.city} ${o.sellers} ${o.parts.map((p) => p.id).join(' ')}`}
         searchPlaceholder="Search order, sub-order, customer, phone, seller"
         filters={[
-          { key: 'status', label: 'Status', options: ORDER_STATUSES.map((s) => ({ value: s, label: s })), test: (o, v) => o.status === v || o.parts.some((p) => p.status === v) },
+          { key: 'status', label: 'Status', options: ORDER_STATUSES.map((s) => ({ value: s, label: s })), test: (o, v) => (v === 'Pending' ? isPendingOrder(o) : o.status === v || o.parts.some((p) => p.status === v)) },
+          { key: 'late', label: 'Running late', options: [{ value: 'yes', label: `Late (${Object.entries(LATE_AFTER).map(([s, d]) => `${s} ${d}+ d`).join(', ')})` }], test: (o) => o.parts.some((p) => lateDays({ ...p, createdAt: p.createdAt || o.createdAt }) > 0) },
           { key: 'retailer', label: 'Retailer', options: retailers.filter((r) => r.status !== 'pending').map((r) => ({ value: r.id, label: r.name })), test: (o, v) => o.sellerIds.includes(v) },
           { key: 'payment', label: 'Payment', options: ['UPI', 'Cards', 'Net banking', 'Cash on delivery', 'GST invoice'].map((s) => ({ value: s, label: s })), test: (o, v) => o.payment === v },
           { key: 'pay', label: 'Payment status', options: ['Paid', 'Due on delivery', 'Collected', 'Invoice due', 'Refunded'].map((s) => ({ value: s, label: s })), test: (o, v) => o.paymentStatus === v },
           { key: 'flag', label: 'Flag', options: [{ value: 'yes', label: 'Flagged' }, { value: 'multi', label: 'Several sellers' }], test: (o, v) => (v === 'yes' ? !!o.flagged : o.partCount > 1) },
         ]}
         date={(o) => o.createdAt}
+        initialFilters={initialFilters}
         initialSort={{ key: 'createdAt', dir: 'desc' }}
         onRowClick={(o) => navigate(`/admin/orders/${o.id}`)}
         bulkActions={canEdit ? [{ label: 'Move pending parts to Processing', icon: 'chevronsRight', run: advance }] : []}

@@ -5,7 +5,6 @@ import Icon from '../components/Icon';
 import NotificationBell from '../components/NotificationBell';
 import { Avatar } from '../components/admin/AdminUI';
 import { BottomNav, SideRail } from '../components/admin/AdminSidebar';
-import { OPEN_CHAT } from '../components/chat/ChatWidget';
 import { useAuth } from '../context/AuthContext';
 import { useIam } from '../context/IamStore';
 import { useRetailer } from '../store/retailers';
@@ -19,8 +18,10 @@ import SellerStatus from '../pages/seller/Status';
 /* Retailer console — "Retailer commerce hub" (client review 6). Follows the
    approved reference: the module list on the left (Dashboard, Orders,
    Products, Discounts, Customers, Payouts, Billing, Reports, Store, Users &
-   access, Support), and a header that keeps search, the AI assistant, the bell
-   and the profile — plus Orders / Products / Payouts as tabs across the top.
+   access, Support), and a header that keeps search, the bell and the profile
+   — plus Orders / Products / Payouts as tabs across the top. The AI assistant
+   is the round button at the bottom right only (review 9: no second icon by
+   the search bar).
    Header and page share one background. Everything is scoped to this
    retailer; staff see the sections of their staff role (requirement 21). */
 
@@ -218,12 +219,6 @@ export default function SellerLayout() {
             </div>
             <div className="flex min-w-0 flex-1 items-center justify-end gap-2">
               {live && <ConsoleSearch />}
-              {live && !readOnly && (
-                <button onClick={() => window.dispatchEvent(new Event(OPEN_CHAT))} aria-label="Ask the Nivorva AI assistant" title="AI assistant" className={cx(roundBtn, 'relative')}>
-                  <Icon name="sparkle" size={18} />
-                  <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-gold ring-2 ring-canvas" />
-                </button>
-              )}
               {live && canSection('support') && !readOnly && (
                 <Link to="/seller/support" aria-label="Support tickets" title="Support" className={cx(roundBtn, 'hidden sm:grid')}><Icon name="headset" size={18} /></Link>
               )}

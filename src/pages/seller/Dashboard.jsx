@@ -14,6 +14,7 @@ import { pendingBalance } from '../../store/payouts';
 import { categoryName } from '../../data/catalog';
 import { dailySeries, rupeesCompact } from '../../lib/analytics';
 import { cx, money } from '../../lib/format';
+import { istStartOfDay } from '../../lib/ist';
 
 /* Seller dashboard — the approved reference design (client review 6): the
    green "Retail operations" hero with quick actions, a KPI strip, then the
@@ -70,7 +71,7 @@ export default function SellerDashboard() {
     const parts = orders.flatMap((o) => o.parts.map((p) => ({ ...p, orderId: o.id, createdAt: o.createdAt, customer: o.customer, city: o.city })));
     const live = parts.filter((p) => p.status !== 'Cancelled');
     const sumSince = (ms) => live.filter((p) => p.createdAt >= ms).reduce((s, p) => s + p.total, 0);
-    const today0 = new Date().setHours(0, 0, 0, 0);
+    const today0 = istStartOfDay();
     const series = dailySeries(orders.map((o) => ({ ...o, total: o.parts.reduce((s, p) => s + (p.status === 'Cancelled' ? 0 : p.total), 0) })), range)
       .map((p) => ({ key: p.t, label: p.label, value: p.billed, orders: p.orders }));
     const inRange = live.filter((p) => p.createdAt >= now - range * DAY);

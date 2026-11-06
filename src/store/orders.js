@@ -8,6 +8,7 @@ import { notify } from './notifications';
 import { adjustStock } from '../context/AdminStore';
 import { API_BASE_URL, LIVE } from '../lib/config';
 import { api, get, patch as apiPatch, post, refresh, who } from '../lib/live';
+import { openCheckout } from '../lib/razorpay';
 
 /* ============================================================================
  * Order book (requirements 8, 9, 12, 15, 19).
@@ -132,6 +133,16 @@ export async function checkout(body, idempotencyKey) {
   const order = await api('/checkout', { method: 'POST', headers: { 'Idempotency-Key': idempotencyKey }, body: JSON.stringify(body) });
   ordersStore.set((list) => [order, ...list.filter((o) => o.id !== order.id)]);
   refresh('notifications', 'catalog');
+  return order;
+}
+
+/* An online order awaiting payment: Razorpay Checkout on the options from
+   checkout (or asked again for "Pay now"), then the API verifies the payment. */
+export async function payOrder(orderId, options) {
+  const paid = await openCheckout(options || await post(`/orders/${orderId}/pay`));
+  const order = await post(`/orders/${orderId}/payment`, paid);
+  ordersStore.set((list) => [order, ...list.filter((o) => o.id !== order.id)]);
+  refresh('notifications');
   return order;
 }
 

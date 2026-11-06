@@ -21,6 +21,14 @@ export function offerFits(o, items) {
     && inScope(p, o.scope));
 }
 
+/* what counts towards the minimum order, as the server's PricingEngine counts it:
+   a retailer's code only its own covered lines, a Nivorva code the whole cart */
+function spendFor(o, items) {
+  return items.filter(({ product: p }) => !o.retailerId || ((p.retailerId === o.retailerId)
+    && (!o.productSkus?.length || o.productSkus.includes(p.sku)) && inScope(p, o.scope)))
+    .reduce((n, l) => n + (Number(l.price) || 0) * l.qty, 0);
+}
+
 const what = (o) => (o.kind === 'percent' ? `${Number(o.value)}% off` : `${money(o.value)} off`);
 const where = (o) => {
   const on = o.productSkus?.length ? `${o.productSkus.length} selected product${o.productSkus.length === 1 ? '' : 's'}`
@@ -38,7 +46,10 @@ export default function AvailableOffers({ items, fallback = [], onApply, current
     return () => { live = false; };
   }, []);
 
-  const fits = (list || []).filter((o) => offerFits(o, items)).sort((a, b) => Number(b.value) - Number(a.value));
+  /* usable ones first; below a minimum order the offer says how much more to add */
+  const fits = (list || []).filter((o) => offerFits(o, items))
+    .map((o) => ({ ...o, short: Math.max(0, Math.ceil(Number(o.minOrder) - spendFor(o, items))) }))
+    .sort((a, b) => (a.short > 0) - (b.short > 0) || Number(b.value) - Number(a.value));
   if (!fits.length) return null;
 
   return (
@@ -58,7 +69,9 @@ export default function AvailableOffers({ items, fallback = [], onApply, current
             </span>
             {current === o.code
               ? <span className="shrink-0 text-[12px] font-bold text-emerald-700">Applied</span>
-              : <button type="button" onClick={() => onApply(o.code)} className="shrink-0 rounded-full bg-forest px-3.5 py-1.5 text-[12px] font-bold text-white shadow-btn transition hover:-translate-y-0.5">Apply</button>}
+              : o.short > 0
+                ? <span className="shrink-0 text-right text-[11.5px] font-bold leading-tight text-amber">Add {money(o.short)}<br />more</span>
+                : <button type="button" onClick={() => onApply(o.code)} className="shrink-0 rounded-full bg-forest px-3.5 py-1.5 text-[12px] font-bold text-white shadow-btn transition hover:-translate-y-0.5">Apply</button>}
           </li>
         ))}
       </ul>

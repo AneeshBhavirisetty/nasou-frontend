@@ -119,6 +119,16 @@ function rebuild() {
     count: products.filter((p) => p.department === d.slug).length,
   }));
   _catName = new Map(categories.map((c) => [c.slug, c.name]));
+  const spellings = new Map();
+  for (const p of allProducts) {
+    const k = typeKey(p.kind);
+    if (!k) continue;
+    const m = spellings.get(k) || new Map();
+    const name = String(p.kind).trim().replace(/\s+/g, ' ');
+    m.set(name, (m.get(name) || 0) + 1);
+    spellings.set(k, m);
+  }
+  _typeName = new Map([...spellings].map(([k, m]) => [k, [...m].sort((x, y) => y[1] - x[1])[0][0]]));
 
   /* Photos: a product without its own photo borrows its item's (same
      category, sub-category and name — the sheet photographs per item, not per
@@ -163,7 +173,11 @@ export function typeKey(kind) {
   else if (/[^s]s$/.test(k) && k.length > 3) k = k.slice(0, -1);
   return k;
 }
-export const typeLabel = (key) => key.replace(/\b([a-z])/g, (m) => m.toUpperCase())
+/* An item type is shown as the master sheet names it ("Elbows", not the
+   grouping key "elbow" — review 9, customer item 21): the spelling most of
+   its products carry. */
+let _typeName = new Map();
+export const typeLabel = (key) => _typeName.get(key) || key.replace(/\b([a-z])/g, (m) => m.toUpperCase())
   .replace(/\b(Pvc|Upvc|Cpvc|Mta|Fta|Led|Mcb|Rccb)\b/g, (m) => ({ Pvc: 'PVC', Upvc: 'UPVC', Cpvc: 'CPVC' }[m] || m.toUpperCase()));
 function masterSubs() {
   try { return settingsStore.get().catalog?.subs || []; } catch { return []; }

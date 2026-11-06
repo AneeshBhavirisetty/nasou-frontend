@@ -13,6 +13,7 @@ import { addAdjustment, checkSettlement, computeSettlements, settleRetailer, use
 import { formatOrderDate } from '../../data/orders';
 import { money } from '../../lib/format';
 import { act } from '../../lib/act';
+import { istStamp } from '../../lib/ist';
 
 /* Retailer payouts (requirement 13), kept simple. Customers pay Nivorva; each
    week (Monday–Sunday) a retailer's delivered sales, less commission, plan fee
@@ -160,6 +161,9 @@ export default function AdminPayouts() {
       {gateway === 'simulated' && (
         <p className="rounded-[14px] border border-amber/20 bg-amber-50 px-4 py-2.5 text-[12.5px] leading-5 text-amber">Test mode — payouts are simulated and no money moves. They go live once the RazorpayX keys are added to the API.</p>
       )}
+      {gateway === 'off' && (
+        <p className="rounded-[14px] border border-amber/20 bg-amber-50 px-4 py-2.5 text-[12.5px] leading-5 text-amber">RazorpayX payouts are switched off, so Settle is unavailable. The amounts below are what each retailer is owed — pay them outside Nivorva for now. Settle turns on once RazorpayX is set up.</p>
+      )}
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Kpi label="To settle now" value={money(toSettle)} note={`${due.filter((d) => d.canSettle).length} retailers`} icon="clock" tone="amber" />
@@ -184,7 +188,7 @@ export default function AdminPayouts() {
                 {d.amount <= 0 ? (
                   <p className="text-[12px] text-ink-50">Fees and refunds were more than sales — this comes off the next settlement.</p>
                 ) : canEdit && (
-                  <Button full icon="rupee" disabled={!d.canSettle} onClick={() => setSettling(d)}>Settle {money(d.amount)}</Button>
+                  <Button full icon="rupee" disabled={!d.canSettle || gateway === 'off'} onClick={() => setSettling(d)}>Settle {money(d.amount)}</Button>
                 )}
               </li>
             ))}
@@ -199,7 +203,7 @@ export default function AdminPayouts() {
             rows={settlements}
             rowKey={(s) => s.id}
             columns={[
-              { key: 'at', label: 'Sent', always: true, render: (s) => <span className="whitespace-nowrap">{formatOrderDate(s.at)}</span>, csv: (s) => new Date(s.at).toISOString() },
+              { key: 'at', label: 'Sent', always: true, render: (s) => <span className="whitespace-nowrap">{formatOrderDate(s.at)}</span>, csv: (s) => istStamp(s.at) },
               { key: 'retailerName', label: 'Retailer', render: (s) => <span className="font-bold text-ink">{s.retailerName}</span> },
               { key: 'label', label: 'Weeks' },
               { key: 'amount', label: 'Amount', align: 'right', render: (s) => <b>{money(s.amount)}</b> },

@@ -7,6 +7,7 @@ import { useIam } from '../../context/IamStore';
 import { useAuditLog, verifyChain } from '../../lib/auditLog';
 import { teamRoleLabel } from '../../lib/access';
 import { cx } from '../../lib/format';
+import { istStamp } from '../../lib/ist';
 
 /* Audit log (requirement 4): every create, edit, delete, approval, login,
    export, permission change, scope bypass and "view as retailer" session —
@@ -46,7 +47,7 @@ export default function AdminAudit() {
         rows={rows}
         initialQuery={params.get('q') || ''}
         columns={[
-          { key: 'at', label: 'When', always: true, render: (e) => <span className="whitespace-nowrap text-[12px]">{when(e.at)}</span>, csv: (e) => new Date(e.at).toISOString() },
+          { key: 'at', label: 'When', always: true, render: (e) => <span className="whitespace-nowrap text-[12px]">{when(e.at)}</span>, csv: (e) => istStamp(e.at) },
           { key: 'actorName', label: 'Who', render: (e) => <span className="block min-w-[120px]"><span className="block font-bold text-ink">{e.actorName}</span><span className="text-[11.5px] text-ink-50">{teamRoleLabel(e.actorRole) !== 'Team member' ? teamRoleLabel(e.actorRole) : e.actorRole}</span></span> },
           { key: 'action', label: 'Action', render: (e) => <span className="whitespace-nowrap rounded-full bg-sunk px-2 py-0.5 font-mono text-[11.5px] font-bold text-forest">{e.action}</span> },
           { key: 'summary', label: 'What happened', render: (e) => <span className="block min-w-[260px] text-ink">{e.summary}</span> },

@@ -11,6 +11,7 @@ import { DEPARTMENTS, DEFAULT_DEPARTMENT, departmentMeta } from '../../data/depa
 import { ruleMatches } from '../../lib/pricing';
 import { money, cx } from '../../lib/format';
 import { act } from '../../lib/act';
+import { istDay } from '../../lib/ist';
 
 /* ============================================================================
  * CategoryDiscountDialog — "apply a discount to this category" from the
@@ -89,14 +90,19 @@ export default function CategoryDiscountDialog({ open, onClose, products, depart
     return { count: hit.length, each };
   }, [products, f.scopeType, f.scopeValue, f.productSkus, pct, value]);
 
-  const coupon = coupons.find((c) => c.code === code.trim().toUpperCase());
+  /* Nivorva's own codes that are not past their last day — a real list, not a type-ahead (review 9:
+     "discount not showing in the drop down"; <datalist> shows nothing on phones). */
+  const today = istDay();
+  const codes = useMemo(() => coupons.filter((c) => !c.retailerId && (!c.expiry || c.expiry >= today))
+    .sort((a, b) => a.code.localeCompare(b.code)), [coupons, today]);
+  const coupon = codes.find((c) => c.code === code);
   const couponScope = f.scopeType === 'department' ? `dept:${f.scopeValue}` : f.scopeValue;
 
   const submit = (e) => {
     e.preventDefault();
     if (mode === 'code') {
       if (f.scopeType === 'retailer') return toast.error('A discount code cannot be limited to one retailer — use “Set a discount here”.');
-      if (!coupon) return toast.error('No discount code with that name — create it under Discounts first.');
+      if (!coupon) return toast.error(codes.length ? 'Choose the discount code to apply.' : 'Create a discount code under Discounts first.');
       if (!preview.count) return toast.error('No products in that selection yet.');
       act(toast, () => saveCoupon({ ...coupon, scope: couponScope, autoApply: true, active: true }), `${coupon.code} now applies itself to ${scopeLabel}`);
       return onClose();
@@ -182,12 +188,18 @@ export default function CategoryDiscountDialog({ open, onClose, products, depart
           {mode === 'code' ? (
             <div className="sm:col-span-2">
               <span className={LABEL}>Discount code</span>
-              <input list="discount-codes" value={code} onChange={(e) => setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))} placeholder="e.g. MONSOON10" className={SELECT} />
-              <datalist id="discount-codes">{coupons.map((c) => <option key={c.id} value={c.code}>{c.kind === 'percent' ? `${c.value}% off` : `₹${c.value} off`}</option>)}</datalist>
+              <select value={code} onChange={(e) => setCode(e.target.value)} className={SELECT}>
+                <option value="">{codes.length ? 'Choose a discount code…' : 'No codes yet — create one under Discounts'}</option>
+                {codes.map((c) => (
+                  <option key={c.id} value={c.code}>
+                    {c.code} — {c.kind === 'percent' ? `${c.value}% off` : `₹${c.value} off`}{c.startsOn > today ? ` · from ${c.startsOn}` : ''}{c.active ? '' : ' · inactive'}
+                  </option>
+                ))}
+              </select>
               <span className="mt-1.5 block text-[12px] text-ink-50">
                 {coupon
-                  ? <>{coupon.kind === 'percent' ? `${coupon.value}% off` : `${money(coupon.value)} off`}{coupon.minOrder ? ` · min order ${money(coupon.minOrder)}` : ''}{coupon.maxDiscount ? ` · capped at ${money(coupon.maxDiscount)}` : ''}{!coupon.active && ' · currently inactive (will be switched on)'}</>
-                  : code ? 'No code with that name yet.' : `${coupons.length} codes in the Discounts module`}
+                  ? <>{coupon.kind === 'percent' ? `${coupon.value}% off` : `${money(coupon.value)} off`}{Number(coupon.minOrder) > 0 ? ` · min order ${money(coupon.minOrder)}` : ' · no minimum'}{Number(coupon.maxDiscount) > 0 ? ` · capped at ${money(coupon.maxDiscount)}` : ''}{coupon.startsOn ? ` · ${coupon.startsOn}` : ''}{coupon.expiry ? ` to ${coupon.expiry}` : ''}{!coupon.active && ' · currently inactive (will be switched on)'}</>
+                  : `${codes.length} Nivorva code${codes.length === 1 ? '' : 's'} in the Discounts module`}
               </span>
             </div>
           ) : (<>

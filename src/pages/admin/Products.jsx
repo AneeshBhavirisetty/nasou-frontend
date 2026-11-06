@@ -23,6 +23,7 @@ import { catalogBase as CATALOG, categoryName, photoOf, typeKey, typeLabel } fro
 import { DEPARTMENTS, DEFAULT_DEPARTMENT, departmentMeta } from '../../data/departments';
 import { money, cx, itemCode } from '../../lib/format';
 import { act } from '../../lib/act';
+import { istStamp } from '../../lib/ist';
 
 const PAGE = 20;
 /* the Retailer filter's value for products with no retailer (Nivorva's own catalogue) */
@@ -96,7 +97,7 @@ function StockLedger({ retailerId }) {
       id="stock-ledger"
       rows={rows}
       columns={[
-        { key: 'at', label: 'When', always: true, render: (e) => <span className="whitespace-nowrap">{new Date(e.at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })}</span>, csv: (e) => new Date(e.at).toISOString() },
+        { key: 'at', label: 'When', always: true, render: (e) => <span className="whitespace-nowrap">{new Date(e.at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })}</span>, csv: (e) => istStamp(e.at) },
         { key: 'name', label: 'Product', render: (e) => <span className="block min-w-[180px]"><span className="block font-bold text-ink">{e.name}</span><span className="font-mono text-[11px] text-ink-50">{e.sku}</span></span> },
         { key: 'reason', label: 'Reason', render: (e) => <span className="rounded-full bg-sunk px-2 py-0.5 text-[11.5px] font-bold capitalize text-forest">{e.reason}</span> },
         { key: 'ref', label: 'Reference', render: (e) => (e.ref ? <span className="font-mono text-[12px]">{e.ref}</span> : '—') },

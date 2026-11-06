@@ -12,9 +12,10 @@
 
 import { findProduct, categoryName, supplierName } from '../data/catalog';
 import { departmentMeta, DEFAULT_DEPARTMENT } from '../data/departments';
+import { istStartOfDay } from './ist';
 
 const DAY = 86400000;
-export const startOfDay = (ms) => { const d = new Date(ms); d.setHours(0, 0, 0, 0); return d.getTime(); };
+export const startOfDay = (ms) => istStartOfDay(ms);
 
 export const billedOf = (o) => (o.status === 'Cancelled' ? 0 : o.total);
 export const isLive = (o) => o.status !== 'Cancelled';

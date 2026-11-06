@@ -12,6 +12,7 @@ import { categoryName, departments } from '../data/catalog';
 import { DEPARTMENTS } from '../data/departments';
 import { cx, money } from '../lib/format';
 import FilterDropdown from '../components/FilterDropdown';
+import { useCatalogVersion } from '../lib/live';
 
 /* Wishlist (client review 6, customer item 12): high-level dropdowns —
    Category, then its Sub-category, Brand and Availability — instead of rows of
@@ -39,6 +40,7 @@ const SORTS = [
 
 export default function Wishlist() {
   const { ids, items, toggle } = useWishlist();
+  useCatalogVersion(); // categories below come from the catalogue: re-read them whenever it reloads
   const { add } = useCart();
   const toast = useToast();
   const [dept, setDept] = useState('');

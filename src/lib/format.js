@@ -13,8 +13,7 @@ export function discount(price, mrp) {
 
 /* Compact "in 2 days" style relative phrasing for delivery estimates. */
 export function deliveryBy(days = 2) {
-  const d = new Date();
-  d.setDate(d.getDate() + days);
+  const d = new Date(Date.now() + days * 86400000);
   return d.toLocaleDateString(currency.locale, { weekday: 'short', day: 'numeric', month: 'short' });
 }
 

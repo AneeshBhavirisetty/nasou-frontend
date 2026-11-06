@@ -4,6 +4,7 @@ import { cx } from '../../lib/format';
 import { downloadSheet, isoDate } from '../../lib/exportSheet';
 import { audit } from '../../lib/auditLog';
 import { useToast } from '../../context/ToastContext';
+import { istStartOfDay } from '../../lib/ist';
 
 /* ============================================================================
  * DataTable — the list view every Super Admin and seller list uses
@@ -75,10 +76,11 @@ export default function DataTable({
   empty = 'Nothing matches these filters.',
   rowClass,
   initialQuery = '',
+  initialFilters,
 }) {
   const toast = useToast();
   const [q, setQ] = useState(initialQuery);
-  const [fv, setFv] = useState({});
+  const [fv, setFv] = useState(() => initialFilters || {});
   const [range, setRange] = useState('');
   const [sort, setSort] = useState(initialSort || null);
   const [page, setPage] = useState(0);
@@ -102,7 +104,7 @@ export default function DataTable({
 
   const filtered = useMemo(() => {
     const n = q.trim().toLowerCase();
-    const since = range ? (() => { const d = new Date(); d.setHours(0, 0, 0, 0); return d.getTime() - (Number(range) - 1) * 86400000; })() : 0;
+    const since = range ? istStartOfDay() - (Number(range) - 1) * 86400000 : 0;
     let out = rows.filter((r) => {
       if (n && !(searchText ? searchText(r) : JSON.stringify(r)).toLowerCase().includes(n)) return false;
       for (const f of filters) if (fv[f.key] && !f.test(r, fv[f.key])) return false;

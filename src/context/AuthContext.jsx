@@ -200,6 +200,7 @@ export function AuthProvider({ children }) {
     setSessionState(null);
     stopPolling();
     clearSessionData();
+    try { localStorage.removeItem('nasou_wishlist_synced'); } catch { /* ignore */ }
   }, [session, endView]);
 
   /* Customer self-service (customer review item 5). Deactivation is undone

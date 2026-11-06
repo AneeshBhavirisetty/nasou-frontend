@@ -6,6 +6,7 @@ import { Badge, Button, Container, Breadcrumbs, PriceTag, Stepper } from '../com
 import { useCart, MAX_QTY } from '../context/CartContext';
 import { money, cx } from '../lib/format';
 import { EASE } from '../lib/motion';
+import { photoOf } from '../data/catalog';
 
 function FreeDeliveryBar({ subtotal, toFree }) {
   const pct = Math.min(100, (subtotal / (subtotal + toFree || 1)) * 100);
@@ -77,7 +78,7 @@ export default function Cart() {
                 >
                   <Link to={`/product/${line.id}`} className="shrink-0">
                     <span className="photo-bed grid h-24 w-24 place-items-center overflow-hidden rounded-[14px]">
-                      <ProductArt kind={line.product.art} material={line.product.material} className="h-full w-full p-2" />
+                      {photoOf(line.product) ? <img src={photoOf(line.product)} alt="" loading="lazy" className="h-full w-full object-cover" /> : <ProductArt kind={line.product.art} material={line.product.material} className="h-full w-full p-2" />}
                     </span>
                   </Link>
 

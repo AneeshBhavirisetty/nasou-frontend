@@ -14,7 +14,9 @@ import { useScopedOrders } from '../../lib/useScoped';
 import { useSettlements } from './Payouts';
 import { byProduct, dailySeries, rupeesCompact, withinDays } from '../../lib/analytics';
 import { userRoleLabel } from '../../lib/roles';
+import { isPendingOrder, lateDays } from '../../lib/marketplace';
 import { money, cx } from '../../lib/format';
+import { istHour } from '../../lib/ist';
 
 /* Super Admin dashboards (requirement 22): Executive, Retailer performance,
    Operations, Finance, Customers & catalog. Every number is derived from
@@ -76,10 +78,11 @@ function useDashboardData() {
       };
     }).sort((a, b) => b.sales - a.sales);
 
-    const LIMIT = { Pending: 2, Processing: 3, Shipped: 5 };
-    const delayed = parts.filter((p) => LIMIT[p.status] && now - ((p.statusLog?.[p.statusLog.length - 1]?.at) || p.createdAt) > LIMIT[p.status] * DAY)
-      .map((p) => ({ ...p, stuckDays: Math.floor((now - (p.statusLog?.[p.statusLog.length - 1]?.at || p.createdAt)) / DAY) }))
+    /* same rules as the Orders panel's filters, so the numbers match what the links open (review 10) */
+    const delayed = parts.map((p) => ({ ...p, stuckDays: lateDays(p, now) })).filter((p) => p.stuckDays > 0)
       .sort((a, b) => b.stuckDays - a.stuckDays);
+    const lateOrders = new Set(delayed.map((p) => p.orderId)).size;
+    const pendingOrders = orders.filter(isPendingOrder).length;
 
     const top = byProduct(last30).slice(0, 8);
     const sold = new Set(last30.flatMap((o) => o.lines.map((l) => l.id)));
@@ -97,7 +100,7 @@ function useDashboardData() {
       newCustomers, returning: customers30.size - newCustomers,
       series: dailySeries(orders, 30).map((p) => ({ label: p.label, value: p.billed, orders: p.orders })),
       commissionSeries: dailySeries(orders, 30).map((p) => ({ ...p, value: 0 })).map((p) => ({ ...p, value: commission(orders.filter((o) => new Date(o.createdAt).toDateString() === new Date(p.t).toDateString())) })),
-      perRetailer, parts, delayed,
+      perRetailer, parts, delayed, lateOrders, pendingOrders,
       partStatus: ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'].map((s) => ({ label: s, value: parts.filter((p) => p.status === s).length })),
       flagged: orders.filter((o) => o.flagged),
       payouts, held,
@@ -178,12 +181,13 @@ export default function AdminDashboard() {
     can('retailers') && { n: retailers.filter((r) => r.pendingChanges).length, label: 'profile changes', to: '/admin/approvals?tab=changes', icon: 'pencil' },
     isOwner && { n: requests.filter((q) => q.status === 'open').length, label: 'Owner sign-offs', to: '/admin/approvals?tab=owner', icon: 'shield' },
     can('refunds', 'approve') && { n: refunds.filter((r) => r.status === 'requested').length, label: 'refunds to approve', to: '/admin/refunds', icon: 'refresh' },
-    can('orders') && { n: d.delayed.length, label: 'delayed sub-orders', to: '/admin/orders', icon: 'clock' },
+    can('orders') && { n: d.pendingOrders, label: 'orders waiting to be packed', to: '/admin/orders?status=Pending', icon: 'package' },
+    can('orders') && { n: d.lateOrders, label: 'orders running late', to: '/admin/orders?late=yes', icon: 'clock' },
     can('orders') && { n: d.flagged.length, label: 'flagged orders', to: '/admin/orders', icon: 'bell' },
     can('payouts') && { n: d.payouts.filter((p) => p.status === 'pending').length, label: 'payouts to review', to: '/admin/payouts', icon: 'rupee' },
   ].filter((x) => x && x.n > 0);
 
-  const hour = new Date().getHours();
+  const hour = istHour();
   const greet = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
   const settled = d.payouts.filter((p) => p.status === 'paid').reduce((s, p) => s + p.net, 0);
 

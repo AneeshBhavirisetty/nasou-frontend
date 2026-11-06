@@ -4,9 +4,13 @@ import { useNotifications } from './NotificationStore';
 import { useAuth } from './AuthContext';
 import { LIVE } from '../lib/config';
 import { api } from '../lib/api';
+import { useCatalogVersion } from '../lib/live';
 
 const WishlistContext = createContext(null);
 const STORAGE_KEY = 'nasou_wishlist';
+/* the signed-in customer's server list, kept so a reload starts with it
+   instead of an empty page while /users/me/wishlist is on its way */
+const SYNCED_KEY = 'nasou_wishlist_synced';
 
 function load() {
   try {
@@ -22,11 +26,27 @@ function save(ids) {
   } catch { /* quota */ }
 }
 
+function loadSynced(userId) {
+  try {
+    const c = JSON.parse(localStorage.getItem(SYNCED_KEY) ?? 'null');
+    return c && c.userId === userId && Array.isArray(c.ids) ? c.ids : null;
+  } catch {
+    return null;
+  }
+}
+
 export function WishlistProvider({ children }) {
-  const [ids, setIds] = useState(load);
   const { push } = useNotifications();
   const { user } = useAuth();
   const synced = LIVE && user?.role === 'CUSTOMER';
+  const [ids, setIds] = useState(() => (synced && loadSynced(user.id)) || load());
+  const catalog = useCatalogVersion();
+
+  /* the server list, remembered for the next start */
+  useEffect(() => {
+    if (!synced) return;
+    try { localStorage.setItem(SYNCED_KEY, JSON.stringify({ userId: user.id, ids })); } catch { /* quota */ }
+  }, [ids, synced, user?.id]);
 
   /* Persist any change (guests, and the browser demo) */
   useEffect(() => { if (!synced) save(ids); }, [ids, synced]);
@@ -66,10 +86,10 @@ export function WishlistProvider({ children }) {
 
   const has = useCallback((productId) => ids.includes(productId), [ids]);
 
-  /* Hydrated items — rehydrate from catalog same as cart */
+  /* Hydrated items — from the catalogue, again whenever it reloads */
   const items = useMemo(
     () => ids.map((id) => findProduct(id)).filter(Boolean),
-    [ids]
+    [ids, catalog] // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   const value = useMemo(

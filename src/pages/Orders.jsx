@@ -5,12 +5,13 @@ import Icon from '../components/Icon';
 import ProductArt from '../components/ProductArt';
 import Modal from '../components/Modal';
 import { Badge, Button, Container, Breadcrumbs } from '../components/ui';
-import { findProduct } from '../data/catalog';
+import { findProduct, photoOf } from '../data/catalog';
 import { formatOrderDate } from '../data/orders';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
-import { updatePart, useRefunds } from '../store/orders';
+import { payOrder, updatePart, useRefunds } from '../store/orders';
+import { LIVE } from '../lib/config';
 import { useScopedOrders } from '../lib/useScoped';
 import { money, cx, itemCode } from '../lib/format';
 import { act } from '../lib/act';
@@ -56,7 +57,7 @@ function PartTracker({ order, part, onCancel }) {
           return (
             <li key={l.id} className="flex items-center gap-3 rounded-[14px] bg-white p-2.5">
               <span className="photo-bed grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-[12px]">
-                {p?.images?.[0] ? <img src={p.images[0]} alt="" className="h-full w-full object-cover" /> : <ProductArt kind={p?.art} material={p?.material} className="h-full w-full p-1" />}
+                {photoOf(p) ? <img src={photoOf(p)} alt="" loading="lazy" className="h-full w-full object-cover" /> : <ProductArt kind={p?.art} material={p?.material} className="h-full w-full p-1" />}
               </span>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-[13.5px] font-semibold text-ink">{l.name}</p>
@@ -84,6 +85,7 @@ export default function Orders() {
   const [params, setParams] = useSearchParams();
   const [cancelling, setCancelling] = useState(null);
   const [reason, setReason] = useState('');
+  const [paying, setPaying] = useState(false);
 
   const list = useMemo(() => [...orders].sort((a, b) => b.createdAt - a.createdAt), [orders]);
   const o = list.find((x) => x.id === params.get('id')) ?? list[0];
@@ -96,6 +98,20 @@ export default function Orders() {
       if (p && p.stock > 0) { add(p, { qty: Math.min(l.qty, p.stock) }); n += 1; }
     });
     if (!n) toast.error('Those items are out of stock right now.');
+  };
+
+  /* online order whose payment did not finish: Razorpay Checkout again, until the order times out */
+  const unpaid = LIVE && o && o.paymentStatus === 'Awaiting payment' && o.status !== 'Cancelled';
+  const payNow = async () => {
+    setPaying(true);
+    try {
+      await payOrder(o.id);
+      toast.success(`Payment received — ${o.id} is on its way to the sellers.`);
+    } catch (x) {
+      if (!x.dismissed) toast.error(x.message);
+    } finally {
+      setPaying(false);
+    }
   };
 
   return (
@@ -158,6 +174,13 @@ export default function Orders() {
                 <div className="flex justify-between"><dt className="text-ink-50">Payment</dt><dd className="text-right font-semibold text-ink">{o.payment} · {o.paymentStatus}</dd></div>
                 {mineRefunds.filter((r) => r.status === 'processed').map((r) => <div key={r.id} className="flex justify-between text-emerald-700"><dt>Refund · {r.partId}</dt><dd className="tnum font-semibold">{money(r.amount)}</dd></div>)}
               </dl>
+
+              {unpaid && (
+                <div className="mt-4 flex flex-col gap-3 rounded-[18px] border border-amber/20 bg-amber-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-[13px] leading-5 text-amber">Payment not finished. Your items are held for a short while — pay now, or the order is cancelled and nothing is charged.</p>
+                  <Button size="sm" icon="lock" loading={paying} onClick={payNow} className="shrink-0">Pay {money(o.total)}</Button>
+                </div>
+              )}
 
               <div className="mt-5 flex flex-wrap gap-2">
                 <Button to={`/invoice/${o.id}`} size="sm" variant="outline" icon="fileText">Invoice</Button>

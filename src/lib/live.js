@@ -39,6 +39,7 @@ const quiet = (p) => p.catch(() => undefined);
 /* ── storefront ─────────────────────────────────────────────────────────── */
 
 let catalogLoaded = false;
+let catalogVersion = 0;
 const catalogWatchers = new Set();
 /* true once the catalogue has arrived. main.jsx re-mounts the app on that
    change, so pages that opened without it (categories and wishlist empty until
@@ -55,8 +56,16 @@ async function loadCatalog() {
   settingsStore.set((s) => ({ ...s, ...(snap.settings || {}) }));
   adminStore.set((s) => ({ ...s, bulkRules: snap.bulkRules || [] }));
   catalogLoaded = true;
+  catalogVersion += 1;
   catalogWatchers.forEach((fn) => fn());
 }
+
+/* Changes every time the catalogue is (re)loaded, for views built from it
+   (the wishlist's categories — review 9, customer item 20). */
+export const useCatalogVersion = () => useSyncExternalStore((fn) => {
+  catalogWatchers.add(fn);
+  return () => catalogWatchers.delete(fn);
+}, () => catalogVersion);
 
 const keepTrying = () => setTimeout(() => loadCatalog().catch(keepTrying), 8000);
 

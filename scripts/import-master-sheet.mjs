@@ -11,6 +11,9 @@
 //   --batch=N   rows per request (default 500; smaller if a slow server times out)
 //   --stock=N   stock for new items (the sheet's Quantity column is empty); default 100
 //   --retire    afterwards, remove the retailer's products the sheet no longer lists
+//   --replace   first empty the retailer's catalogue (Owner only): products nobody ordered
+//               are deleted, ordered ones are hidden with their codes freed — then the
+//               sheet is imported fresh (review 9: "remove the data and load this sheet")
 //   --images=<map.json>  photos from scripts/upload-sheet-images.mjs: each row gets its
 //                item's photo from the media library, matched by Category / Sub category /
 //                Item Name to the photo folders. Rows whose Image URL cell is empty get the
@@ -106,6 +109,12 @@ const post = async (path, body) => {
     return call(path, body, session.accessToken);
   }
 };
+
+if (flag('replace')) {
+  const cleared = await post('/admin/catalog/master-import/clear', { retailerId, dryRun: flag('dry-run') });
+  console.log(`${cleared.dryRun ? 'Would clear' : 'Cleared'} ${cleared.retailer}: ${cleared.products} products — `
+    + `${cleared.deleted} deleted, ${cleared.keptForOrders} kept hidden for past orders (codes freed)`);
+}
 
 if (flag('clear-unowned')) {
   const cleared = await post('/admin/catalog/master-import/retire', { keep: [], dryRun: flag('dry-run'), retailerId: null });
