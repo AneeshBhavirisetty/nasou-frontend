@@ -17,6 +17,7 @@ import { bulkOffersFor, describeBulk } from '../lib/pricing';
 import { useWishlist } from '../context/WishlistContext';
 import { useToast } from '../context/ToastContext';
 import { money, discount, deliveryBy, cx, onRequest, quoteLink, itemCode } from '../lib/format';
+import { returnsCopy, useFeature } from '../lib/features';
 import { usePointerTilt } from '../lib/motion';
 
 /* deterministic pseudo-reviews from the product's own numbers */
@@ -39,6 +40,7 @@ function reviewsFor(p) {
 }
 
 export default function ProductDetail() {
+  const refundsOn = useFeature('refunds');
   const { id } = useParams();
   const product = findProduct(id);
   const { add, setOpen } = useCart();
@@ -340,7 +342,7 @@ export default function ProductDetail() {
               In-stock items ordered before 2 PM are dispatched the same working day and usually arrive the next working day. We deliver within Tirupati only.
             </AccordionItem>
             <AccordionItem title="Returns">
-              Unused fittings in original packaging can be returned within 7 days of delivery for a full refund of the item value.
+              {returnsCopy(refundsOn)}
             </AccordionItem>
             <AccordionItem title="Bulk & trade pricing">
               Slab pricing available on orders above ₹25,000. Sign in and contact us for a quote.

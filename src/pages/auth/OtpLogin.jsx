@@ -11,11 +11,10 @@ import AuthStepper from '../../components/auth/AuthStepper';
 import OtpInput from '../../components/auth/OtpInput';
 import ResendTimer from '../../components/auth/ResendTimer';
 import PasswordField from '../../components/auth/PasswordField';
-import PhoneField from '../../components/auth/PhoneField';
-import { isMobile10 } from '../../lib/format';
+import { contactOf, describeContact } from '../../lib/contact';
 
 const MOCK = import.meta.env.VITE_API_BASE_URL === undefined || import.meta.env.VITE_MOCK_API === 'true';
-const STEPS = ['Mobile', 'Verify', 'Details'];
+const STEPS = ['Mobile or email', 'Verify', 'Details'];
 
 export default function OtpLogin() {
   const { isAuthenticated, user, sendOtp, verifyOtp, register } = useAuth();
@@ -26,9 +25,11 @@ export default function OtpLogin() {
   const redirect = explicit || '/home';
 
   const [step, setStep] = useState(0);
-  const [phone, setPhone] = useState('');
+  const [raw, setRaw] = useState('');
+  const [contact, setContact] = useState(null);
   const [otp, setOtp] = useState('');
   const [phoneToken, setPhoneToken] = useState('');
+  const [emailToken, setEmailToken] = useState('');
   const [otpErr, setOtpErr] = useState(false);
   const [form, setForm] = useState({ fullName: '', email: '', password: '' });
   const [loading, setLoading] = useState(false);
@@ -38,16 +39,19 @@ export default function OtpLogin() {
 
   const send = async () => {
     setError('');
-    if (!isMobile10(phone)) return setError('Enter a valid 10-digit mobile number.');
+    const c = contactOf(raw);
+    if (!c) return setError('Enter a 10-digit mobile number or an email address.');
     setLoading(true);
     try {
-      await sendOtp(phone.trim());
-      toast.success('OTP sent to your phone.');
-    } catch {
-      toast.info(MOCK ? 'Demo mode — use code 123456' : 'OTP sent.');
+      await sendOtp(c);
+      setContact(c);
+      setStep(1);
+      toast.success(c.email ? 'Code sent — check your inbox (and spam).' : 'Code sent to your phone.');
+    } catch (err) {
+      if (MOCK) { setContact(c); setStep(1); toast.info('Demo mode — use code 123456'); }
+      else setError(err.message || 'Could not send a code. Try again.');
     } finally {
       setLoading(false);
-      setStep(1);
     }
   };
 
@@ -56,18 +60,20 @@ export default function OtpLogin() {
     if (otp.length !== 6) { setOtpErr(true); return setError('Enter the 6-digit code.'); }
     setLoading(true);
     try {
-      const data = await verifyOtp(phone.trim(), otp);
+      const data = await verifyOtp(contact, otp);
       if (data?.accessToken) {
         toast.success('Welcome back!');
         navigate(landingFor(data, explicit), { replace: true });
       } else {
         setPhoneToken(data?.phoneToken || '');
+        setEmailToken(data?.emailToken || '');
+        if (contact.email) setForm((f) => ({ ...f, email: contact.email }));
         setStep(2);
         toast.info('One more step — create your account.');
       }
     } catch (err) {
       if (MOCK && otp === '123456') {
-        const demoNew = ['9000000000', '9000000001', '9000000002'].includes(phone.replace(/\D/g, ''));
+        const demoNew = ['9000000000', '9000000001', '9000000002'].includes(contact.phone || '');
         if (demoNew) { setStep(2); toast.info('New number — create your account.'); }
         else { toast.success('Welcome back! (demo)'); navigate(redirect, { replace: true }); }
       } else {
@@ -86,7 +92,9 @@ export default function OtpLogin() {
     if (form.password.length < 8) return setError('Use at least 8 characters for your password.');
     setLoading(true);
     try {
-      await register({ phone: phone.trim(), email: form.email.trim(), fullName: form.fullName.trim(), password: form.password, phoneToken });
+      await register(contact.email
+        ? { email: contact.email, fullName: form.fullName.trim(), password: form.password, emailToken }
+        : { phone: contact.phone, email: form.email.trim(), fullName: form.fullName.trim(), password: form.password, phoneToken });
       toast.success('Account created — welcome to Nivorva!');
       navigate(redirect, { replace: true });
     } catch (err) {
@@ -102,11 +110,11 @@ export default function OtpLogin() {
 
   return (
     <AuthCard
-      title={step === 2 ? 'Create your account' : 'Sign in with OTP'}
+      title={step === 2 ? 'Create your account' : 'Sign in with a code'}
       subtitle={
-        step === 0 ? 'We’ll text a 6-digit code to verify your number.'
-          : step === 1 ? `Enter the code sent to ${phone}.`
-            : 'Just your name and email to finish.'
+        step === 0 ? 'We’ll send a 6-digit code to your mobile number or email.'
+          : step === 1 ? `Enter the code sent to ${describeContact(contact)}.`
+            : contact?.email ? 'Just your name and a password to finish.' : 'Just your name and email to finish.'
       }
       footer={<>Prefer a password? <Link to="/login" className="font-bold text-forest hover:underline">Sign in here</Link></>}
     >
@@ -115,7 +123,8 @@ export default function OtpLogin() {
       <motion.div key={step} initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.28 }}>
         {step === 0 && (
           <form onSubmit={(e) => { e.preventDefault(); send(); }} className="space-y-4">
-            <PhoneField value={phone} onChange={setPhone} autoFocus />
+            <Field label="Mobile number or email" value={raw} onChange={(e) => setRaw(e.target.value)} autoFocus
+              autoComplete="username" inputMode="email" placeholder="98765 43210 or you@example.com" />
             {err}
             <Button type="submit" full size="lg" loading={loading}>Send code</Button>
           </form>
@@ -127,7 +136,7 @@ export default function OtpLogin() {
             {err}
             <Button onClick={verify} full size="lg" loading={loading}>Verify &amp; continue</Button>
             <div className="flex items-center justify-between">
-              <button onClick={() => { setStep(0); setOtp(''); }} className="text-[12.5px] font-semibold text-forest-800 hover:text-forest">← Change number</button>
+              <button onClick={() => { setStep(0); setOtp(''); }} className="text-[12.5px] font-semibold text-forest-800 hover:text-forest">← Change {contact?.email ? 'email' : 'number'}</button>
               <ResendTimer seconds={30} onResend={send} />
             </div>
             {MOCK && <p className="text-center text-[11.5px] text-forest-800">Demo mode — enter any 6 digits</p>}
@@ -137,7 +146,8 @@ export default function OtpLogin() {
         {step === 2 && (
           <form onSubmit={(e) => { e.preventDefault(); finish(); }} className="space-y-4">
             <Field label="Full name" value={form.fullName} onChange={(e) => setForm({ ...form, fullName: e.target.value })} placeholder="Your name" required />
-            <Field label="Email address" type="email" autoComplete="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="you@example.com" required />
+            <Field label="Email address" type="email" autoComplete="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="you@example.com" required
+              disabled={Boolean(contact?.email)} hint={contact?.email ? 'Verified with the code you just entered.' : undefined} />
             <PasswordField label="Create a password" autoComplete="new-password" strength value={form.password} onChange={(v) => setForm({ ...form, password: v })} />
             {err}
             <Button type="submit" full size="lg" loading={loading}>Create account</Button>

@@ -3,25 +3,25 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useToast } from '../../context/ToastContext';
 import { authApi } from '../../lib/api';
-import { Button } from '../../components/ui';
+import { Button, Field } from '../../components/ui';
 import Icon from '../../components/Icon';
 import AuthCard from '../../components/auth/AuthCard';
 import AuthStepper from '../../components/auth/AuthStepper';
 import OtpInput from '../../components/auth/OtpInput';
 import ResendTimer from '../../components/auth/ResendTimer';
 import PasswordField, { scorePassword } from '../../components/auth/PasswordField';
-import PhoneField from '../../components/auth/PhoneField';
-import { isMobile10 } from '../../lib/format';
+import { contactOf, describeContact } from '../../lib/contact';
 
 const MOCK = import.meta.env.VITE_API_BASE_URL === undefined || import.meta.env.VITE_MOCK_API === 'true';
-const STEPS = ['Mobile', 'Verify', 'New password'];
+const STEPS = ['Mobile or email', 'Verify', 'New password'];
 
 export default function ForgotPassword() {
   const toast = useToast();
   const navigate = useNavigate();
 
   const [step, setStep] = useState(0);
-  const [phone, setPhone] = useState('');
+  const [raw, setRaw] = useState('');
+  const [contact, setContact] = useState(null);
   const [otp, setOtp] = useState('');
   const [otpErr, setOtpErr] = useState(false);
   const [pw, setPw] = useState('');
@@ -32,12 +32,15 @@ export default function ForgotPassword() {
 
   const send = async () => {
     setError('');
-    if (!isMobile10(phone)) return setError('Enter a valid 10-digit mobile number.');
+    const c = contactOf(raw);
+    if (!c) return setError('Enter your 10-digit mobile number or your email address.');
     setLoading(true);
     try {
-      await authApi.forgotPassword(phone.trim());
-      /* The API answers the same whether or not the number has an account. */
-      toast.success(MOCK ? 'Demo mode — use code 123456' : 'If this number has an account, a code is on its way.');
+      await authApi.forgotPassword(c);
+      setContact(c);
+      /* The API answers the same whether or not there is an account. */
+      toast.success(MOCK ? 'Demo mode — use code 123456'
+        : c.email ? 'If this email has an account, a code is on its way — check spam too.' : 'If this number has an account, a code is on its way.');
       setStep(1);
     } catch (err) {
       setError(err.message || 'Could not send a code. Try again.');
@@ -51,7 +54,7 @@ export default function ForgotPassword() {
     if (otp.length !== 6) { setOtpErr(true); return setError('Enter the 6-digit code.'); }
     setLoading(true);
     try {
-      const data = await authApi.verifyResetCode(phone.trim(), otp);
+      const data = await authApi.verifyResetCode(contact, otp);
       setToken(data.resetToken);
       setStep(2);
     } catch (err) {
@@ -86,14 +89,15 @@ export default function ForgotPassword() {
   return (
     <AuthCard
       title="Reset your password"
-      subtitle={step === 0 ? 'We’ll verify your mobile number first.' : step === 1 ? `Enter the code sent to ${phone}.` : 'Choose a new password.'}
+      subtitle={step === 0 ? 'We’ll send a code to the mobile number or email on your account.' : step === 1 ? `Enter the code sent to ${describeContact(contact)}.` : 'Choose a new password.'}
       footer={<Link to="/login" className="inline-flex items-center gap-1.5 font-bold text-forest hover:underline"><Icon name="arrowLeft" size={14} /> Back to sign in</Link>}
     >
       <AuthStepper steps={STEPS} current={step} />
       <motion.div key={step} initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.28 }}>
         {step === 0 && (
           <form onSubmit={(e) => { e.preventDefault(); send(); }} className="space-y-4">
-            <PhoneField value={phone} onChange={setPhone} autoFocus />
+            <Field label="Mobile number or email" value={raw} onChange={(e) => setRaw(e.target.value)} autoFocus
+              autoComplete="username" inputMode="email" placeholder="98765 43210 or you@example.com" />
             {err}
             <Button type="submit" full size="lg" loading={loading}>Send code</Button>
           </form>
@@ -104,7 +108,7 @@ export default function ForgotPassword() {
             {err}
             <Button onClick={verify} full size="lg" loading={loading}>Verify</Button>
             <div className="flex items-center justify-between">
-              <button onClick={() => { setStep(0); setOtp(''); }} className="text-[12.5px] font-semibold text-forest-800 hover:text-forest">← Change number</button>
+              <button onClick={() => { setStep(0); setOtp(''); }} className="text-[12.5px] font-semibold text-forest-800 hover:text-forest">← Change {contact?.email ? 'email' : 'number'}</button>
               <ResendTimer seconds={30} onResend={send} />
             </div>
             {MOCK && <p className="text-center text-[11.5px] text-forest-800">Demo code: <span className="font-mono">123456</span></p>}

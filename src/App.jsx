@@ -48,6 +48,7 @@ import AdminRefunds from './pages/admin/Refunds';
 import AdminPayouts from './pages/admin/Payouts';
 import AdminReconciliation from './pages/admin/Reconciliation';
 import AdminAudit from './pages/admin/Audit';
+import AdminEmails from './pages/admin/Emails';
 import AdminSettings from './pages/admin/Settings';
 import AdminMasterCatalog from './pages/admin/MasterCatalog';
 import AdminCustomerDetail from './pages/admin/CustomerDetail';
@@ -163,6 +164,7 @@ export default function App() {
           <Route path="/admin/refunds" element={<AdminRefunds />} />
           <Route path="/admin/payouts" element={<AdminPayouts />} />
           <Route path="/admin/reconciliation" element={<AdminReconciliation />} />
+          <Route path="/admin/emails" element={<AdminEmails />} />
           <Route path="/admin/audit" element={pageOn('/admin/audit') ? <AdminAudit /> : <Navigate to="/admin/dashboard" replace />} />
           <Route path="/admin/settings" element={pageOn('/admin/settings') ? <AdminSettings /> : <Navigate to="/admin/dashboard" replace />} />
           <Route path="/admin/catalog" element={pageOn('/admin/catalog') ? <AdminMasterCatalog /> : <Navigate to="/admin/dashboard" replace />} />

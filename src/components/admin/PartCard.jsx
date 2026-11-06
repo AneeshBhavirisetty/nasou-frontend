@@ -5,6 +5,7 @@ import ReasonDialog from './ReasonDialog';
 import { StatusPill, SELECT_CLS, LABEL_CLS } from './AdminUI';
 import { findProduct, photoOf } from '../../data/catalog';
 import { createRefund, refundableOn, updatePart } from '../../store/orders';
+import { paidOnline, useFeature } from '../../lib/features';
 import { useToast } from '../../context/ToastContext';
 import { ORDER_FLOW, nextStatus } from '../../lib/marketplace';
 import { money, cx, itemCode } from '../../lib/format';
@@ -23,7 +24,9 @@ export default function PartCard({ order, part, by, canAdvance, canCancel, canRe
   const [amount, setAmount] = useState('');
   const reached = part.status === 'Cancelled' ? -1 : ORDER_FLOW.indexOf(part.status);
   const live = part.status !== 'Cancelled' && part.status !== 'Delivered';
+  const refundsOn = useFeature('refunds');
   const max = refundableOn(order.id, part.id);
+  const heldPayment = !refundsOn && paidOnline(order);
   const next = nextStatus(part.status);
   /* undo a mistake (client review 8): Processing → Pending, Shipped → Processing */
   const prev = ORDER_FLOW[ORDER_FLOW.indexOf(part.status) - 1];
@@ -55,7 +58,7 @@ export default function PartCard({ order, part, by, canAdvance, canCancel, canRe
               </li>
             ))}
           </ol>
-        ) : <p className="rounded-[12px] bg-clay-50 px-3 py-2 text-[12.5px] font-semibold text-clay-600">Cancelled — stock returned{order.payment !== 'Cash on delivery' ? ' and payment refunded' : ''}.</p>}
+        ) : <p className="rounded-[12px] bg-clay-50 px-3 py-2 text-[12.5px] font-semibold text-clay-600">Cancelled — stock returned{heldPayment ? '. Paid online: Nivorva support settles the payment with the customer' : refundsOn && order.payment !== 'Cash on delivery' ? ' and payment refunded' : ''}.</p>}
 
         <ul className="space-y-2">
           {part.lines.map((l) => {
@@ -100,13 +103,13 @@ export default function PartCard({ order, part, by, canAdvance, canCancel, canRe
             {canAdvance && live && <button onClick={advance} className="flex h-9 items-center gap-1.5 rounded-full bg-forest px-4 text-[12.5px] font-bold text-white shadow-btn hover:bg-forest-800"><Icon name="chevronsRight" size={14} /> Mark {next.toLowerCase()}</button>}
             {canAdvance && live && prev && <button onClick={moveBack} className="flex h-9 items-center gap-1.5 rounded-full border border-line px-4 text-[12.5px] font-bold text-forest hover:border-forest"><Icon name="arrowLeft" size={14} /> Back to {prev.toLowerCase()}</button>}
             {canCancel && live && <button onClick={() => setDialog('cancel')} className="flex h-9 items-center gap-1.5 rounded-full border border-clay/30 px-4 text-[12.5px] font-bold text-clay-600 hover:bg-clay-50"><Icon name="close" size={14} /> Cancel part</button>}
-            {canRefund && max > 0 && part.status !== 'Cancelled' && order.payment !== 'Cash on delivery' && <button onClick={() => { setAmount(String(max)); setDialog('refund'); }} className="flex h-9 items-center gap-1.5 rounded-full border border-line px-4 text-[12.5px] font-bold text-forest hover:border-forest"><Icon name="refresh" size={14} /> Start refund</button>}
+            {refundsOn && canRefund && max > 0 && part.status !== 'Cancelled' && order.payment !== 'Cash on delivery' && <button onClick={() => { setAmount(String(max)); setDialog('refund'); }} className="flex h-9 items-center gap-1.5 rounded-full border border-line px-4 text-[12.5px] font-bold text-forest hover:border-forest"><Icon name="refresh" size={14} /> Start refund</button>}
           </div>
         )}
       </div>
 
       <ReasonDialog open={dialog === 'cancel'} onClose={() => setDialog(null)} title={`Cancel ${part.id}?`} confirm="Cancel this part" tone="danger" label="Reason (shown to the customer)"
-        intro={<>Only <b>{part.retailerName}</b>’s part is cancelled; other sellers’ parts carry on. Stock goes back{order.payment !== 'Cash on delivery' ? ` and ${money(part.total - (part.refunded || 0))} is refunded` : ''}.</>}
+        intro={<>Only <b>{part.retailerName}</b>’s part is cancelled; other sellers’ parts carry on. Stock goes back{heldPayment ? `. The customer paid ${money(part.total - (part.refunded || 0))} online — refunds are switched off, so Nivorva support settles it with them` : refundsOn && order.payment !== 'Cash on delivery' ? ` and ${money(part.total - (part.refunded || 0))} is refunded` : ''}.</>}
         onConfirm={(why) => { act(toast, () => updatePart(order.id, part.id, 'Cancelled', { by, note: why, byRetailer }), `${part.id} cancelled`); }} />
       <ReasonDialog open={dialog === 'refund'} onClose={() => setDialog(null)} title={`Refund on ${part.id}`} confirm="Start refund" label="Reason"
         intro={<>Comes only out of <b>{part.retailerName}</b>’s share (commission is returned pro rata). Up to <b>{money(max)}</b>. Finance approves before Razorpay pays it out.</>}

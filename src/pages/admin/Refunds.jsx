@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
+import { useFeature } from '../../lib/features';
 import DataTable from '../../components/admin/DataTable';
 import ReasonDialog from '../../components/admin/ReasonDialog';
 import { AdminPageHead, Kpi, StatusPill } from '../../components/admin/AdminUI';
@@ -26,11 +27,14 @@ export default function AdminRefunds() {
   const threshold = useSettings((s) => s.decisions.refundApprovalAbove);
   const [declining, setDeclining] = useState(null);
   const canApprove = can('refunds', 'approve');
+  const refundsOn = useFeature('refunds');
   const by = user?.fullName;
 
   const waiting = refunds.filter((r) => r.status === 'requested');
   const processed = refunds.filter((r) => r.status === 'processed');
 
+  /* Refunds switched off (REFUNDS_ENABLED on the API): nothing to see here. */
+  if (!refundsOn) return <Navigate to="/admin/dashboard" replace />;
   return (
     <div className="space-y-5">
       <AdminPageHead title="Refunds" note={`Start a refund from any order’s part. ${threshold > 0 ? `Refunds up to ${money(threshold)} are approved automatically; larger ones wait for Finance.` : 'Every refund waits for Finance approval.'}`} />

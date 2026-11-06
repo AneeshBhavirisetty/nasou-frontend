@@ -160,17 +160,18 @@ export function AuthProvider({ children }) {
     return data;
   }, [_apply]);
 
-  /* phoneToken: what /auth/otp/verify returned for a new number — the proof it was verified. */
-  const register = useCallback(async ({ phone, email, fullName, password, phoneToken }) => {
-    const data = await api('/auth/register', { method: 'POST', body: JSON.stringify({ phone, email, fullName, password, phoneToken }) });
+  /* phoneToken / emailToken: what /auth/otp/verify returned for a new number or email — the proof it was verified. */
+  const register = useCallback(async ({ phone, email, fullName, password, phoneToken, emailToken }) => {
+    const data = await api('/auth/register', { method: 'POST', body: JSON.stringify({ phone, email, fullName, password, phoneToken, emailToken }) });
     _apply(data);
     return data;
   }, [_apply]);
 
-  const sendOtp = useCallback((phone) => api('/auth/otp/send', { method: 'POST', body: JSON.stringify({ phone }) }), []);
+  /* contact: { phone } for an SMS code or { email } for an email code (lib/contact.js). */
+  const sendOtp = useCallback((contact) => api('/auth/otp/send', { method: 'POST', body: JSON.stringify(contact) }), []);
 
-  const verifyOtp = useCallback(async (phone, otp) => {
-    const data = await api('/auth/otp/verify', { method: 'POST', body: JSON.stringify({ phone, otp }) });
+  const verifyOtp = useCallback(async (contact, otp) => {
+    const data = await api('/auth/otp/verify', { method: 'POST', body: JSON.stringify({ ...contact, otp }) });
     if (data?.accessToken) _apply(data);
     return data;
   }, [_apply]);

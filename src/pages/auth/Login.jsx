@@ -129,8 +129,8 @@ export default function Login() {
           <div className="relative flex justify-center text-xs uppercase tracking-[0.16em] text-forest-800"><span className="bg-white px-3">Or continue with</span></div>
         </div>
         <Link to="/login/otp" className="mt-3 flex w-full items-center justify-center gap-3 rounded-md border border-line bg-white/80 px-4 py-3 text-sm font-semibold text-forest transition hover:bg-sunk">
-          <span className="grid h-5 w-5 place-items-center rounded-full bg-forest text-white"><Icon name="phone" size={11} /></span>
-          Mobile OTP
+          <span className="grid h-5 w-5 place-items-center rounded-full bg-forest text-white"><Icon name="mail" size={11} /></span>
+          Email or mobile code
         </Link>
       </div>
 

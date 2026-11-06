@@ -12,6 +12,7 @@ import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
 import { payOrder, updatePart, useRefunds } from '../store/orders';
 import { LIVE } from '../lib/config';
+import { paidOnline, useFeature } from '../lib/features';
 import { useScopedOrders } from '../lib/useScoped';
 import { money, cx, itemCode } from '../lib/format';
 import { act } from '../lib/act';
@@ -27,6 +28,9 @@ const units = (lines) => lines.reduce((n, l) => n + l.qty, 0);
 const when = (ms) => new Date(ms).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
 
 function PartTracker({ order, part, onCancel }) {
+  /* Refunds switched off (REFUNDS_ENABLED): a part paid online is cancelled by support, not here. */
+  const refundsOn = useFeature('refunds');
+  const canCancel = refundsOn || !paidOnline(order);
   const reached = part.status === 'Cancelled' ? -1 : FLOW.indexOf(part.status);
   const last = part.statusLog?.[part.statusLog.length - 1];
   return (
@@ -70,7 +74,9 @@ function PartTracker({ order, part, onCancel }) {
       </ul>
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[12.5px]">
         <span className="text-ink-50">Part total <b className="tnum text-ink">{money(part.total)}</b></span>
-        {part.status === 'Pending' && <button onClick={() => onCancel(part)} className="font-bold text-clay-600 hover:underline">Cancel this part</button>}
+        {part.status === 'Pending' && (canCancel
+          ? <button onClick={() => onCancel(part)} className="font-bold text-clay-600 hover:underline">Cancel this part</button>
+          : <Link to="/support" className="font-semibold text-forest-800 hover:underline">Paid online — ask support to cancel</Link>)}
       </div>
     </div>
   );

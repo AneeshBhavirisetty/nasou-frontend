@@ -10,6 +10,7 @@ import Accordion, { AccordionItem } from '../components/Accordion';
 import { Container, Rating } from '../components/ui';
 import { coverPhoto, departments, bestsellers, dealProducts, newProducts, products, suppliers } from '../data/catalog';
 import { testimonials, faqs, valueProps } from '../data/site';
+import { returnsCopy, useFeature } from '../lib/features';
 import { categoryPhotoUrl, useSettings } from '../store/settings';
 import { useRetailers } from '../store/retailers';
 import { cx } from '../lib/format';
@@ -34,6 +35,7 @@ function Head({ label, title, note, to, cta = 'View all' }) {
 
 
 export default function Home() {
+  const refundsOn = useFeature('refunds');
   const banners = useSettings((s) => s.banners);
   const featured = useSettings((s) => s.featured);
   const categoryPhotos = useSettings((s) => s.categoryPhotos);
@@ -160,7 +162,7 @@ export default function Home() {
           <h2 className="font-hero mt-3 text-[clamp(1.6rem,4vw,2.4rem)] font-normal tracking-[-0.045em] text-forest">Questions, answered</h2>
           <p className="mt-2 max-w-sm text-[14px] text-ink-50">Delivery, GST, returns and trade pricing — the things contractors ask first.</p>
         </div>
-        <Accordion>{faqs.map((f, i) => <AccordionItem key={i} title={f.q} defaultOpen={i === 0}>{f.a}</AccordionItem>)}</Accordion>
+        <Accordion>{faqs.map((f, i) => <AccordionItem key={i} title={f.q} defaultOpen={i === 0}>{f.key === 'returns' ? returnsCopy(refundsOn) : f.a}</AccordionItem>)}</Accordion>
       </section>
 
       {/* sell CTA */}

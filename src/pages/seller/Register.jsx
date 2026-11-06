@@ -2,7 +2,8 @@ import { useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Icon from '../../components/Icon';
 import { Button, Container, Field } from '../../components/ui';
-import VerifyPhone from '../../components/auth/VerifyPhone';
+import VerifyEmail from '../../components/auth/VerifyEmail';
+import PhoneField from '../../components/auth/PhoneField';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { createAccount, findAccount } from '../../store/accounts';
@@ -45,8 +46,8 @@ export default function SellerRegister() {
     website: '', answer: '', agree: false,
   });
   const [docs, setDocs] = useState({});
-  /* proof the owner's mobile passed a Twilio code (review 6) */
-  const [phoneToken, setPhoneToken] = useState('');
+  /* proof the owner's email passed a 6-digit code (client, 6 Nov 2026: email instead of mobile OTP) */
+  const [emailToken, setEmailToken] = useState('');
   const set = (k) => (e) => setF((s) => ({ ...s, [k]: e.target.value }));
   const up = (k) => (e) => setF((s) => ({ ...s, [k]: e.target.value.toUpperCase().replace(/\s/g, '') }));
 
@@ -54,8 +55,8 @@ export default function SellerRegister() {
     if (step === 0) {
       if (f.contact.trim().length < 2) return 'Enter your name.';
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email)) return 'Enter a valid email.';
+      if (!emailToken) return 'Verify your work email — tap Verify and enter the code we email you.';
       if (!isMobile10(f.phone)) return 'Enter a 10-digit mobile number.';
-      if (!phoneToken) return 'Verify your mobile number — tap Verify and enter the code we text you.';
       if (f.password.length < 8) return 'Password needs at least 8 characters.';
       if (findAccount(f.email) || findAccount(f.phone)) return 'That email or mobile already has a Nivorva account — sign in instead.';
     }
@@ -106,7 +107,7 @@ export default function SellerRegister() {
           name: f.name.trim(), legalName: f.legalName.trim(), type: f.type, contact: f.contact.trim(), email: f.email.trim().toLowerCase(),
           phone: f.phone, password: f.password, address: f.address.trim(), city: f.city.trim(), state: f.state, pin: f.pin,
           categories: f.categories.join(','), gstin: f.gstin, pan: f.pan, bankHolder: f.holder.trim(), bankAccount: f.account,
-          bankIfsc: f.ifsc, website: f.website, startedAt: String(started.current), phoneToken,
+          bankIfsc: f.ifsc, website: f.website, startedAt: String(started.current), emailToken,
         };
         Object.entries(fields).forEach(([k, v]) => form.append(k, v));
         DOC_TYPES.filter((d) => docs[d.key]).forEach((d) => form.append(d.key, docs[d.key].file, docs[d.key].name));
@@ -181,8 +182,8 @@ export default function SellerRegister() {
             {step === 0 && (
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <Field label="Your name" value={f.contact} onChange={set('contact')} autoComplete="name" />
-                <Field label="Work email" type="email" value={f.email} onChange={set('email')} autoComplete="email" hint="Your sign-in for the seller console" />
-                <div className="sm:col-span-2"><VerifyPhone label="Mobile" value={f.phone} onChange={(v) => setF((s) => ({ ...s, phone: v }))} token={phoneToken} onVerified={setPhoneToken} hint="Tap Verify — we’ll text a one-time code to this number." /></div>
+                <div className="sm:col-span-2"><VerifyEmail label="Work email" value={f.email} onChange={(v) => setF((s) => ({ ...s, email: v }))} token={emailToken} onVerified={setEmailToken} hint="Your sign-in for the seller console — tap Verify and enter the code we email you." /></div>
+                <PhoneField label="Mobile" value={f.phone} onChange={(v) => setF((s) => ({ ...s, phone: v }))} hint="Nivorva calls this number about orders and payouts." />
                 <Field label="Password" type="password" value={f.password} onChange={set('password')} autoComplete="new-password" hint="At least 8 characters" />
               </div>
             )}

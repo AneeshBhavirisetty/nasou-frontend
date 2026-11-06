@@ -29,7 +29,7 @@ export default function VerifyPhone({ value, onChange, token, onVerified, label 
     if (!isMobile10(value)) return setError('Enter a valid 10-digit mobile number first.');
     setBusy(true);
     try {
-      await authApi.sendOtp(value);
+      await authApi.sendOtp({ phone: value });
       setOtp('');
       setStage('sent');
     } catch (x) {
@@ -44,7 +44,7 @@ export default function VerifyPhone({ value, onChange, token, onVerified, label 
     if (otp.length !== 6) return setError('Enter the 6-digit code.');
     setBusy(true);
     try {
-      const res = await authApi.verifyOtp(value, otp);
+      const res = await authApi.verifyOtp({ phone: value }, otp);
       if (res?.isNewUser === false || res?.accessToken) {
         setError('This mobile number already has a Nivorva account. Sign in instead.');
         return;

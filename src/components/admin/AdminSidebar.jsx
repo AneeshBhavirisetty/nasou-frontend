@@ -7,6 +7,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useIam } from '../../context/IamStore';
 import { useRetailers, useRequests } from '../../store/retailers';
 import { useRefunds } from '../../store/orders';
+import { useFeature } from '../../lib/features';
 import { useEnquiries, useTickets } from '../../store/support';
 import { cx } from '../../lib/format';
 
@@ -26,7 +27,7 @@ export const ADMIN_NAV = [
   { group: 'Marketplace', to: '/admin/commission', label: 'Commission', short: 'Commission', icon: 'percent', module: 'commission' },
   { group: 'Marketplace', to: '/admin/support', label: 'Support tickets', short: 'Support', icon: 'ticket', module: 'retailers', badge: 'tickets' },
   { group: 'Commerce', to: '/admin/orders', label: 'Orders', short: 'Orders', icon: 'truck', module: 'orders' },
-  { group: 'Commerce', to: '/admin/refunds', label: 'Refunds', short: 'Refunds', icon: 'refresh', module: 'refunds', badge: 'refunds' },
+  { group: 'Commerce', to: '/admin/refunds', label: 'Refunds', short: 'Refunds', icon: 'refresh', module: 'refunds', badge: 'refunds', feature: 'refunds' },
   { group: 'Commerce', to: '/admin/enquiries', label: 'Enquiries', short: 'Enquiries', icon: 'inbox', module: 'orders', badge: 'enquiries' },
   { group: 'Commerce', to: '/admin/products', label: 'Products', short: 'Products', icon: 'package', module: 'catalog' },
   { group: 'Commerce', to: '/admin/catalog', label: 'Master catalog', short: 'Catalog', icon: 'layers', module: 'catalog', exact: true, off: true },
@@ -37,6 +38,7 @@ export const ADMIN_NAV = [
   { group: 'Finance', to: '/admin/billing', label: 'Billing & payments', short: 'Billing', icon: 'card', module: 'payouts' },
   { group: 'Finance', to: '/admin/reports', label: 'Reports & analytics', short: 'Reports', icon: 'barChart', module: 'dashboards' },
   { group: 'People & settings', to: '/admin/users', label: 'Team & customers', short: 'Users', icon: 'users', module: ['team', 'customers'] },
+  { group: 'People & settings', to: '/admin/emails', label: 'Emails', short: 'Emails', icon: 'mail', module: 'audit' },
   { group: 'People & settings', to: '/admin/audit', label: 'Audit log', short: 'Audit', icon: 'fileText', module: 'audit', off: true },
   { group: 'People & settings', to: '/admin/settings', label: 'Content & settings', short: 'Settings', icon: 'wrench', module: 'content', off: true },
   { group: 'People & settings', to: '/admin/catalog/import', label: 'Catalog import / export', short: 'Import', icon: 'upload', module: 'catalog' },
@@ -57,7 +59,9 @@ export const navAllowed = (can, n) => !n || allowed(can, n.module);
 /* entries the signed-in person may open */
 export function useAdminNav() {
   const { can } = useIam();
-  return ADMIN_NAV.filter((n) => !n.hidden && !n.off && allowed(can, n.module));
+  const refundsOn = useFeature('refunds');
+  const on = (n) => !n.feature || (n.feature === 'refunds' && refundsOn);
+  return ADMIN_NAV.filter((n) => !n.hidden && !n.off && on(n) && allowed(can, n.module));
 }
 
 /* counts that want attention */

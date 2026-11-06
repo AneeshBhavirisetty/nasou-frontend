@@ -41,7 +41,7 @@ export const faqs = [
   { q: 'How fast is delivery?', a: 'In-stock items ordered before 2pm are dispatched the same working day and usually arrive the next working day. We deliver within Tirupati only.' },
   { q: 'Can I order a fitting that shows "out of stock"?', a: 'You can add it to your wishlist and we will email you when it is back. Most fast-moving SKUs restock within a week.' },
   { q: 'Do you supply to trade / bulk buyers?', a: 'Yes. Create an account and contact us for slab pricing on orders above ₹25,000.' },
-  { q: 'What is your returns policy?', a: 'Unused fittings in original packaging can be returned within 7 days of delivery for a full refund of the item value.' },
+  { key: 'returns', q: 'What is your returns policy?', a: 'Unused fittings in original packaging can be returned within 7 days of delivery for a full refund of the item value.' },
 ];
 
 export const footerColumns = [

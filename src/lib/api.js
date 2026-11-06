@@ -211,13 +211,13 @@ async function mockAuthEndpoint(path, options) {
   }
   if (path === '/auth/otp/send') return { message: 'OTP sent successfully' };
   if (path === '/auth/otp/verify') {
-    if (!body.phone || !body.otp) throw new Error('Invalid OTP or phone number');
-    const a = findAccount(String(body.phone).replace(/\D/g, '').slice(-10));
-    if (!a) return { isNewUser: true };
+    if ((!body.phone && !body.email) || !body.otp) throw new Error('Invalid code');
+    const a = findAccount(body.email || String(body.phone).replace(/\D/g, '').slice(-10));
+    if (!a) return body.email ? { isNewUser: true, email: body.email, emailToken: 'demo-email-token' } : { isNewUser: true };
     if (a.role === 'ADMIN') throw new Error('Team accounts sign in with password and a two-factor code.');
     return { ...afterPassword(a), isNewUser: false };
   }
-  if (path === '/auth/forgot-password') return { message: 'If an account uses that number, a code is on its way.' };
+  if (path === '/auth/forgot-password') return { message: body.email ? 'If an account uses that email, a code is on its way.' : 'If an account uses that number, a code is on its way.' };
   if (path === '/auth/forgot-password/verify') {
     if (body.otp !== '123456') throw new Error('That code is not correct.');
     return { resetToken: 'demo-reset-token' };
@@ -245,17 +245,18 @@ export const authApi = {
     api('/auth/login', { method: 'POST', body: JSON.stringify({ identifier, password }) }),
   register: (payload) =>
     api('/auth/register', { method: 'POST', body: JSON.stringify(payload) }),
-  sendOtp: (phone) =>
-    api('/auth/otp/send', { method: 'POST', body: JSON.stringify({ phone }) }),
-  verifyOtp: (phone, otp) =>
-    api('/auth/otp/verify', { method: 'POST', body: JSON.stringify({ phone, otp }) }),
+  /* contact: { phone } or { email } (lib/contact.js) */
+  sendOtp: (contact) =>
+    api('/auth/otp/send', { method: 'POST', body: JSON.stringify(contact) }),
+  verifyOtp: (contact, otp) =>
+    api('/auth/otp/verify', { method: 'POST', body: JSON.stringify({ ...contact, otp }) }),
   verify2fa: (challengeId, code) =>
     api('/auth/2fa/verify', { method: 'POST', body: JSON.stringify({ challengeId, code }) }),
-  /* Forgot password: a code to the account's mobile → a reset token → the new password. */
-  forgotPassword: (phone) =>
-    api('/auth/forgot-password', { method: 'POST', body: JSON.stringify({ phone }) }),
-  verifyResetCode: (phone, otp) =>
-    api('/auth/forgot-password/verify', { method: 'POST', body: JSON.stringify({ phone, otp }) }),
+  /* Forgot password: a code to the account's mobile or email → a reset token → the new password. */
+  forgotPassword: (contact) =>
+    api('/auth/forgot-password', { method: 'POST', body: JSON.stringify(contact) }),
+  verifyResetCode: (contact, otp) =>
+    api('/auth/forgot-password/verify', { method: 'POST', body: JSON.stringify({ ...contact, otp }) }),
   resetPassword: (token, password) =>
     api('/auth/reset-password', { method: 'POST', body: JSON.stringify({ token, password }) }),
 };

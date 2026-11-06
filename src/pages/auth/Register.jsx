@@ -7,13 +7,16 @@ import { Button, Field } from '../../components/ui';
 import Icon from '../../components/Icon';
 import AuthCard from '../../components/auth/AuthCard';
 import PasswordField, { scorePassword } from '../../components/auth/PasswordField';
-import VerifyPhone from '../../components/auth/VerifyPhone';
+import VerifyEmail from '../../components/auth/VerifyEmail';
+import PhoneField from '../../components/auth/PhoneField';
+import { isMobile10 } from '../../lib/format';
 import { landingFor } from '../../lib/auth';
 
-/* Sign up (client review 6): one form. The mobile number has its own
-   "Verify" button — a Twilio code checked inline — and the account can only be
-   created once it shows Verified; the proof (phoneToken) goes with the sign-up
-   so the server knows the number is the person's. */
+/* Sign up: one form. The email has its own "Verify" button — a 6-digit code
+   emailed and checked inline (client, 6 Nov 2026: email verification instead
+   of mobile OTP) — and the account can only be created once it shows
+   Verified; the proof (emailToken) goes with the sign-up so the server knows
+   the address is the person's. The mobile is a contact number. */
 export default function Register() {
   const { isAuthenticated, user, register } = useAuth();
   const toast = useToast();
@@ -22,7 +25,7 @@ export default function Register() {
   const explicit = params.get('redirect');
 
   const [f, setF] = useState({ fullName: '', email: '', phone: '', password: '' });
-  const [phoneToken, setPhoneToken] = useState('');
+  const [emailToken, setEmailToken] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -33,16 +36,17 @@ export default function Register() {
     setError('');
     if (!f.fullName.trim()) return setError('Enter your full name.');
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email)) return setError('Enter a valid email address.');
-    if (!phoneToken) return setError('Verify your mobile number — tap Verify and enter the code we text you.');
+    if (!emailToken) return setError('Verify your email — tap Verify and enter the code we email you.');
+    if (f.phone && !isMobile10(f.phone)) return setError('Enter a valid 10-digit mobile number, or leave it empty.');
     if (scorePassword(f.password) < 2) return setError('Choose a stronger password (8+ chars, mixed case, a number).');
     setLoading(true);
     try {
       const session = await register({
         phone: f.phone.trim(),
-        email: f.email.trim(),
+        email: f.email.trim().toLowerCase(),
         fullName: f.fullName.trim(),
         password: f.password,
-        phoneToken,
+        emailToken,
       });
       toast.success('Welcome to Nivorva!');
       navigate(landingFor(session, explicit), { replace: true });
@@ -56,13 +60,13 @@ export default function Register() {
   return (
     <AuthCard
       title="Create your account"
-      subtitle="Your details, then verify your mobile with a one-time code."
+      subtitle="Your details, then verify your email with a 6-digit code."
       footer={<>Already registered? <Link to="/login" className="font-bold text-forest hover:underline">Sign in</Link> · <Link to="/sell" className="font-bold text-forest hover:underline">Sell on Nivorva</Link></>}
     >
       <form onSubmit={create} noValidate className="space-y-4">
         <Field label="Full name" value={f.fullName} onChange={(e) => setF({ ...f, fullName: e.target.value })} placeholder="Your name" autoComplete="name" required />
-        <Field label="Email address" type="email" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} placeholder="you@example.com" autoComplete="email" required />
-        <VerifyPhone value={f.phone} onChange={(v) => setF({ ...f, phone: v })} token={phoneToken} onVerified={setPhoneToken} hint="Tap Verify — we’ll text you a one-time code." />
+        <VerifyEmail value={f.email} onChange={(v) => setF({ ...f, email: v })} token={emailToken} onVerified={setEmailToken} hint="Tap Verify — we’ll email you a 6-digit code." />
+        <PhoneField label="Mobile number (optional)" value={f.phone} onChange={(v) => setF({ ...f, phone: v })} hint="For delivery updates from the seller." />
         <PasswordField label="Password" autoComplete="new-password" strength value={f.password} onChange={(v) => setF({ ...f, password: v })} />
         {error && (
           <motion.p initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} role="alert" className="rounded-md bg-clay-50 px-3 py-2.5 text-[13px] text-clay-600">
@@ -70,8 +74,8 @@ export default function Register() {
             {error.includes('already has') && <> <Link to="/login" className="font-bold underline">Sign in</Link></>}
           </motion.p>
         )}
-        <Button type="submit" full size="lg" loading={loading} disabled={!phoneToken} iconRight="arrowRight">
-          {phoneToken ? 'Create account' : 'Verify your mobile to continue'}
+        <Button type="submit" full size="lg" loading={loading} disabled={!emailToken} iconRight="arrowRight">
+          {emailToken ? 'Create account' : 'Verify your email to continue'}
         </Button>
       </form>
 

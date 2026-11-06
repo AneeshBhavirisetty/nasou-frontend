@@ -15,6 +15,7 @@ import { DOC_TYPES } from '../../lib/marketplace';
 import { money, cx } from '../../lib/format';
 import { timeAgo } from '../../context/NotificationStore';
 import { act } from '../../lib/act';
+import { useFeature } from '../../lib/features';
 
 /* Approval queue (requirements 6 and 17, plus Owner sign-off from 11).
    Applications: review documents → approve, reject with a reason, or ask
@@ -100,6 +101,7 @@ function Application({ r, canEdit, by }) {
 }
 
 export default function AdminApprovals() {
+  const refundsOn = useFeature('refunds');
   const [params, setParams] = useSearchParams();
   const { user } = useAuth();
   const { can, isOwner } = useIam();
@@ -180,7 +182,7 @@ export default function AdminApprovals() {
                     <p className="text-[15px] font-bold text-ink">Delete {q.retailerName}</p>
                     <p className="mt-0.5 text-[12.5px] text-ink-50">Asked by {q.by} · {timeAgo(q.at)}</p>
                     <p className="mt-2 text-[13.5px] text-ink-70">“{q.reason}”</p>
-                    {fp && <p className="mt-2 text-[12.5px] text-clay-600">Effect: {fp.products} products delisted · {fp.openParts.length} open sub-orders cancelled · {money(fp.refund)} refunded</p>}
+                    {fp && <p className="mt-2 text-[12.5px] text-clay-600">Effect: {fp.products} products delisted · {fp.openParts.length} open sub-orders cancelled {refundsOn && <> · {money(fp.refund)} refunded</>}</p>}
                   </div>
                   {q.status === 'open' ? (isOwner && (
                     <div className="flex gap-2">

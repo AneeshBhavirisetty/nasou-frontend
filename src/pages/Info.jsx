@@ -4,6 +4,7 @@ import Accordion, { AccordionItem } from '../components/Accordion';
 import { Button, Container, Breadcrumbs, Field } from '../components/ui';
 import { useToast } from '../context/ToastContext';
 import { brand, faqs, valueProps } from '../data/site';
+import { returnsCopy, useFeature } from '../lib/features';
 
 const CONTENT = {
   about: {
@@ -15,7 +16,7 @@ const CONTENT = {
     lead: 'Trade enquiry, bulk quote, or a question about an order — reach us any working day, 9am to 7pm.',
   },
   returns: {
-    title: 'Returns & refunds',
+    title: 'Returns',
     lead: 'Unused fittings in their original packaging can be returned within 7 days of delivery for a full refund of the item value. Start a return from your orders page or contact us.',
   },
 };
@@ -45,6 +46,7 @@ function ContactForm() {
 }
 
 export default function Info({ slug = 'about' }) {
+  const refundsOn = useFeature('refunds');
   const c = CONTENT[slug] ?? CONTENT.about;
   return (
     <Container className="pb-12 pt-5">
@@ -52,7 +54,7 @@ export default function Info({ slug = 'about' }) {
       <div className="rounded-[24px] border border-white/80 bg-white/70 p-6 shadow-card backdrop-blur sm:p-8">
         <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-ink-50">Nivorva</p>
         <h1 className="mt-2 text-[clamp(1.8rem,5vw,2.4rem)] font-semibold text-forest">{c.title}</h1>
-        <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-ink-50">{c.lead}</p>
+        <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-ink-50">{slug === 'returns' ? returnsCopy(refundsOn) : c.lead}</p>
       </div>
 
       {slug === 'about' && (
@@ -84,7 +86,7 @@ export default function Info({ slug = 'about' }) {
       {slug === 'returns' && (
         <div className="mt-5 max-w-3xl">
           <Accordion>
-            {faqs.map((f, i) => <AccordionItem key={i} title={f.q} defaultOpen={i === 0}>{f.a}</AccordionItem>)}
+            {faqs.map((f, i) => <AccordionItem key={i} title={f.q} defaultOpen={i === 0}>{f.key === 'returns' ? returnsCopy(refundsOn) : f.a}</AccordionItem>)}
           </Accordion>
         </div>
       )}

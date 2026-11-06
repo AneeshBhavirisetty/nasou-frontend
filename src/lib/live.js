@@ -8,6 +8,7 @@ import { ordersStore, refundsStore } from '../store/orders';
 import { accountsStore, invitesStore } from '../store/accounts';
 import { payoutsStore, reconRowsStore } from '../store/payouts';
 import { settingsStore } from '../store/settings';
+import { setFeatures } from './features';
 import { notificationsStore } from '../store/notifications';
 import { adminStore, stockLedgerStore, liveProductsStore } from '../context/AdminStore';
 import { auditStore, setServerChain } from './auditLog';
@@ -54,6 +55,7 @@ async function loadCatalog() {
   setLiveCatalog(snap);
   if (!isAdmin()) retailersStore.set(snap.retailers || []);
   settingsStore.set((s) => ({ ...s, ...(snap.settings || {}) }));
+  setFeatures(snap.features);
   adminStore.set((s) => ({ ...s, bulkRules: snap.bulkRules || [] }));
   catalogLoaded = true;
   catalogVersion += 1;

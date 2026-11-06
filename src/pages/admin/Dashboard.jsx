@@ -9,6 +9,7 @@ import { useIam } from '../../context/IamStore';
 import { useAdminStore } from '../../context/AdminStore';
 import { useRetailers, useRequests } from '../../store/retailers';
 import { useRefunds } from '../../store/orders';
+import { useFeature } from '../../lib/features';
 import { useSettings } from '../../store/settings';
 import { useScopedOrders } from '../../lib/useScoped';
 import { useSettlements } from './Payouts';
@@ -174,13 +175,14 @@ export default function AdminDashboard() {
   const requests = useRequests();
   const refunds = useRefunds();
   const d = useDashboardData();
+  const refundsOn = useFeature('refunds');
   const [tab, setTab] = useState('exec');
 
   const attention = [
     can('retailers') && { n: retailers.filter((r) => r.status === 'pending').length, label: 'retailers to approve', to: '/admin/approvals', icon: 'store' },
     can('retailers') && { n: retailers.filter((r) => r.pendingChanges).length, label: 'profile changes', to: '/admin/approvals?tab=changes', icon: 'pencil' },
     isOwner && { n: requests.filter((q) => q.status === 'open').length, label: 'Owner sign-offs', to: '/admin/approvals?tab=owner', icon: 'shield' },
-    can('refunds', 'approve') && { n: refunds.filter((r) => r.status === 'requested').length, label: 'refunds to approve', to: '/admin/refunds', icon: 'refresh' },
+    refundsOn && can('refunds', 'approve') && { n: refunds.filter((r) => r.status === 'requested').length, label: 'refunds to approve', to: '/admin/refunds', icon: 'refresh' },
     can('orders') && { n: d.pendingOrders, label: 'orders waiting to be packed', to: '/admin/orders?status=Pending', icon: 'package' },
     can('orders') && { n: d.lateOrders, label: 'orders running late', to: '/admin/orders?late=yes', icon: 'clock' },
     can('orders') && { n: d.flagged.length, label: 'flagged orders', to: '/admin/orders', icon: 'bell' },
@@ -306,7 +308,7 @@ export default function AdminDashboard() {
               <Kpi label="Commission (30 d)" value={rupeesCompact(d.commission30)} icon="percent" />
               <Kpi label="To settle" value={rupeesCompact(d.payouts.filter((p) => p.status === 'ready').reduce((s, p) => s + p.net, 0))} note="Closed weeks not paid" icon="clock" tone="amber" />
               <Kpi label="Paid to retailers" value={rupeesCompact(settled)} note="All time" icon="rupee" />
-              <Kpi label="Refunds (30 d)" value={rupeesCompact(d.refunds30.reduce((s, r) => s + r.amount, 0))} note={`${d.refunds30.length} refunds`} icon="refresh" />
+              {refundsOn && <Kpi label="Refunds (30 d)" value={rupeesCompact(d.refunds30.reduce((s, r) => s + r.amount, 0))} note={`${d.refunds30.length} refunds`} icon="refresh" />}
             </div>
             <div className="grid gap-5 xl:grid-cols-[1.6fr_1fr]">
               <ChartCard title="Commission per day" note="Last 30 days" table={{ headers: ['Day', 'Commission'], rows: d.commissionSeries.filter((p) => p.value).map((p) => [p.label, money(p.value)]) }}>

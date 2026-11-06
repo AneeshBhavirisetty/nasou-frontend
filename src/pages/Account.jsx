@@ -12,6 +12,8 @@ import { useNotifications } from '../context/NotificationStore';
 import { addressBook, formatAddress } from '../lib/geo';
 import { userRoleLabel } from '../lib/roles';
 import { cx, isMobile10 } from '../lib/format';
+import { useFeature } from '../lib/features';
+import VerifyEmail from '../components/auth/VerifyEmail';
 
 /* My profile (customer review items 1, 3 and 5): details, an address book
    with "Use my current location", password, sign out (here or everywhere),
@@ -35,6 +37,7 @@ function Section({ title, note, children }) {
 }
 
 export default function Account() {
+  const refundsOn = useFeature('refunds');
   const { user, profile, updateProfile, logout, changePassword, deactivateAccount, deleteAccount } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
@@ -42,7 +45,10 @@ export default function Account() {
   const [tab, setTab] = useState(() => (window.location.hash === '#addresses' ? 'addresses' : 'details'));
   const [f, setF] = useState(() => ({ fullName: user?.fullName || '', email: profile.email || user?.email || '', phone: profile.phone || user?.phone || '' }));
   const [err, setErr] = useState('');
+  const [emailToken, setEmailToken] = useState('');
   const [saving, setSaving] = useState(false);
+  const currentEmail = String(profile.email || user?.email || '').toLowerCase();
+  const emailChanged = f.email.trim() !== '' && f.email.trim().toLowerCase() !== currentEmail;
   const [editing, setEditing] = useState(null); // address being edited / added
   const [pw, setPw] = useState({ current: '', next: '', again: '' });
   const [danger, setDanger] = useState(null); // 'deactivate' | 'delete'
@@ -59,9 +65,11 @@ export default function Account() {
     if (!f.fullName.trim()) return setErr('Enter your name.');
     if (f.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email)) return setErr('Enter a valid email address.');
     if (f.phone && !isMobile10(f.phone)) return setErr('Enter a valid 10-digit mobile number.');
+    if (emailChanged && !emailToken) return setErr('Verify the new email first — tap Verify and enter the code we send to it.');
     setSaving(true);
     try {
-      await updateProfile({ fullName: f.fullName.trim(), email: f.email.trim(), phone: f.phone });
+      await updateProfile({ fullName: f.fullName.trim(), email: f.email.trim().toLowerCase(), phone: f.phone, ...(emailChanged ? { emailToken } : {}) });
+      setEmailToken('');
       toast.success('Profile saved');
       push({ icon: 'user', kind: 'account', title: 'Profile updated', body: 'Your name and contact details were saved', to: '/account' });
     } catch (x) {
@@ -131,7 +139,7 @@ export default function Account() {
               <form onSubmit={saveDetails} noValidate>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <Field label="Full name" value={f.fullName} onChange={(e) => setF((s) => ({ ...s, fullName: e.target.value }))} autoComplete="name" />
-                  <Field label="Email" type="email" value={f.email} onChange={(e) => setF((s) => ({ ...s, email: e.target.value }))} placeholder="you@example.com" autoComplete="email" />
+                  <VerifyEmail label="Email" value={f.email} onChange={(v) => setF((s) => ({ ...s, email: v }))} token={emailToken} onVerified={setEmailToken} needed={emailChanged} hint={emailChanged ? 'New email — tap Verify and enter the code we send to it.' : undefined} />
                   <PhoneField value={f.phone} onChange={(v) => setF((s) => ({ ...s, phone: v }))} hint="Used for delivery updates" />
                 </div>
                 {err && <p role="alert" className="mt-4 rounded-md bg-clay-50 px-3 py-2.5 text-[13px] text-clay-600">{err}</p>}
@@ -226,7 +234,7 @@ export default function Account() {
 
       {danger && (
         <Modal open onClose={() => setDanger(null)} title={danger === 'delete' ? 'Delete your account?' : 'Deactivate your account?'} size="sm">
-          <p className="text-[13.5px] text-ink-70">{danger === 'delete' ? 'This cannot be undone. Open orders still arrive; refunds go to your original payment method.' : 'You will be signed out. Signing in again re-activates the account straight away.'}</p>
+          <p className="text-[13.5px] text-ink-70">{danger === 'delete' ? `This cannot be undone. Open orders still arrive${refundsOn ? '; refunds go to your original payment method' : ''}.` : 'You will be signed out. Signing in again re-activates the account straight away.'}</p>
           <select value={reason} onChange={(e) => setReason(e.target.value)} className="mt-4 h-11 w-full rounded-md border border-line px-3 text-[14px]">
             <option value="">Tell us why (optional)</option>
             {['I have finished my project', 'Too many notifications', 'Prices or delivery did not work for me', 'Privacy concerns', 'Something else'].map((r) => <option key={r}>{r}</option>)}
