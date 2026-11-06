@@ -4,7 +4,7 @@ export const brand = {
   tagline: 'Every trusted counter. One cart.',
   promise:
     'Plumbing, electrical, hardware and more from verified local retailers — search by size, brand or SKU, order once, and track every seller’s part to your site.',
-  email: 'hello@nivorva.in',
+  email: 'nivorvasupport@gmail.com',
   phone: '+91 97058 07551',
   toll: '1800 120 000 066',
   /* WhatsApp Business number (digits only, with country code) for wa.me links */
