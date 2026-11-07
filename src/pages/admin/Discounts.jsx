@@ -33,7 +33,7 @@ function CouponForm({ open, coupon, onClose, onSave }) {
     const code = c.code.trim().toUpperCase();
     if (!/^[A-Z0-9]{3,16}$/.test(code)) return setErr('Code must be 3–16 letters or digits.');
     if (!(Number(c.value) > 0)) return setErr('Enter a discount value above 0.');
-    if (c.kind === 'percent' && Number(c.value) > 90) return setErr('Percentage discount cannot exceed 90%.');
+    if (c.kind === 'percent' && Number(c.value) > 99) return setErr('Percentage discount cannot exceed 99%.');
     onSave({
       id: coupon?.id || `c_${Date.now().toString(36)}`,
       code,

@@ -108,7 +108,7 @@ export default function CategoryDiscountDialog({ open, onClose, products, depart
       return onClose();
     }
     if (value <= 0) return toast.error('Enter a discount greater than zero.');
-    if (pct && value > 100) return toast.error('A percentage discount cannot be more than 100%.');
+    if (pct && value > 99) return toast.error('A percentage discount cannot be more than 99%.');
     if (!preview.count) return toast.error('No products in that selection yet.');
 
     act(toast, () => saveBulkRule({
