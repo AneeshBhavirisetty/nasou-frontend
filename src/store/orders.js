@@ -140,7 +140,8 @@ export async function checkout(body, idempotencyKey) {
    checkout (or asked again for "Pay now"), then the API verifies the payment. */
 export async function payOrder(orderId, options) {
   const paid = await openCheckout(options || await post(`/orders/${orderId}/pay`));
-  const order = await post(`/orders/${orderId}/payment`, paid);
+  /* test mode (no Razorpay keys on the server): the API records a test payment */
+  const order = paid.test ? await post(`/orders/${orderId}/test-payment`) : await post(`/orders/${orderId}/payment`, paid);
   ordersStore.set((list) => [order, ...list.filter((o) => o.id !== order.id)]);
   refresh('notifications');
   return order;
