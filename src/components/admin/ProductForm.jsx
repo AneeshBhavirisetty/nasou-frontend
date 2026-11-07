@@ -162,8 +162,10 @@ export default function ProductForm({ open, product, onClose, onSave, retailerId
   const brand = f.supplierName.trim();
   const knownBrand = brandForName(brand);
 
-  const submit = (e) => {
+  const [saving, setSaving] = useState(false);
+  const submit = async (e) => {
     e.preventDefault();
+    if (saving) return;
     setErr('');
     if (isNew && !fixedRetailer && !f.retailerId) return setErr('Choose which retailer sells this product.');
     if (!f.subName.trim()) return setErr('Choose the sub-category.');
@@ -183,7 +185,7 @@ export default function ProductForm({ open, product, onClose, onSave, retailerId
     const finalMrp = mrp || paise(price * 1.15);
     const material = f.department === 'plumbing' ? (sub?.name || subName) : product?.material || null;
 
-    onSave({
+    const saved = {
       id: product?.id || `NEW-${Date.now().toString(36)}`,
       /* the server assigns the code for new products; this is only the preview */
       sku: product?.sku || nextCode,
@@ -217,8 +219,17 @@ export default function ProductForm({ open, product, onClose, onSave, retailerId
       reviewCount: product?.reviewCount ?? 0,
       badges: product?.badges ?? (isNew ? ['New'] : []),
       retailerId: product?.retailerId || fixedRetailer || f.retailerId,
-    });
-    onClose();
+    };
+    /* closes only once the server has it; otherwise the reason shows here and nothing typed is lost */
+    setSaving(true);
+    try {
+      await onSave(saved);
+      onClose();
+    } catch (x) {
+      setErr(x?.status === 409 ? 'This product was changed elsewhere a moment ago (stock or another edit). Close and open it again to edit the latest version.' : x?.message || 'That did not save. Try again.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const cover = f.images[0];
@@ -364,12 +375,13 @@ export default function ProductForm({ open, product, onClose, onSave, retailerId
 
           <div className="flex justify-end gap-3 border-t border-line pt-4">
             <button type="button" onClick={onClose} className="h-10 rounded-md border border-line px-5 text-[13.5px] font-semibold text-ink-70 transition hover:border-ink-35">Cancel</button>
-            <Button type="submit" icon={isNew ? 'plus' : 'check'}>{isNew ? 'Add product' : 'Save changes'}</Button>
+            <Button type="submit" icon={isNew ? 'plus' : 'check'} loading={saving}>{isNew ? 'Add product' : 'Save changes'}</Button>
           </div>
         </form>
       </Modal>
 
-      <MediaPicker open={picking} onClose={() => setPicking(false)} selected={f.images} onDone={(urls) => set('images')(urls)} />
+      <MediaPicker open={picking} onClose={() => setPicking(false)} selected={f.images} onDone={(urls) => set('images')(urls)}
+        department={f.department} departmentName={DEPARTMENTS.find((d) => d.slug === f.department)?.name} />
     </>
   );
 }

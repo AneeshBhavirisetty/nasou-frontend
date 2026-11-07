@@ -213,9 +213,23 @@ export function startPolling() {
     if (!visible() || !who()) return;
     refresh('orders', 'refunds', ...(isAdmin() ? ['retailers', 'requests', 'access', 'tickets'] : ['tickets']));
   }, 120000));
+  /* Stock moves without the console doing anything — orders take it, unpaid or
+     cancelled ones give it back — so the product lists follow too (client final
+     review: "0 in the retailer portal, Only 1 left on the website"). A store's
+     list is small: every 2 minutes. The team's is the whole catalogue: every 5. */
+  let productsAt = Date.now();
+  const products = () => {
+    if (!who() || (!isAdmin() && !isSeller())) return;
+    productsAt = Date.now();
+    refresh('products', 'stock');
+  };
+  timers.push(setInterval(() => { if (visible()) products(); }, isAdmin() ? 300000 : 120000));
+  const back = () => { if (visible() && Date.now() - productsAt > 60000) products(); };
+  document.addEventListener('visibilitychange', back);
+  timers.push({ stop: () => document.removeEventListener('visibilitychange', back) });
 }
 export function stopPolling() {
-  timers.forEach(clearInterval);
+  timers.forEach((t) => (t?.stop ? t.stop() : clearInterval(t)));
   timers = [];
 }
 

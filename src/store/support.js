@@ -109,6 +109,7 @@ export async function openAttachment(ticketId, messageId) {
   setTimeout(() => URL.revokeObjectURL(url), 60000);
 }
 export async function setEnquiryStatus(id, status, note) {
-  await patch(`/admin/enquiries/${id}`, { status, note });
+  /* the team updates any enquiry; a store its own (client final review) */
+  await patch(`${role() === 'ADMIN' ? '/admin' : '/seller'}/enquiries/${id}`, { status, note });
   await loadEnquiries();
 }

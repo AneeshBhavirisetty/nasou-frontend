@@ -49,12 +49,26 @@ const sizeValue = (s = '') => {
    after the code, and lists made at load time were empty (review 6: the
    Product type filter "did not expand"). Fixed order, most common first,
    so options never jump while you click. */
+/* A product's colour as the sheet's Item Colour, tidied ("  white" → "White"). */
+const colourOf = (p) => {
+  const c = String(p.color || '').trim();
+  return c ? c.charAt(0).toUpperCase() + c.slice(1).toLowerCase() : '';
+};
+const SWATCH = {
+  white: '#ffffff', black: '#1d1d1d', red: '#d23b2f', blue: '#2f64c8', yellow: '#f2c230', brown: '#7a4b2a', silver: '#c0c4c8',
+  green: '#2f8f4e', grey: '#8a8f94', gray: '#8a8f94', orange: '#ef7d2a', pink: '#e98bb0', purple: '#7d4fb8', cream: '#f4ead2',
+  ivory: '#f8f3e3', beige: '#e3d3b4', gold: '#c9a227', golden: '#c9a227', chrome: '#c7ccd1', maroon: '#7b1e2b', violet: '#8b5cf6',
+};
+
 function useOptionLists() {
   return useMemo(() => {
     const kinds = new Map();
     const brandCounts = new Map();
     const materials = new Map();
+    const colours = new Map();
     for (const p of products) {
+      const c = colourOf(p);
+      if (c) colours.set(c, (colours.get(c) || 0) + 1);
       const k = typeKey(p.kind);
       if (k) kinds.set(k, (kinds.get(k) || 0) + 1);
       if (p.supplier) brandCounts.set(p.supplier, (brandCounts.get(p.supplier) || 0) + 1);
@@ -65,6 +79,7 @@ function useOptionLists() {
       sizes: [...new Set(products.map((p) => p.size).filter(Boolean))].sort((a, b) => sizeValue(a) - sizeValue(b) || a.localeCompare(b)),
       kinds: byCount(kinds),
       materials: byCount(materials),
+      colours: byCount(colours),
       brands: [...suppliers].sort((a, b) => (brandCounts.get(b.slug) || 0) - (brandCounts.get(a.slug) || 0) || a.name.localeCompare(b.name)),
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -150,6 +165,7 @@ export default function Shop() {
   const [kinds, setKinds] = useState([]);
   const [sizes, setSizes] = useState([]);
   const [cols, setCols] = useState([]);
+  const [colours, setColours] = useState([]);
   const [minPrice, setMinPrice] = useState(0);
   const [maxPrice, setMaxPrice] = useState(PRICE_MAX);
   const [minOff, setMinOff] = useState(0);
@@ -177,7 +193,7 @@ export default function Shop() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.key]);
 
-  useEffect(() => { setPage(1); }, [q, depts, cats, mats, sups, tiers, kinds, sizes, cols, minPrice, maxPrice, minOff, minRating, inStockOnly, dealOnly, sort]);
+  useEffect(() => { setPage(1); }, [q, depts, cats, mats, sups, tiers, kinds, sizes, cols, colours, minPrice, maxPrice, minOff, minRating, inStockOnly, dealOnly, sort]);
 
   useEffect(() => {
     const next = new URLSearchParams();
@@ -213,6 +229,7 @@ export default function Shop() {
     if (skip !== 'kind' && kinds.length && !kinds.includes(typeKey(p.kind))) return false;
     if (skip !== 'size' && sizes.length && !sizes.includes(p.size)) return false;
     if (skip !== 'col' && cols.length && !cols.some((c) => p.badges.includes(c))) return false;
+    if (skip !== 'colour' && colours.length && !colours.includes(colourOf(p))) return false;
     if (skip !== 'price' && (p.price < minPrice || (maxPrice < PRICE_MAX && p.price > maxPrice))) return false;
     if (skip !== 'off' && minOff && p.discount < minOff) return false;
     if (skip !== 'rating' && minRating && p.rating < minRating) return false;
@@ -243,7 +260,7 @@ export default function Shop() {
     if (by[sort]) out = [...out].sort(by[sort]);
     return out;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searched, depts, cats, mats, sups, tiers, kinds, sizes, cols, minPrice, maxPrice, minOff, minRating, inStockOnly, dealOnly, sort]);
+  }, [searched, depts, cats, mats, sups, tiers, kinds, sizes, cols, colours, minPrice, maxPrice, minOff, minRating, inStockOnly, dealOnly, sort]);
 
   const counts = useMemo(() => ({
     dept: facet('dept', (p) => p.department),
@@ -254,19 +271,20 @@ export default function Shop() {
     kind: facet('kind', (p) => typeKey(p.kind)),
     size: facet('size', (p) => p.size),
     col: facet('col', (p) => p.badges),
+    colour: facet('colour', colourOf),
     offBase: searched.filter((p) => matches(p, 'off')),
     ratingBase: searched.filter((p) => matches(p, 'rating')),
     priceBase: searched.filter((p) => matches(p, 'price')),
     avail: searched.filter((p) => matches(p, 'avail')),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [searched, depts, cats, mats, sups, tiers, kinds, sizes, cols, minPrice, maxPrice, minOff, minRating, inStockOnly, dealOnly]);
+  }), [searched, depts, cats, mats, sups, tiers, kinds, sizes, cols, colours, minPrice, maxPrice, minOff, minRating, inStockOnly, dealOnly]);
 
   const shown = results.slice(0, page * PAGE);
   const priceActive = minPrice > 0 || maxPrice < PRICE_MAX;
-  const activeCount = depts.length + cats.length + mats.length + sups.length + tiers.length + kinds.length + sizes.length + cols.length
+  const activeCount = depts.length + cats.length + mats.length + sups.length + tiers.length + kinds.length + sizes.length + cols.length + colours.length
     + (priceActive ? 1 : 0) + (minOff ? 1 : 0) + (minRating ? 1 : 0) + (inStockOnly ? 1 : 0) + (dealOnly ? 1 : 0);
   const clearAll = () => {
-    setDepts([]); setCats([]); setMats([]); setSups([]); setTiers([]); setKinds([]); setSizes([]); setCols([]);
+    setDepts([]); setCats([]); setMats([]); setSups([]); setTiers([]); setKinds([]); setSizes([]); setCols([]); setColours([]);
     setMinPrice(0); setMaxPrice(PRICE_MAX); setMinOff(0); setMinRating(0); setInStock(false); setDealOnly(false);
   };
 
@@ -411,6 +429,25 @@ export default function Shop() {
         </button>
       </Group>
 
+      {/* paints and anything else that has a colour (client final review) */}
+      {lists.colours.length > 0 && (
+        <Group title="Colour" active={colours.length}>
+          <div className="flex flex-wrap gap-1.5">
+            {lists.colours.map((c) => {
+              const on = colours.includes(c);
+              const n = counts.colour.get(c) || 0;
+              return (
+                <button key={c} type="button" onClick={() => toggle(colours, setColours)(c)} aria-pressed={on}
+                  className={cx('inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[12px] font-semibold transition', on ? 'border-forest bg-forest text-white' : 'border-line bg-white text-ink-70 hover:border-forest/40', n === 0 && !on && 'opacity-45')}>
+                  <span aria-hidden="true" className="h-3 w-3 shrink-0 rounded-full border border-black/15" style={{ background: SWATCH[c.toLowerCase()] || '#d9d4cb' }} />
+                  {c}<span className={cx('tnum', on ? 'text-white/75' : 'text-ink-35')}>{n}</span>
+                </button>
+              );
+            })}
+          </div>
+        </Group>
+      )}
+
       {/* no Material group (client review 7): for plumbing it repeated the
           PVC / CPVC / UPVC sub-categories */}
       <Group title="Brand tier" active={tiers.length} defaultOpen={false}>
@@ -445,6 +482,7 @@ export default function Shop() {
     ...mats.map((m) => [m, () => toggle(mats, setMats)(m)]),
     ...tiers.map((t) => [`${TIERS.find((x) => x.key === t)?.label ?? t} brands`, () => toggle(tiers, setTiers)(t)]),
     ...cols.map((c) => [c, () => toggle(cols, setCols)(c)]),
+    ...colours.map((c) => [`Colour: ${c}`, () => toggle(colours, setColours)(c)]),
     ...(dealOnly ? [['On offer', () => setDealOnly(false)]] : []),
     ...(inStockOnly ? [['In stock', () => setInStock(false)]] : []),
   ];

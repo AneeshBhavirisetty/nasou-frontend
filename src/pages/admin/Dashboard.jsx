@@ -15,7 +15,7 @@ import { useScopedOrders } from '../../lib/useScoped';
 import { useSettlements } from './Payouts';
 import { byProduct, dailySeries, rupeesCompact, withinDays } from '../../lib/analytics';
 import { userRoleLabel } from '../../lib/roles';
-import { isPendingOrder, lateDays } from '../../lib/marketplace';
+import { isPendingOrder, lateDays, orderHasStatus } from '../../lib/marketplace';
 import { money, cx } from '../../lib/format';
 import { istHour } from '../../lib/ist';
 
@@ -102,7 +102,9 @@ function useDashboardData() {
       series: dailySeries(orders, 30).map((p) => ({ label: p.label, value: p.billed, orders: p.orders })),
       commissionSeries: dailySeries(orders, 30).map((p) => ({ ...p, value: 0 })).map((p) => ({ ...p, value: commission(orders.filter((o) => new Date(o.createdAt).toDateString() === new Date(p.t).toDateString())) })),
       perRetailer, parts, delayed, lateOrders, pendingOrders,
-      partStatus: ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'].map((s) => ({ label: s, value: parts.filter((p) => p.status === s).length })),
+      orderCount: orders.length,
+      /* orders, counted exactly as the Orders page's Status filter counts them */
+      orderStatus: ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'].map((s) => ({ label: s, value: orders.filter((o) => orderHasStatus(o, s)).length, parts: parts.filter((p) => p.status === s).length })),
       flagged: orders.filter((o) => o.flagged),
       payouts, held,
       refunds30,
@@ -282,8 +284,8 @@ export default function AdminDashboard() {
 
         {tab === 'ops' && (
           <div className="grid gap-5 lg:grid-cols-[1fr_1.3fr]">
-            <ChartCard title="Sub-orders by status" note={`${d.parts.length} sub-orders`} table={{ headers: ['Status', 'Sub-orders'], rows: d.partStatus.map((s) => [s.label, s.value]) }}>
-              <BarList rows={d.partStatus.map((s, i) => ({ key: s.label, label: s.label, value: s.value, color: [SERIES[2], SERIES[1], '#5b9bd5', SERIES[0], SERIES[3]][i] }))} format={(v) => `${v}`} />
+            <ChartCard title="Orders by status" note={`${d.orderCount} orders · ${d.parts.length} sub-orders — tap a status to see them`} table={{ headers: ['Status', 'Orders', 'Sub-orders'], rows: d.orderStatus.map((s) => [s.label, s.value, s.parts]) }}>
+              <BarList rows={d.orderStatus.map((s, i) => ({ key: s.label, label: s.label, value: s.value, parts: s.parts, color: [SERIES[2], SERIES[1], '#5b9bd5', SERIES[0], SERIES[3]][i] }))} format={(v) => `${v}`} detail={(r) => `${r.parts} sub-order${r.parts === 1 ? '' : 's'}`} onSelect={(r) => navigate(`/admin/orders?status=${r.label}`)} />
             </ChartCard>
             <Panel title="Delays" note="Pending over 2 days, processing over 3, shipped over 5." action={<Link to="/admin/orders" className="text-[12.5px] font-bold text-forest hover:underline">All orders →</Link>}>
               <ul className="space-y-2">

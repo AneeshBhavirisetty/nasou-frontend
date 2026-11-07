@@ -123,11 +123,18 @@ export async function putImages(files) {
   return { images: out, errors };
 }
 
-export async function listImages() {
+/* department: only that category's photos (on its products) plus ones not on any product yet */
+export async function listImages(department) {
   if (LIVE) {
     if (!isTeam()) return sessionUploads;
-    const page = await api('/admin/media?size=200');
-    return (page?.items || []).map(fromServer);
+    /* every page (the server sends 100 at a time — the picker used to stop at "Storage (100)") */
+    const items = [];
+    for (let page = 0, pages = 1; page < pages && page < 30; page += 1) {
+      const res = await api(`/admin/media?size=100&page=${page}${department ? `&department=${encodeURIComponent(department)}` : ''}`);
+      items.push(...(res?.items || []));
+      pages = res?.totalPages || 1;
+    }
+    return items.map(fromServer);
   }
   const all = await tx('readonly', (s) => s.getAll());
   return (all || []).sort((a, b) => b.at - a.at);

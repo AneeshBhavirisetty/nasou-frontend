@@ -81,6 +81,8 @@ export default function ProductCard({ product, compact = false }) {
         <h3 className="mt-1 text-[15px] font-semibold leading-snug text-ink sm:text-base">
           <Link to={to} className="line-clamp-2 transition hover:text-forest">{product.name}</Link>
         </h3>
+        {/* the supplier on every card, discounted or not (client final review) */}
+        {product.supplierName && <p className="mt-0.5 truncate text-[12px] text-ink-50">by <span className="font-semibold capitalize text-ink-70">{product.supplierName}</span></p>}
         {product.rating > 0 && (
           <Rating value={product.rating} count={product.reviewCount} size={13} className="mt-1.5 sm:mt-2" />
         )}
@@ -93,9 +95,7 @@ export default function ProductCard({ product, compact = false }) {
                 : <p className="tnum text-base font-semibold text-ink sm:text-lg">{money(product.price)}</p>}
               {!quote && off > 0 && <span className="text-[12px] font-bold text-emerald-700">{off}% off</span>}
             </div>
-            {!quote && off > 0
-              ? <p className="tnum text-[12px] text-ink-35 line-through">{money(product.mrp)}</p>
-              : <p className="truncate text-[12px] capitalize text-ink-50">by {product.supplierName}</p>}
+            {!quote && off > 0 && <p className="tnum text-[12px] text-ink-35 line-through">{money(product.mrp)}</p>}
             <p className={cx('mt-1 text-[11.5px] font-semibold', out ? 'text-clay-600' : low ? 'text-amber' : 'text-emerald-700')}>
               {out ? 'Out of stock' : low ? `Only ${product.stock} left` : 'In stock'}
             </p>

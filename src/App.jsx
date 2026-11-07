@@ -70,6 +70,7 @@ import AuthLayout from './layouts/AuthLayout';
 import PublicLayout from './layouts/PublicLayout';
 import ProtectedLayout from './layouts/ProtectedLayout';
 import AdminLayout from './layouts/AdminLayout';
+import { PageMessage } from './components/AppErrorBoundary';
 
 /* the NasouHive landing (3D, gsap) — its own chunk, loaded only on "/" */
 const LandingPage = lazy(() => import('./landing/LandingPage'));
@@ -90,7 +91,7 @@ export default function App() {
       <ScrollToTop />
       <Routes>
         {/* The NasouHive landing page; the shop's home is /home */}
-        <Route path="/" element={<Suspense fallback={<div className="min-h-dvh bg-[#efe7da]" />}><LandingPage /></Suspense>} />
+        <Route path="/" element={<Suspense fallback={<PageMessage title="Loading…" />}><LandingPage /></Suspense>} />
         {/* the landing's "Get Started" buttons point at /app/auth */}
         <Route path="/app/auth" element={<Navigate to="/join" replace />} />
 

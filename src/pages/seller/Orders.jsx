@@ -10,6 +10,8 @@ import { useScopedOrders } from '../../lib/useScoped';
 import { useSeller } from '../../layouts/SellerLayout';
 import { formatOrderDate } from '../../data/orders';
 import { cx, money } from '../../lib/format';
+import WalkInSales from '../../components/seller/WalkInSales';
+import { useIam } from '../../context/IamStore';
 
 /* Seller orders: only this retailer's sub-orders (lib/scope cuts every
    multi-seller order down to their part). Review 6 (retailer item 12) brought
@@ -39,6 +41,9 @@ export default function SellerOrders() {
   const navigate = useNavigate();
   const orders = useScopedOrders();
   const [step, setStep] = useState('');
+  const [tab, setTab] = useState('orders');
+  const { readOnly } = useSeller();
+  const { canSection } = useIam();
   const rows = useMemo(() => orders.map((o) => ({ ...o, part: o.parts[0] })), [orders]);
   const count = (s) => rows.filter((r) => r.part.status === s).length;
   const shown = step ? rows.filter((r) => r.part.status === step) : rows;
@@ -46,6 +51,14 @@ export default function SellerOrders() {
   return (
     <div className="space-y-5">
       <AdminPageHead title="Orders" note="Your part of each customer order. Move it along as you pack and ship — the customer sees every step." />
+
+      <div className="flex gap-1.5">
+        {[['orders', 'Nivorva orders'], ['walkin', 'Walk-in sales']].map(([k, l]) => (
+          <button key={k} type="button" onClick={() => setTab(k)} aria-pressed={tab === k} className={cx('rounded-full px-3.5 py-1.5 text-[12.5px] font-bold transition', tab === k ? 'bg-forest text-white' : 'bg-white text-ink-70 shadow-card hover:text-ink')}>{l}</button>
+        ))}
+      </div>
+
+      {tab === 'walkin' ? <WalkInSales canRecord={!readOnly && canSection('orders')} /> : (<>
 
       {/* tracking board — tap a step to list just those */}
       <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
@@ -83,6 +96,7 @@ export default function SellerOrders() {
         onRowClick={(o) => navigate(`/seller/orders/${o.id}`)}
         exportName="my-orders"
       />
+      </>)}
     </div>
   );
 }

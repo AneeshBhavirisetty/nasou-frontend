@@ -206,6 +206,9 @@ export function lateDays(part, now = Date.now()) {
 }
 /* the Orders panel's own Pending test: the order, or one of its sellers' parts, is pending */
 export const isPendingOrder = (o) => o.status === 'Pending' || o.parts.some((p) => p.status === 'Pending');
+/* One rule for "orders with this status" — the Orders filter and the dashboard
+   count the same way, so their numbers always match (client final review). */
+export const orderHasStatus = (o, s) => (s === 'Pending' ? isPendingOrder(o) : o.status === s || o.parts.some((p) => p.status === s));
 
 /* ── settlement cycles (weekly, Monday to Sunday) ─────────────────────────── */
 export function cycleStart(ms) {

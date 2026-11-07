@@ -4,8 +4,8 @@ import Icon from '../components/Icon';
 import ProductArt from '../components/ProductArt';
 import AvailableOffers from '../components/AvailableOffers';
 import AddressForm, { addressProblem, blankAddress } from '../components/AddressForm';
-import { Badge, Button, Container, Breadcrumbs } from '../components/ui';
-import { useCart } from '../context/CartContext';
+import { Badge, Button, Container, Breadcrumbs, Stepper } from '../components/ui';
+import { MAX_QTY, useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
 import { useAdminStore, couponDiscount, productById } from '../context/AdminStore';
@@ -65,7 +65,7 @@ const SPEED = [
 const ONLINE = (p) => p !== 'Cash on delivery' && p !== 'GST invoice';
 
 export default function Checkout() {
-  const { items, groups, totals, clear } = useCart();
+  const { items, groups, totals, clear, setQty } = useCart();
   const { coupons } = useAdminStore();
   const { isAuthenticated, user, profile, updateProfile } = useAuth();
   const toast = useToast();
@@ -421,7 +421,8 @@ export default function Checkout() {
           </div>
 
           <div className="mt-8 flex items-center justify-between gap-3 border-t border-line-soft pt-6">
-            <Button variant="outline" icon="chevronLeft" onClick={() => setStep((s) => Math.max(0, s - 1))} disabled={step === 0}>Back</Button>
+            {/* first step: back to the cart (client final review) */}
+            <Button variant="outline" icon="chevronLeft" onClick={() => (step === 0 ? navigate('/cart') : setStep((s) => s - 1))} disabled={paying}>{step === 0 ? 'Cart' : 'Back'}</Button>
             {step < STEPS.length - 1 ? (
               <Button size="lg" iconRight="arrowRight" onClick={next}><span className="sm:hidden">Continue</span><span className="hidden sm:inline">Continue securely</span></Button>
             ) : (
@@ -449,7 +450,13 @@ export default function Checkout() {
                         <span className="photo-bed grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-[12px]">{photoOf(line.product) ? <img src={photoOf(line.product)} alt="" loading="lazy" className="h-full w-full object-cover" /> : <ProductArt kind={line.product.art} material={line.product.material} className="h-full w-full p-1" />}</span>
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-[13px] font-bold">{line.product.name}</p>
-                          <p className="tnum text-[12px] text-ink-50">Qty {line.qty}{line.bulk ? ` · bulk − ${money(line.bulk.amount)}` : ''}</p>
+                          {/* quantity can still change here (client final review); 0 removes the item */}
+                          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+                            {paying ? <span className="tnum text-[12px] text-ink-50">Qty {line.qty}</span> : (
+                              <Stepper size="sm" value={line.qty} onChange={(q) => setQty(line.index, q)} min={0} max={Math.min(MAX_QTY, line.product.stock || MAX_QTY)} />
+                            )}
+                            {line.bulk && <span className="tnum text-[11.5px] font-semibold text-emerald-700">bulk − {money(line.bulk.amount)}</span>}
+                          </div>
                         </div>
                         <span className="tnum text-[13px] font-bold">{money(line.price * line.qty - (line.bulk?.amount || 0))}</span>
                       </li>

@@ -15,7 +15,8 @@ import { cx } from '../../lib/format';
  *   Upload  — drop / browse new files; they are saved to blob storage.
  *   Library — pick from everything already in storage, reusable across products.
  * ==========================================================================*/
-export default function MediaPicker({ open, onClose, selected = [], max = MAX_IMAGES_PER_PRODUCT, onDone }) {
+/* department / departmentName: the product's category — the library opens on its photos (client final review) */
+export default function MediaPicker({ open, onClose, selected = [], max = MAX_IMAGES_PER_PRODUCT, onDone, department, departmentName }) {
   const toast = useToast();
   const [tab, setTab] = useState('library');
   const [library, setLibrary] = useState([]);
@@ -24,10 +25,15 @@ export default function MediaPicker({ open, onClose, selected = [], max = MAX_IM
   const [drag, setDrag] = useState(false);
   const fileRef = useRef(null);
 
-  const refresh = () => listImages().then(setLibrary);
-  useEffect(() => { refresh(); return onMediaChange(refresh); }, []);
+  const [scope, setScope] = useState('category'); // 'category' | 'all'
+  const only = scope === 'category' && department ? department : undefined;
+  const [loaded, setLoaded] = useState(false);
+  const refresh = () => listImages(only).then((l) => { setLibrary(l); setLoaded(true); });
+  useEffect(() => { refresh(); return onMediaChange(refresh); }, [only]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (open) setScope('category'); }, [open, department]);
   useEffect(() => { if (open) setPicked(selected); /* eslint-disable-next-line */ }, [open]);
-  useEffect(() => { if (open && library.length === 0) setTab('upload'); }, [open, library.length]);
+  /* straight to Upload only when storage really is empty — not while it is still loading */
+  useEffect(() => { if (open && loaded && library.length === 0) setTab('upload'); }, [open, loaded, library.length]);
 
   const isPicked = (url) => picked.includes(url);
   const toggle = (url) => {
@@ -78,6 +84,17 @@ export default function MediaPicker({ open, onClose, selected = [], max = MAX_IM
           {picked.length}/{max} selected
         </span>
       </div>
+      {department && tab === 'library' && (
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          {[['category', `${departmentName || 'This category'} photos`], ['all', 'All storage']].map(([k, label]) => (
+            <button key={k} type="button" onClick={() => setScope(k)}
+              className={cx('rounded-full px-3 py-1.5 text-[12px] font-bold transition', scope === k ? 'bg-forest text-white' : 'bg-sunk text-ink-70 hover:text-ink')}>
+              {label}
+            </button>
+          ))}
+          {scope === 'category' && <span className="self-center text-[11.5px] text-ink-50">On {departmentName || 'this category'} products, plus new uploads</span>}
+        </div>
+      )}
 
       {tab === 'upload' ? (
         <div className="pt-4">
@@ -132,7 +149,7 @@ export default function MediaPicker({ open, onClose, selected = [], max = MAX_IM
                       )}
                     >
                       <span className="photo-bed block aspect-square">
-                        <img src={rec.url} alt={rec.name} className="h-full w-full object-cover" />
+                        <img src={rec.url} alt={rec.name} loading="lazy" decoding="async" className="h-full w-full object-cover" />
                       </span>
                     </button>
                     {on && (

@@ -15,7 +15,7 @@ import { rupeesCompact } from '../../lib/analytics';
 import { money } from '../../lib/format';
 import { act } from '../../lib/act';
 import { istStamp } from '../../lib/ist';
-import { LATE_AFTER, isPendingOrder, lateDays } from '../../lib/marketplace';
+import { LATE_AFTER, isPendingOrder, lateDays, orderHasStatus } from '../../lib/marketplace';
 
 /* Orders — global list view (requirement 7). One row per customer order;
    each order has one sub-order per retailer, tracked separately. Opening a
@@ -86,7 +86,7 @@ export default function AdminOrders() {
         searchText={(o) => `${o.id} ${o.customer} ${o.email} ${o.phone} ${o.city} ${o.sellers} ${o.parts.map((p) => p.id).join(' ')}`}
         searchPlaceholder="Search order, sub-order, customer, phone, seller"
         filters={[
-          { key: 'status', label: 'Status', options: ORDER_STATUSES.map((s) => ({ value: s, label: s })), test: (o, v) => (v === 'Pending' ? isPendingOrder(o) : o.status === v || o.parts.some((p) => p.status === v)) },
+          { key: 'status', label: 'Status', options: ORDER_STATUSES.map((s) => ({ value: s, label: s })), test: (o, v) => orderHasStatus(o, v) },
           { key: 'late', label: 'Running late', options: [{ value: 'yes', label: `Late (${Object.entries(LATE_AFTER).map(([s, d]) => `${s} ${d}+ d`).join(', ')})` }], test: (o) => o.parts.some((p) => lateDays({ ...p, createdAt: p.createdAt || o.createdAt }) > 0) },
           { key: 'retailer', label: 'Retailer', options: retailers.filter((r) => r.status !== 'pending').map((r) => ({ value: r.id, label: r.name })), test: (o, v) => o.sellerIds.includes(v) },
           { key: 'payment', label: 'Payment', options: ['UPI', 'Cards', 'Net banking', 'Cash on delivery', 'GST invoice'].map((s) => ({ value: s, label: s })), test: (o, v) => o.payment === v },

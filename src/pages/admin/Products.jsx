@@ -196,9 +196,11 @@ export function ProductsManager({ seller = false }) {
 
   const shown = filtered.slice(0, page * PAGE);
 
-  const onSave = (prod) => {
+  /* the form waits for this and shows any error itself, so nothing typed is lost */
+  const onSave = async (prod) => {
     const isNew = !rows.some((p) => p.id === prod.id);
-    act(toast, () => saveProduct(prod, seller ? sellerName(actor.retailerId) : undefined), isNew ? `${prod.name} added` : `${prod.name} updated`);
+    await saveProduct(prod, seller ? sellerName(actor.retailerId) : undefined);
+    toast.success(isNew ? `${prod.name} added` : `${prod.name} updated`);
   };
   const onDelete = (p) => {
     if (!window.confirm(`Delist "${p.name}"?`)) return;
@@ -324,7 +326,7 @@ export function ProductsManager({ seller = false }) {
               <span className="tnum text-[13px] font-semibold">{money(p.price)}</span>
               <span className="tnum text-right text-[13px] text-ink-50 sm:text-left"><span className="sm:hidden">MRP </span>{money(p.mrp)}</span>
               {canEdit
-                ? <StockCell value={p.stock} onChange={(n) => setStock(p.id, n)} />
+                ? <StockCell value={p.stock} onChange={(n) => act(toast, () => setStock(p.id, n))} />
                 : <span className={cx('tnum text-[13px] font-bold', p.stock === 0 ? 'text-clay' : 'text-ink')}>{p.stock} in stock</span>}
               <div className="flex justify-end gap-1.5">
                 {canEdit && <button onClick={() => setEditing(p)} className="grid h-8 w-8 place-items-center rounded-md border border-line text-ink-50 transition hover:border-ink-35 hover:text-ink" aria-label={`Edit ${p.name}`}>

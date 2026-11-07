@@ -57,17 +57,29 @@ const productInput = (p) => ({
   itemSubtype2: p.itemSubtype2 ?? null, color: p.color ?? null, saleUnit: p.saleUnit || null, packUnit: p.packUnit || null,
 });
 const afterProducts = () => refresh('products', 'stock', 'catalog');
+/* The saved product comes back with its new version: put it in the list at once.
+   Waiting for the full reload (7 MB for the team) meant a second edit within
+   those seconds still sent the old version and was refused — "Save changes
+   sometimes does nothing" (client final review). The reload still follows. */
+const keep = (saved) => {
+  if (!saved?.sku) return;
+  const list = liveProductsStore.get();
+  liveProductsStore.set(list.some((p) => p.sku === saved.sku) ? list.map((p) => (p.sku === saved.sku ? { ...p, ...saved } : p)) : [saved, ...list]);
+};
 const live = {
   async saveProduct(prod) {
     const existing = liveProductsStore.get().find((p) => p.id === prod.id || p.sku === prod.sku);
-    if (existing) await put(`${base()}/products/${sku(existing)}`, productInput({ ...existing, ...prod, version: existing.version }));
-    else if (base() === '/admin') await post(`/admin/products?retailerId=${encodeURIComponent(prod.retailerId || '')}`, productInput(prod));
-    else await post('/seller/products', productInput(prod));
-    return afterProducts();
+    let saved;
+    if (existing) saved = await put(`${base()}/products/${sku(existing)}`, productInput({ ...existing, ...prod, version: existing.version }));
+    else if (base() === '/admin') saved = await post(`/admin/products?retailerId=${encodeURIComponent(prod.retailerId || '')}`, productInput(prod));
+    else saved = await post('/seller/products', productInput(prod));
+    keep(saved);
+    afterProducts();
+    return saved;
   },
   async setStock(id, stock) {
     const p = productById(id);
-    await apiPatch(`${base()}/products/${sku(p || { id })}/inventory`, { stock });
+    keep(await apiPatch(`${base()}/products/${sku(p || { id })}/inventory`, { stock }));
     return afterProducts();
   },
   async deleteProduct(id) {

@@ -4,7 +4,7 @@ import Icon from './Icon';
 import Logo from './Logo';
 import { Container } from './ui';
 import { useToast } from '../context/ToastContext';
-import { brand, footerColumns, paymentMethods, socials, whatsappLink } from '../data/site';
+import { brand, footerColumns, whatsappLink } from '../data/site';
 
 function Newsletter() {
   const toast = useToast();
@@ -92,17 +92,6 @@ export default function Footer() {
                 <span className="hidden sm:inline">·</span>
                 <span>GSTIN {brand.gst}</span>
                 <Link to="/returns" className="transition hover:text-white/80">Returns</Link>
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                {socials.map((s) => (
-                  <a key={s.label} href={s.href} target="_blank" rel="noreferrer" className="text-[12px] text-white/55 transition hover:text-white">
-                    {s.label}
-                  </a>
-                ))}
-                <span className="mx-1 h-3 w-px bg-white/15" />
-                {paymentMethods.map((m) => (
-                  <span key={m} className="rounded-full bg-white/10 px-2.5 py-1 text-[10.5px] font-bold text-white/80">{m}</span>
-                ))}
               </div>
             </div>
           </div>

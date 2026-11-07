@@ -86,12 +86,6 @@ export const footerColumns = [
   },
 ];
 
-export const socials = [
-  { label: 'Facebook', href: 'https://facebook.com' },
-  { label: 'Instagram', href: 'https://instagram.com' },
-  { label: 'LinkedIn', href: 'https://linkedin.com' },
-  { label: 'YouTube', href: 'https://youtube.com' },
-];
 
 /* No cash on delivery (client, 6 Nov 2026): every order is paid online. */
 export const paymentMethods = ['UPI', 'Cards', 'Net banking', 'GST invoice'];

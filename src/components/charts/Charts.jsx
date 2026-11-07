@@ -238,7 +238,7 @@ export function ColumnChart({ points, format = (v) => v, tick = format, label = 
 }
 
 /* ── horizontal bar list (value at the tip, per-bar tooltip) ───────────────── */
-export function BarList({ rows, format = (v) => v, color = FOREST, detail, max: forcedMax }) {
+export function BarList({ rows, format = (v) => v, color = FOREST, detail, max: forcedMax, onSelect }) {
   const [hover, setHover] = useState(null);
   const max = forcedMax ?? Math.max(1, ...rows.map((r) => r.value));
   return (
@@ -255,7 +255,10 @@ export function BarList({ rows, format = (v) => v, color = FOREST, detail, max: 
             onPointerLeave={() => setHover(null)}
             onFocus={() => setHover(i)}
             onBlur={() => setHover(null)}
-            className="relative rounded-[8px] outline-none focus-visible:ring-2 focus-visible:ring-forest/30"
+            onClick={onSelect ? () => onSelect(r) : undefined}
+            onKeyDown={onSelect ? (e) => { if (e.key === 'Enter') onSelect(r); } : undefined}
+            role={onSelect ? 'link' : undefined}
+            className={`relative rounded-[8px] outline-none focus-visible:ring-2 focus-visible:ring-forest/30${onSelect ? ' cursor-pointer' : ''}`}
           >
             <div className="mb-1 flex items-baseline justify-between gap-3 text-[12.5px]">
               <span className="min-w-0 truncate font-semibold text-ink-70">{r.label}</span>
